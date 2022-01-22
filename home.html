@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="ISO-8859-1">
+    <title>Student Management System</title>
+    <link rel="stylesheet" href="assets/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/general.css">
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <!-- <a class="navbar-brand" href="#">Navbar</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button> -->
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <form class="d-flex">
+                    <input class="form-control me-1" type="search" placeholder="Search" aria-label="Search">
+                    <div class="dropdown">
+                        <span class="filter mx-1">Filter</span>
+                        <div class="dropdown-content">
+                            <p>Hello World!</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-success ms-1" type="submit">Search</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+    <div class="row justify-content-between mx-0 img-bg">
+        <div class="col-4 border bg-light">
+            <h5 class="text-center py-2">Upcoming Auctions</h5>
+        </div>
+        <div class="col-4 border bg-light">
+            <h5 class="text-center py-2">My List</h5>
+        </div>
+    </div>
+    <script src="home.js" type="module"></script>
+</body>
+
+</html>
