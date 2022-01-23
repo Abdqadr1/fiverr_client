@@ -7,6 +7,7 @@
   --success: #166d71;
   --header: #8c8c8c;
   --danger: #dc3545;
+  --progress-bar: #2e79eb79;
 }
 body {
   padding: 0;
@@ -16,7 +17,8 @@ body {
 .filter {
   display: inline-block;
   width: 80px;
-  padding: 6px 10px;
+  padding: 4px 10px;
+  margin-top: 3px;
   border: 1px solid #ced4da;
   border-radius: 5px;
   background-color: white;
@@ -49,7 +51,8 @@ body {
 ul.dropdown-list,
 ul.auctions-list,
 ul.list,
-ul.length-bar {
+ul.length-bar,
+ul.sales-amount-list {
   list-style: none;
   padding: 0;
   position: relative;
@@ -59,12 +62,12 @@ ul.dropdown-list li {
   padding: 6px;
   border-bottom: 1px solid var(--header);
 }
-ul.dropdown-list li:last-child {
+ul.dropdown-list > li:last-child {
   border-bottom: none !important;
   padding: 6px 6px 0px 6px !important;
 }
 
-ul.dropdown-list li span.prop {
+ul.dropdown-list li li.prop {
   display: inline-block;
   cursor: pointer;
   font-size: 13px;
@@ -77,14 +80,15 @@ ul.dropdown-list li span.prop {
   background-color: white;
   margin: 2px 5px;
 }
-ul.dropdown-list li span.prop:hover,
-ul.dropdown-list li span.prop.active {
+ul.dropdown-list li li.prop:hover,
+ul.dropdown-list li li.prop.active {
   background-color: rgb(116, 111, 111);
   color: white;
   border: none;
 }
 
-ul.length-bar li {
+ul.length-bar li,
+ul.sales-amount-list li {
   width: 25%;
   position: relative;
   float: left;
@@ -92,6 +96,18 @@ ul.length-bar li {
   font-size: 12px;
   word-wrap: break-word;
   text-align: center;
+}
+ul.sales-amount-list li::before {
+  content: "";
+  width: 8px;
+  height: 20px;
+  border-radius: 50rem;
+  border: 1px solid var(--progress-bar);
+  display: block;
+  text-align: center;
+  margin: 0 auto 10px auto;
+  background-color: white;
+  cursor: pointer;
 }
 .length-bar {
   counter-reset: step;
@@ -110,7 +126,8 @@ ul.length-bar li::before {
   background-color: white;
   cursor: pointer;
 }
-ul.length-bar li::after {
+ul.length-bar li::after,
+ul.sales-amount-list li::after {
   content: "";
   position: absolute;
   width: 100%;
@@ -120,8 +137,21 @@ ul.length-bar li::after {
   left: -50%;
   z-index: -2;
 }
-ul.length-bar li:first-child::after {
+ul.length-bar li:first-child::after,
+ul.sales-amount-list li:first-child::after {
   content: none;
+}
+ul.sales-amount-list li.active:before {
+  content: "\25C9";
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--progress-bar);
+  font-size: 16px;
+  line-height: 20px;
+  color: var(--primary-color);
+}
+ul.sales-amount-list li.after + li::after {
+  background-color: var(--progress-bar);
 }
 ul.length-bar li.active::before {
   content: "\2713";
@@ -143,18 +173,27 @@ div.or input:focus {
   border-top: none;
   border-right: none;
   border-left: none;
+  padding: 0px 4px;
   border-bottom: 1px solid black;
   appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  margin: 0;
+  background: none;
+  font-size: small;
 }
 
 /* set map image background */
 div#contain {
   min-height: 100vh;
-  background-image: url(../assets/map.png);
+  background-image: url(../assets/img_map.png);
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
   padding: 0 !important;
+}
+div.contain {
+  min-height: 100vh;
 }
 
 /* auctions list */
@@ -208,6 +247,7 @@ div#calendar .calendar-header {
 .calendar-body {
   border: 1px solid var(--header);
   padding: 8px;
+  border-radius: 5px;
 }
 div.weekday {
   display: grid;
@@ -226,12 +266,12 @@ span.month-picker {
   border-right: 1px solid var(--header);
   border-top: 1px solid var(--header);
   border-left: 1px solid var(--header);
-  border-radius: 2px 3px 0px 0px;
+  border-radius: 5px 5px 0px 0px;
   margin-left: 10px;
   padding: 6px;
   position: relative;
   top: 1px;
-  z-index: 100;
+  z-index: 2;
 }
 div.days {
   display: grid;
@@ -249,6 +289,9 @@ div.days div {
   padding: 5px;
   position: relative;
   cursor: pointer;
+}
+div.days div:hover {
+  border: 1px solid var(--header);
 }
 
 /* my list */
@@ -278,4 +321,8 @@ ul.list span.legend {
 ul.list {
   padding: 18px 0 15px 0;
   margin: 0;
+}
+/* tabs */
+div.tab-content {
+  min-height: 200px;
 }
