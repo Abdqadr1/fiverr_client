@@ -19,9 +19,25 @@ myCarousel.addEventListener('slid.bs.carousel', function (event) {
 const carouselItems = document.querySelectorAll("div.carousel-item");
 
 const tabList = document.querySelector("ul.nav-tabs")
+const thirdSlideTabList = document.querySelector("ul#third-slide-tab-list");
+const thirdSlideTabListLinks = thirdSlideTabList.querySelectorAll("a.nav-link");
+let activeTab = "2020";
+thirdSlideTabListLinks.forEach(link => {
+    link.onclick = (event) => {
+        const text = link.textContent;
+        event.preventDefault();
+        thirdSlideTabListLinks.forEach(l => {
+            if (l.textContent === text) {
+                l.classList.add("active")
+            } else {
+                l.classList.remove("active")
+            }
+        })
+    }
+})
+
 const links = tabList.querySelectorAll("a.nav-link");
 const tabContent = document.querySelector("div.tab-content")
-let activeTab = "Overview";
 links.forEach(link => {
     link.onclick = (event) => {
         const text = link.textContent;
