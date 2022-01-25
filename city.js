@@ -1,3 +1,4 @@
+import "./navbar.js"
 // tabs nav
 const myCarousel = document.querySelector('#slider')
 var carousel = new bootstrap.Carousel(myCarousel, {
@@ -57,3 +58,36 @@ links.forEach(link => {
 })
 
 // google pie chart
+const chartDiv = document.querySelector("div#pieChart");
+google.charts.load('current', {'packages':['corechart']});
+google.charts.setOnLoadCallback(drawChart);
+function drawChart() {
+    const data = google.visualization.arrayToDataTable([
+          ['Property Type', 'Number'],
+          ['Single Family',  2],
+          ['Multi Family', 4],
+          ['Commercial',  6]
+    ]);
+    const options = {
+        title: 'Property Type',
+        is3D: true,
+        pieSliceText: 'none',
+        pieSliceTextStyle: {
+            display: 'none'
+        },
+        legend: {
+            position: 'right',
+            textStyle: {fontSize: 14, fontName: 'Overpass' }
+        },
+        slices: {
+            // 0: { color: '#e0e0e0' },
+            // 1: { color: '#e6e1e1' },
+            // 2: {color: '#8c8c8c'}
+        },
+        chartArea:{width:'90%'}
+    };
+
+    const chart = new google.visualization.PieChart(chartDiv);
+
+    chart.draw(data, options);
+}

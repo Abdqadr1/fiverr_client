@@ -52,7 +52,8 @@ ul.dropdown-list,
 ul.auctions-list,
 ul.list,
 ul.length-bar,
-ul.sales-amount-list {
+ul.sales-amount-list,
+ul.actions-list {
   list-style: none;
   padding: 0;
   position: relative;
@@ -373,3 +374,42 @@ table#compareTable th {
 /* .bg-light {
   background-color: rgb(242, 246, 248) !important;
 } */
+div.search-item {
+  cursor: pointer;
+}
+div.search-item-header {
+  background-color: #d8dfe9;
+  color: rgb(61, 58, 58);
+}
+div.search-query-text {
+  text-align: center;
+  font-size: 14px;
+}
+ul.actions-list li {
+  width: 16.33%;
+  text-align: center;
+  word-wrap: break-word;
+  display: inline-block;
+  border: 1px solid #7e7f81;
+  border-radius: 5px;
+  margin: 0 2px;
+  height: 50px;
+  font-size: 15px;
+  line-height: 20px;
+  cursor: pointer;
+}
+ul.actions-list li:hover {
+  /* background-color: #dee2e6; */
+}
+ul.actions-list li.small-text {
+  font-size: 14px;
+  padding: 0px;
+}
+ul.actions-list li a.btn {
+  padding: 0px;
+  width: 100%;
+  height: 100%;
+  font-size: 14px;
+  background-color: #dee2e6;
+  color: rgb(92, 88, 88);
+}
