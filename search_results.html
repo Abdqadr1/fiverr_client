@@ -104,72 +104,79 @@
                     <div class="text-uppercase pt-3"><b>results: </b>3</div>
                 </div>
                 <!-- search results list -->
-                <div class="mx-4 px-4 mb-3 row justify-content-between text-center">
-                    <!-- each result lien -->
-                    <div class="col-5 mt-3 border p-0 search-item">
-                        <div class="d-flex border search-item-header py-1">
-                            <span class="d-inline-block ms-2 me-3" style="font-size: 12px;">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault"><br>Add
-                            </span>
-                            <span class="mt-2">Lien<span class="ms-2">#21-453</span></span>
-                        </div>
-                        <div class="row justify-content-between my-2 mx-1">
-                            <div class="col-7 p-0">
-                                <img src="assets/img_map.png" height="80px" width="100%">
-                            </div>
-                            <div class="col-5 ps-1 mx-0 search-query-text">
-                                Lien Info
-                            </div>
-                        </div>
-                    </div>
-                    <!-- each result lien -->
-                    <div class="col-5 mt-3 border p-0 search-item">
-                        <div class="d-flex border search-item-header py-1">
-                            <span class="d-inline-block ms-2 me-3" style="font-size: 12px;">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault"><br>Add
-                            </span>
-                            <span class="mt-2">Lien<span class="ms-2">#21-453</span></span>
-                        </div>
-                        <div class="row justify-content-between my-2 mx-1">
-                            <div class="col-7 p-0">
-                                <img src="assets/img_map.png" height="80px" width="100%">
-                            </div>
-                            <div class="col-5 ps-1 mx-0 search-query-text">
-                                Lien Info
-                            </div>
-                        </div>
-                    </div>
-                    <!-- each result lien -->
-                    <div class="col-5 mt-3 border p-0 search-item">
-                        <div class="d-flex border search-item-header py-1">
-                            <span class="d-inline-block ms-2 me-3" style="font-size: 12px;">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault"><br>Add
-                            </span>
-                            <span class="mt-2">Lien<span class="ms-2">#21-453</span></span>
-                        </div>
-                        <div class="row justify-content-between my-2 mx-1">
-                            <div class="col-7 p-0">
-                                <img src="assets/img_map.png" height="80px" width="100%">
-                            </div>
-                            <div class="col-5 ps-1 mx-0 search-query-text">
-                                Lien Info
+                <div class="container my-3">
+                    <div class="row g-2">
+                        <!-- for active liens -->
+                        <div class="col-6">
+                            <div class="p-2">
+                                <div class="border active-lien">
+                                    <div class="border search-item-header py-1">
+                                        <div class="d-flex pb-4">
+                                            <span class="ms-2 me-1" style="font-size: 12px;">
+                                                <input class="form-check-input ms-1" type="checkbox" value=""
+                                                    id="flexCheckDefault"><br>Add
+                                            </span>
+                                            <span class="fs-6 ms-lg-2 mt-2">Tax Sale Certificate
+                                                <span class="ms-2 text-center">#009</span></span>
+                                        </div>
+                                        <div class="row justify-content-around mt-2 mx-0 text-center">
+                                            <span class="col-6">Total Price<br><b>$4617.09</b></span>
+                                            <span class="col-3">Block<br><b>352</b></span>
+                                            <span class="col-2">Lot<br><b>11</b></span>
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-between mt-2 mx-1">
+                                        <div class="col-5 p-0">
+                                            <img src="assets/img_map.png" height="80px" width="100%">
+                                        </div>
+                                        <div class="col-7 ps-1 mx-0 search-query-text">
+                                            <address class="mb-2">1499 Hackenbee St Nutley, NJ 07015</address>
+                                            <div class="text-uppercase">STATUS: <span>Active</span></div>
+                                        </div>
+                                        <div class="col-6 text-center">Source:<br><b>MLS</b></div>
+                                        <div class="col-6">Est. Value: <b>$191,562</b></div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
-                    </div>
-                    <!-- each result lien -->
-                    <div class="col-5 mt-3 border p-0 search-item">
-                        <div class="d-flex border search-item-header py-1">
-                            <span class="d-inline-block ms-2 me-3" style="font-size: 12px;">
-                                <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault"><br>Add
-                            </span>
-                            <span class="mt-2">Lien<span class="ms-2">#21-453</span></span>
-                        </div>
-                        <div class="row justify-content-between my-2 mx-1">
-                            <div class="col-7 p-0">
-                                <img src="assets/img_map.png" height="80px" width="100%">
-                            </div>
-                            <div class="col-5 ps-1 mx-0 search-query-text">
-                                Lien Info
+                        <!-- for old liens -->
+                        <div class="col-6 active-lien">
+                            <div class="p-2">
+                                <div class="border old-lien">
+                                    <div class="border search-item-header py-1">
+                                        <div class="d-flex">
+                                            <span class="ms-2 me-1" style="font-size: 12px;">
+                                                <input class="form-check-input ms-1" type="checkbox" value=""
+                                                    id="flexCheckDefault"><br>Add
+                                            </span>
+                                            <span class="fs-6 ms-1 ms-lg-3 mt-1">Tax Sale Certificate<br>
+                                                <small>Sold on <a href="">Dec 24, 2018</a></small></span>
+                                            <span class="mt-2 ms-1 ms-lg-3">Cert. No
+                                                <br><b>18-067</b></span>
+                                        </div>
+                                        <div class="row justify-content-around mt-2 mx-0 text-center">
+                                            <span class="col-4"><small>Tax Lien Sale
+                                                    Amount</small><br><b>$4617.09</b></span>
+                                            <span class="col-3"><small>Int. Rate</small><br><b>352</b></span>
+                                            <span class="col-4"><small>Est. No. of Bids</small><br><b>11</b></span>
+                                            <span class="col-3"><small>Block</small><br><b>11</b></span>
+                                            <span class="col-2"><small>Lot</small><br><b>5</b></span>
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-between mt-2 mx-1">
+                                        <div class="col-5 p-0">
+                                            <img src="assets/img_map.png" height="80px" width="100%">
+                                        </div>
+                                        <div class="col-7 ps-1 mx-0 search-query-text">
+                                            <address class="mb-2">1499 Hackenbee St Nutley, NJ 07015</address>
+                                            <div class="text-uppercase">STATUS: <span>OLD</span></div>
+                                        </div>
+                                        <div class="col-6 text-center">Source:<br><b>MLS</b></div>
+                                        <div class="col-6">Est. Value: <b>$191,562</b></div>
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -178,7 +185,7 @@
                 <div class="py-1 text-center border">Select any 2 items to compare</div>
                 <ul class="actions-list d-flex px-2 py-2 m-0">
                     <li class="py-3 bg-success text-white">Select All</li>
-                    <li class="py-1 pt-lg-3 px-2 bg-danger text-white">Deselect All</li>
+                    <li class="py-1 pt-lg-2 px-lg-3 px-xl-4 px-2 bg-danger text-white">Deselect All</li>
                     <li class="py-3 filter ps-0">Filter</li>
                     <li class="py-3 bg-primary text-white">Compare</li>
                     <li class="small-text"><a class="btn btn-secondary py-1">Calculate Avg Report</a></li>

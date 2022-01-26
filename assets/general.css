@@ -185,8 +185,8 @@ div.or input:focus {
 
 /* set map image background */
 div#contain {
-  min-height: 100vh;
-  background-image: url(../assets/img_map.png);
+  height: 100vh;
+  background-image: url(../assets/map.png);
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
@@ -207,7 +207,7 @@ ul.list li {
 }
 ul.auctions-list li:hover,
 ul.list li:hover {
-  background-color: var(--primary-color);
+  background-color: var(--header);
   color: white;
 }
 ul.auctions-list li span {
@@ -377,8 +377,26 @@ div.search-item {
   cursor: pointer;
 }
 div.search-item-header {
-  background-color: #d8dfe9;
   color: rgb(61, 58, 58);
+  font-size: 14px;
+  height: 160px;
+  padding: 10px 0;
+  cursor: pointer;
+}
+div.active-lien div.search-item-header {
+  background-color: rgb(7, 78, 49);
+  color: white;
+}
+div.active-lien div.search-item-header:hover {
+  background-color: rgb(31, 99, 71);
+}
+div.old-lien div.search-item-header {
+  background-color: rgb(150, 142, 142);
+  color: rgb(59, 53, 53);
+  font-size: 12px;
+}
+div.old-lien div.search-item-header:hover {
+  background-color: rgb(165, 158, 158);
 }
 div.search-query-text {
   text-align: center;
@@ -397,9 +415,9 @@ ul.actions-list li {
   line-height: 20px;
   cursor: pointer;
 }
-ul.actions-list li:hover {
-  /* background-color: #dee2e6; */
-}
+/* ul.actions-list li:hover {
+  background-color: #dee2e6;
+} */
 ul.actions-list li.small-text {
   font-size: 14px;
   padding: 0px;
@@ -431,4 +449,9 @@ div img.img-map {
   /* transform: rotate(15deg);
   -moz-transform: rotate(15deg);
   -webkit-transform: rotate(15deg); */
+}
+.add-small {
+  font-size: 10px;
+  line-height: 11px;
+  text-align: center;
 }
