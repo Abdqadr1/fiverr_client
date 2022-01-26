@@ -2,7 +2,7 @@ import "./navbar.js"
 // tabs nav
 const myCarousel = document.querySelector('#slider')
 var carousel = new bootstrap.Carousel(myCarousel, {
-  interval: 5000,
+  interval: 0,
   wrap: false
 })
 myCarousel.addEventListener('slid.bs.carousel', function (event) {

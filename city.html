@@ -120,11 +120,18 @@
                             </li>
                         </ul>
                         <div class="tab-content p-3">
-                            <div id="slider" class="carousel slide" aria-id="overview">
+                            <div id="slider" class="carousel slide" aria-id="overview" data-bs-interval="false"
+                                data-interval="false">
                                 <div class="carousel-inner">
                                     <div class="carousel-item active" id="1">
-                                        <img src="assets/img_bidding graphic.png" class="d-block w-100" height="500px"
-                                            alt="">
+                                        <!-- first tab -->
+                                        <div class="row justify-content-around">
+                                            <div class="col-3 py-3 m-0">
+                                                <img src="assets/img_map.png" class="d-block w-100" height="200px"
+                                                    alt="city map">
+                                            </div>
+                                            <div class="col-8 m-0"></div>
+                                        </div>
                                     </div>
                                     <div class="carousel-item" id="2">
                                         <img src="assets/img_values.png" class="d-block w-100" height="500px" alt="">
@@ -246,7 +253,8 @@
                                                 <!-- that link takes you to a page called 'Search Results' where the tax liens are displayed -->
                                                 <!-- <a href="" class="btn btn-primary mx-auto mt-3 d-block w-50">See Full
                                                     Report</a> -->
-                                                <a href="" class="d-block mx-auto w-50 mt-3 text-center">Show All Tax
+                                                <a href="search_results.html+66"
+                                                    class="d-block mx-auto w-50 mt-3 text-center">Show All Tax
                                                     Liens Sold in
                                                     <b>2018</b></a>
                                             </div>
@@ -330,7 +338,7 @@
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">>
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header py-2">
