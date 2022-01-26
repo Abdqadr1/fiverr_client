@@ -9,6 +9,10 @@
   --danger: #dc3545;
   --progress-bar: #2e79eb79;
 }
+@font-face {
+  font-family: londrina-outline;
+  src: url(../assets/LondrinaOutline-Regular.ttf);
+}
 body {
   padding: 0;
   margin: 0;
@@ -48,12 +52,7 @@ body {
 }
 
 /* filter list  */
-ul.dropdown-list,
-ul.auctions-list,
-ul.list,
-ul.length-bar,
-ul.sales-amount-list,
-ul.actions-list {
+ul {
   list-style: none;
   padding: 0;
   position: relative;
@@ -412,4 +411,24 @@ ul.actions-list li a.btn {
   font-size: 14px;
   background-color: #dee2e6;
   color: rgb(92, 88, 88);
+}
+ul li.half {
+  width: 50%;
+  box-sizing: border-box;
+  display: inline-block;
+}
+.londrina {
+  font-family: "londrina-outline", "Overpass", serif;
+  font-weight: bold;
+  letter-spacing: 3px;
+  font-size: 28px;
+}
+div img.img-map {
+  height: auto;
+  width: 100%;
+  margin: 0px auto;
+  display: block;
+  /* transform: rotate(15deg);
+  -moz-transform: rotate(15deg);
+  -webkit-transform: rotate(15deg); */
 }
