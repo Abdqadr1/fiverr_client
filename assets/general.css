@@ -418,17 +418,14 @@ ul.actions-list li {
 /* ul.actions-list li:hover {
   background-color: #dee2e6;
 } */
-ul.actions-list li.small-text {
-  font-size: 14px;
-  padding: 0px;
-}
-ul.actions-list li a.btn {
-  padding: 0px;
+
+ul.actions-list li a.big {
+  padding: 12px 0;
   width: 100%;
   height: 100%;
-  font-size: 14px;
-  background-color: #dee2e6;
-  color: rgb(92, 88, 88);
+  font-size: 16px;
+  line-height: 24px;
+  color: white;
 }
 ul li.half {
   width: 50%;
@@ -446,9 +443,17 @@ div img.img-map {
   width: 100%;
   margin: 0px auto;
   display: block;
+  max-height: 300px;
   /* transform: rotate(15deg);
   -moz-transform: rotate(15deg);
   -webkit-transform: rotate(15deg); */
+}
+div#note {
+  background-color: #b44d81;
+  text-align: center;
+  padding: 6px 0;
+  border: 1px solid #dee2e6;
+  color: white;
 }
 .add-small {
   font-size: 10px;
@@ -472,14 +477,16 @@ div#pieChart {
   width: 100%;
   height: 100%;
 }
-a#compareBtn {
-  width: 100%;
-  height: 100%;
-  font-size: 16px;
+a.action-btn {
+  width: 100% !important;
+  height: 100% !important;
+  font-size: 16px !important;
   padding-top: 12px;
+  color: white !important;
+  border: none !important;
+}
+a#compareBtn {
   background-color: #0d6efd;
-  color: white;
-  border: none;
 }
 a#compareBtn:hover {
   background-color: #384457;

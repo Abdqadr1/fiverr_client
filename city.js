@@ -58,45 +58,5 @@ links.forEach(link => {
 })
 
 
-//modal
-const compareBtn = document.querySelector("li a#compareBtn")
-const modalTag = document.querySelector("div#modal");
-console.log(modalTag)
-const myModal = new bootstrap.Modal(modalTag, {
-  keyboard: false
-})
-compareBtn.onclick = event => myModal.show();
+import "./compare.js"
 
-// google pie chart
-const chartDiv = document.querySelector("div#pieChart");
-const tdGraphics = document.querySelectorAll("td.graphic")
-google.charts.load('current', { 'packages': ['corechart'] });
-tdGraphics.forEach(td => {
-    const chartDiv = td.querySelector("div#pieChart");
-    google.charts.setOnLoadCallback(drawChart);
-    function drawChart() {
-        const data = google.visualization.arrayToDataTable([
-            ['Property Type', 'Number'],
-            ['Single Family',  2],
-            ['Multi Family', 4],
-            ['Commercial',  6]
-        ]);
-        const options = {
-            backgroundColor: 'transparent',
-            legend:'none',
-            width: '100%',
-            height: '100%',
-            pieSliceText: 'none',
-            chartArea: {
-                left: "3%",
-                top: "3%",
-                height: "200",
-                width: "300",
-        }
-    };
-
-        const chart = new google.visualization.PieChart(chartDiv);
-
-        chart.draw(data, options);
-    }
-})

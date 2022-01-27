@@ -222,65 +222,6 @@
                                                         </tr>
                                                     </tbody>
                                                 </table>
-                                                <!-- compare 2 cars table -->
-                                                <table
-                                                    class="table table-bordered mt-3 border table-striped table-hover"
-                                                    id="compareTable">
-                                                    <tbody class="text-center">
-                                                        <tr>
-                                                            <td class="head">Typical Snatched Up Lien
-                                                                <a href="" class="btn btn-secondary py-0 px-2"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#exampleModal">
-                                                                    <i class="bi bi-box-arrow-up-right"></i>
-                                                                </a>
-                                                            </td>
-                                                            <td></td>
-                                                            <td class="head">Typical No Bid Lien
-                                                                <a href="" class="btn btn-secondary py-0 px-2"
-                                                                    data-bs-toggle="modal"
-                                                                    data-bs-target="#exampleModal">
-                                                                    <i class="bi bi-box-arrow-up-right"></i>
-                                                                </a>
-                                                            </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>$4,365</td>
-                                                            <th>Avg Sale Amnt.</th>
-                                                            <td>$2,312</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>$5,505</td>
-                                                            <th>Avg Premium Paid</th>
-                                                            <td>--</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>3</td>
-                                                            <th>Est. No. of Bids</th>
-                                                            <td>0</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>&lt; Graphic &gt;</td>
-                                                            <th>Property Type</th>
-                                                            <td>&lt; Graphic &gt; </td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>$286,765</td>
-                                                            <th>Avg Home Value</th>
-                                                            <td>$113,654</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>10+ years</td>
-                                                            <th>Length of Ownership</th>
-                                                            <td>Less than 2 years</td>
-                                                        </tr>
-                                                        <tr>
-                                                            <td>1-2</td>
-                                                            <th>Active Mortgs</th>
-                                                            <td>0</td>
-                                                        </tr>
-                                                    </tbody>
-                                                </table>
                                                 <!-- that link takes you to a page called 'Search Results' where the tax liens are displayed -->
                                                 <!-- <a href="" class="btn btn-primary mx-auto mt-3 d-block w-50">See Full
                                                     Report</a> -->
@@ -296,6 +237,14 @@
                         </div>
                         <!-- show tax liens here -->
                         <div class="border m-0">
+                            <div class="row justify-content-around mt-2 text-center fs-5">
+                                <div class="col">
+                                    Tax Liens to be sold <br><a href="">Register Now</a>
+                                </div>
+                                <div class="col">
+                                    Countdown to <b>2/18/22</b> <br> 3 days left at 5pm EST
+                                </div>
+                            </div>
                             <!-- search results list -->
                             <div class="container my-3">
                                 <div class="row g-2">
@@ -306,7 +255,7 @@
                                                 <div class="border search-item-header py-1">
                                                     <div class="d-flex">
                                                         <span class="ms-2 me-1" style="font-size: 12px;">
-                                                            <input class="form-check-input ms-1" type="checkbox"
+                                                            <input class="form-check-input ms-1 check" type="checkbox"
                                                                 value="" id="flexCheckDefault"><br>Add
                                                         </span>
                                                         <span class="fs-6 ms-lg-2 mt-2">Tax Sale Certificate
@@ -341,7 +290,7 @@
                                                 <div class="border search-item-header py-1">
                                                     <div class="d-flex">
                                                         <span class="ms-2 me-1" style="font-size: 12px;">
-                                                            <input class="form-check-input ms-1" type="checkbox"
+                                                            <input class="form-check-input ms-1 check" type="checkbox"
                                                                 value="" id="flexCheckDefault"><br>Add
                                                         </span>
                                                         <span class="fs-6 ms-1 ms-lg-3 mt-1">Tax Sale Certificate<br>
@@ -377,15 +326,25 @@
                                 </div>
                             </div>
                             <!-- action tabs -->
-                            <div class="py-1 text-center border">Select any 2 items to compare</div>
+                            <div class="" id="note">Select any 2 items to compare</div>
                             <ul class="actions-list d-flex px-2 py-2 m-0">
-                                <li class="py-3 bg-success text-white">Select All</li>
-                                <li class="py-1 pt-lg-2 px-lg-3 px-xl-4 px-2 bg-danger text-white">Deselect All</li>
+                                <li class="bg-success text-white">
+                                    <a class="btn btn-success action-btn">Select all</a>
+                                </li>
+                                <li class="bg-danger text-white">
+                                    <a class="btn btn-danger action-btn pt-sm-1 pt-xl-2">Deselect all</a>
+                                </li>
                                 <li class="py-3 filter ps-0">Filter</li>
-                                <li class="bg-primary text-white"><a id="compareBtn"
-                                        class="btn btn-secondary">Compare</a></li>
-                                <li class="small-text"><a class="btn btn-secondary py-1">Calculate Avg Report</a></li>
-                                <li class="small-text"><a class="btn btn-secondary py-1 pt-lg-2">Add to My liens</a>
+                                <li class="bg-primary text-white">
+                                    <a id="compareBtn" class="btn action-btn">Compare</a>
+                                </li>
+                                <li class="small-text">
+                                    <a class="btn btn-secondary big py-md-0 pt-xl-1">Calculate Avg
+                                        Report</a>
+                                </li>
+                                <li class="small-text">
+                                    <a class="btn btn-secondary big py-md-0 pt-xl-1" style="line-height: 25px;">
+                                        Add to My liens</a>
                                 </li>
                             </ul>
                         </div>
@@ -454,7 +413,7 @@
         </div>
         <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-lg">
-                <div class="modal-content">
+                <div class="modal-content" style="height: 600px;">
                     <div class="modal-header py-3 text-center">
                         <h5 class="modal-title mx-auto">Calculate Average Report</h5>
                         <button type="button" class="btn-close ms-0" data-bs-dismiss="modal"
