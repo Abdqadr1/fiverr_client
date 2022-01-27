@@ -111,7 +111,7 @@
                             <div class="p-2">
                                 <div class="border active-lien">
                                     <div class="border search-item-header py-1">
-                                        <div class="d-flex pb-4">
+                                        <div class="d-flex">
                                             <span class="ms-2 me-1" style="font-size: 12px;">
                                                 <input class="form-check-input ms-1" type="checkbox" value=""
                                                     id="flexCheckDefault"><br>Add
@@ -156,10 +156,8 @@
                                                 <br><b>18-067</b></span>
                                         </div>
                                         <div class="row justify-content-around mt-2 mx-0 text-center">
-                                            <span class="col-4"><small>Tax Lien Sale
-                                                    Amount</small><br><b>$4617.09</b></span>
+                                            <span class="col-4"><small>Total Price</small><br><b>$4617.09</b></span>
                                             <span class="col-3"><small>Int. Rate</small><br><b>352</b></span>
-                                            <span class="col-4"><small>Est. No. of Bids</small><br><b>11</b></span>
                                             <span class="col-3"><small>Block</small><br><b>11</b></span>
                                             <span class="col-2"><small>Lot</small><br><b>5</b></span>
                                         </div>
@@ -252,7 +250,77 @@
                 </div>
             </div>
         </div>
-
+    </div>
+    <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header py-3 text-center">
+                    <h5 class="modal-title mx-auto">Calculate Average Report</h5>
+                    <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="height: 400px;overflow-y: auto;">
+                    <!-- compare 2 cars table -->
+                    <table class="table table-bordered mt-3 border table-striped table-hover" id="compareTable">
+                        <tbody class="text-center">
+                            <tr>
+                                <td class="head">Typical Snatched Up Lien
+                                    <a href="" class="btn btn-secondary py-0 px-2" data-bs-toggle="modal"
+                                        data-bs-target="#exampleModal">
+                                        <i class="bi bi-box-arrow-up-right"></i>
+                                    </a>
+                                </td>
+                                <td></td>
+                                <td class="head">Typical No Bid Lien
+                                    <a href="" class="btn btn-secondary py-0 px-2" data-bs-toggle="modal"
+                                        data-bs-target="#exampleModal">
+                                        <i class="bi bi-box-arrow-up-right"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>$4,365</td>
+                                <th>Avg Sale Amnt.</th>
+                                <td>$2,312</td>
+                            </tr>
+                            <tr>
+                                <td>$5,505</td>
+                                <th>Avg Premium Paid</th>
+                                <td>--</td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <th>Est. No. of Bids</th>
+                                <td>0</td>
+                            </tr>
+                            <tr>
+                                <td class="graphic">
+                                    <div id="pieChart"></div>
+                                </td>
+                                <th>Property Type</th>
+                                <td class="graphic">
+                                    <div id="pieChart"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>$286,765</td>
+                                <th>Avg Home Value</th>
+                                <td>$113,654</td>
+                            </tr>
+                            <tr>
+                                <td>10+ years</td>
+                                <th>Length of Ownership</th>
+                                <td>Less than 2 years</td>
+                            </tr>
+                            <tr>
+                                <td>1-2</td>
+                                <th>Active Mortgs</th>
+                                <td>0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="search_results.js" type="module"></script>
 </body>

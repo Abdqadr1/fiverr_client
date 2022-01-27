@@ -379,7 +379,7 @@ div.search-item {
 div.search-item-header {
   color: rgb(61, 58, 58);
   font-size: 14px;
-  height: 160px;
+  height: 105px;
   padding: 10px 0;
   cursor: pointer;
 }
@@ -454,4 +454,34 @@ div img.img-map {
   font-size: 10px;
   line-height: 11px;
   text-align: center;
+}
+td.graphic {
+  display: block;
+  min-width: 300px;
+  width: 100%;
+  position: relative;
+  padding-bottom: 65%;
+  height: 0;
+  overflow: hidden;
+}
+div#pieChart {
+  margin: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+a#compareBtn {
+  width: 100%;
+  height: 100%;
+  font-size: 16px;
+  padding-top: 12px;
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+}
+a#compareBtn:hover {
+  background-color: #384457;
+  border: 2px solid #8c8c8c;
 }

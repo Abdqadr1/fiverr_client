@@ -101,7 +101,7 @@
                     <div class="row justify-content-around py-2 mx-0 border bg-light mb-4">
                         <div class="col-2">
                             <img src="assets/user.png" alt="" class="rounded-pill" height="70px" width="100%">
-                            <span class="text-center">John B</span>
+                            <span class="text-center d-inline-block w-100">John B</span>
                         </div>
                         <div class="col-10">
                             Hi and welcome to Nutley. <br /> The nicest city in NJ and the home to...
@@ -165,7 +165,7 @@
                                         </div>
                                     </div>
                                     <div class="carousel-item" id="2">
-                                        <img src="assets/img_values.png" class="d-block w-100" height="500px" alt="">
+                                        <img src="assets/img_values.png" class="d-block w-100" height="350px" alt="">
                                     </div>
                                     <div class="carousel-item" id="3">
                                         <div class="third-slide my-3 mx-1">
@@ -292,19 +292,102 @@
                                         </div>
                                     </div>
                                 </div>
-                                <!-- <button class="carousel-control-prev" type="button" data-bs-target="#slider"
-                                    data-bs-slide="prev">
-                                    <span class="carousel-control-prev-icon" aria-hidden="true"
-                                        style="background-color: black;"></span>
-                                    <span class="visually-hidden">Previous</span>
-                                </button>
-                                <button class="carousel-control-next" type="button" data-bs-target="#slider"
-                                    data-bs-slide="next">
-                                    <span class="carousel-control-next-icon" aria-hidden="true"
-                                        style="background-color: black;"></span>
-                                    <span class="visually-hidden">Next</span>
-                                </button> -->
                             </div>
+                        </div>
+                        <!-- show tax liens here -->
+                        <div class="border m-0">
+                            <!-- search results list -->
+                            <div class="container my-3">
+                                <div class="row g-2">
+                                    <!-- for active liens -->
+                                    <div class="col-6">
+                                        <div class="p-2">
+                                            <div class="border active-lien">
+                                                <div class="border search-item-header py-1">
+                                                    <div class="d-flex">
+                                                        <span class="ms-2 me-1" style="font-size: 12px;">
+                                                            <input class="form-check-input ms-1" type="checkbox"
+                                                                value="" id="flexCheckDefault"><br>Add
+                                                        </span>
+                                                        <span class="fs-6 ms-lg-2 mt-2">Tax Sale Certificate
+                                                            <span class="ms-2 text-center">#009</span></span>
+                                                    </div>
+                                                    <div class="row justify-content-around mt-2 mx-0 text-center">
+                                                        <span class="col-6">Total Price<br><b>$4617.09</b></span>
+                                                        <span class="col-3">Block<br><b>352</b></span>
+                                                        <span class="col-2">Lot<br><b>11</b></span>
+                                                    </div>
+                                                </div>
+                                                <div class="row justify-content-between mt-2 mx-1">
+                                                    <div class="col-5 p-0">
+                                                        <img src="assets/img_map.png" height="80px" width="100%">
+                                                    </div>
+                                                    <div class="col-7 ps-1 mx-0 search-query-text">
+                                                        <address class="mb-2">1499 Hackenbee St Nutley, NJ 07015
+                                                        </address>
+                                                        <div class="text-uppercase">STATUS: <span>Active</span></div>
+                                                    </div>
+                                                    <div class="col-6 text-center">Source:<br><b>MLS</b></div>
+                                                    <div class="col-6">Est. Value: <b>$191,562</b></div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <!-- for old liens -->
+                                    <div class="col-6 active-lien">
+                                        <div class="p-2">
+                                            <div class="border old-lien">
+                                                <div class="border search-item-header py-1">
+                                                    <div class="d-flex">
+                                                        <span class="ms-2 me-1" style="font-size: 12px;">
+                                                            <input class="form-check-input ms-1" type="checkbox"
+                                                                value="" id="flexCheckDefault"><br>Add
+                                                        </span>
+                                                        <span class="fs-6 ms-1 ms-lg-3 mt-1">Tax Sale Certificate<br>
+                                                            <small>Sold on <a href="">Dec 24, 2018</a></small></span>
+                                                        <span class="mt-2 ms-1 ms-lg-3">Cert. No
+                                                            <br><b>18-067</b></span>
+                                                    </div>
+                                                    <div class="row justify-content-around mt-2 mx-0 text-center">
+                                                        <span class="col-4"><small>Total
+                                                                Price</small><br><b>$4617.09</b></span>
+                                                        <span class="col-3"><small>Int.
+                                                                Rate</small><br><b>352</b></span>
+                                                        <span class="col-3"><small>Block</small><br><b>11</b></span>
+                                                        <span class="col-2"><small>Lot</small><br><b>5</b></span>
+                                                    </div>
+                                                </div>
+                                                <div class="row justify-content-between mt-2 mx-1">
+                                                    <div class="col-5 p-0">
+                                                        <img src="assets/img_map.png" height="80px" width="100%">
+                                                    </div>
+                                                    <div class="col-7 ps-1 mx-0 search-query-text">
+                                                        <address class="mb-2">1499 Hackenbee St Nutley, NJ 07015
+                                                        </address>
+                                                        <div class="text-uppercase">STATUS: <span>OLD</span></div>
+                                                    </div>
+                                                    <div class="col-6 text-center">Source:<br><b>MLS</b></div>
+                                                    <div class="col-6">Est. Value: <b>$191,562</b></div>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- action tabs -->
+                            <div class="py-1 text-center border">Select any 2 items to compare</div>
+                            <ul class="actions-list d-flex px-2 py-2 m-0">
+                                <li class="py-3 bg-success text-white">Select All</li>
+                                <li class="py-1 pt-lg-2 px-lg-3 px-xl-4 px-2 bg-danger text-white">Deselect All</li>
+                                <li class="py-3 filter ps-0">Filter</li>
+                                <li class="bg-primary text-white"><a id="compareBtn"
+                                        class="btn btn-secondary">Compare</a></li>
+                                <li class="small-text"><a class="btn btn-secondary py-1">Calculate Avg Report</a></li>
+                                <li class="small-text"><a class="btn btn-secondary py-1 pt-lg-2">Add to My liens</a>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -369,59 +452,73 @@
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+        <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <div class="modal-header py-2">
+                    <div class="modal-header py-3 text-center">
                         <h5 class="modal-title mx-auto">Calculate Average Report</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <button type="button" class="btn-close ms-0" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
                     </div>
                     <div class="modal-body" style="height: 400px;overflow-y: auto;">
-                        <!-- sale Certificate header -->
-                        <div class="row justify-content-center mt-2 border py-2">
-                            <div class="col-2 mx-1 form-check px-2">
-                                <input class="form-check-input mx-auto" type="checkbox" value=""
-                                    id="flexCheckDefault"><br>
-                                <label class="form-check-label mx-auto d-inline-block text-center">
-                                    Add
-                                </label>
-                            </div>
-                            <div class="col-7 mx-1 text-center">
-                                <h4 class="m-0">Tax Sale Certificate</h4>
-                                <p class="m-0">&lt;&lt; HEADER &gt;&gt;</p>
-                            </div>
-                        </div>
-                        <!-- address -->
-                        <div class="w-80 mx-auto text-center mb-3 border py-2">
-                            <b class="me-3 mb-3">1569 Hazkenzenck Ave</b> Nutley, NJ 07014
-                        </div>
-                        <div class="row justify-content-around gx-2">
-                            <div class="col-6 border">
-                                <img src="assets/img_calendar.png" class="" alt="Tax lien image" height="150px"
-                                    width="100%">
-                            </div>
-                            <div class="col-5 p-3">
-                                <p>Est. Value<br><b>$291,682</b></p>
-                                <p>Single Family - Hom sole on 2,875</p>
-                            </div>
-                        </div>
-                        <div class="row justify-content-around text-left">
-                            <div class="col-6 py-1">Avg. Sale Amnt.</div>
-                            <div class="col-5 py-1">$9,345</div>
-                            <div class="col-6 py-1">Avg. Premium Paid</div>
-                            <div class="col-5 py-1">$13,550</div>
-                            <div class="col-6 py-1">Avg. No. of Bids</div>
-                            <div class="col-5 py-1">5.25</div>
-                            <div class="col-6 py-1">Property Type</div>
-                            <div class="col-5 py-1">&lt; Graphic &gt;</div>
-                            <div class="col-6 py-1">Avg Home Value</div>
-                            <div class="col-5 py-1">$445,700</div>
-                            <div class="col-6 py-1">Avg Length of Ownership</div>
-                            <div class="col-5 py-1">3.5</div>
-                            <div class="col-10">
-                                <div id="pieChart" class="mx-auto mt-3" style="width: 100%; height: auto;"></div>
-                            </div>
-                        </div>
+                        <!-- compare 2 cars table -->
+                        <table class="table table-bordered mt-3 border table-striped table-hover" id="compareTable">
+                            <tbody class="text-center">
+                                <tr>
+                                    <td class="head">Typical Snatched Up Lien
+                                        <a href="" class="btn btn-secondary py-0 px-2" data-bs-toggle="modal">
+                                            <i class="bi bi-box-arrow-up-right"></i>
+                                        </a>
+                                    </td>
+                                    <td></td>
+                                    <td class="head">Typical No Bid Lien
+                                        <a href="" class="btn btn-secondary py-0 px-2" data-bs-toggle="modal"
+                                            data-bs-target="#exampleModal">
+                                            <i class="bi bi-box-arrow-up-right"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>$4,365</td>
+                                    <th>Avg Sale Amnt.</th>
+                                    <td>$2,312</td>
+                                </tr>
+                                <tr>
+                                    <td>$5,505</td>
+                                    <th>Avg Premium Paid</th>
+                                    <td>--</td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <th>Est. No. of Bids</th>
+                                    <td>0</td>
+                                </tr>
+                                <tr>
+                                    <td class="graphic">
+                                        <div id="pieChart"></div>
+                                    </td>
+                                    <th>Property Type</th>
+                                    <td class="graphic">
+                                        <div id="pieChart"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>$286,765</td>
+                                    <th>Avg Home Value</th>
+                                    <td>$113,654</td>
+                                </tr>
+                                <tr>
+                                    <td>10+ years</td>
+                                    <th>Length of Ownership</th>
+                                    <td>Less than 2 years</td>
+                                </tr>
+                                <tr>
+                                    <td>1-2</td>
+                                    <th>Active Mortgs</th>
+                                    <td>0</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

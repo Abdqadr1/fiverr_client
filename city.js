@@ -57,37 +57,46 @@ links.forEach(link => {
     }
 })
 
+
+//modal
+const compareBtn = document.querySelector("li a#compareBtn")
+const modalTag = document.querySelector("div#modal");
+console.log(modalTag)
+const myModal = new bootstrap.Modal(modalTag, {
+  keyboard: false
+})
+compareBtn.onclick = event => myModal.show();
+
 // google pie chart
 const chartDiv = document.querySelector("div#pieChart");
-google.charts.load('current', {'packages':['corechart']});
-google.charts.setOnLoadCallback(drawChart);
-function drawChart() {
-    const data = google.visualization.arrayToDataTable([
-          ['Property Type', 'Number'],
-          ['Single Family',  2],
-          ['Multi Family', 4],
-          ['Commercial',  6]
-    ]);
-    const options = {
-        title: 'Property Type',
-        is3D: true,
-        pieSliceText: 'none',
-        pieSliceTextStyle: {
-            display: 'none'
-        },
-        legend: {
-            position: 'right',
-            textStyle: {fontSize: 14, fontName: 'Overpass' }
-        },
-        slices: {
-            // 0: { color: '#e0e0e0' },
-            // 1: { color: '#e6e1e1' },
-            // 2: {color: '#8c8c8c'}
-        },
-        chartArea:{width:'90%'}
+const tdGraphics = document.querySelectorAll("td.graphic")
+google.charts.load('current', { 'packages': ['corechart'] });
+tdGraphics.forEach(td => {
+    const chartDiv = td.querySelector("div#pieChart");
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+        const data = google.visualization.arrayToDataTable([
+            ['Property Type', 'Number'],
+            ['Single Family',  2],
+            ['Multi Family', 4],
+            ['Commercial',  6]
+        ]);
+        const options = {
+            backgroundColor: 'transparent',
+            legend:'none',
+            width: '100%',
+            height: '100%',
+            pieSliceText: 'none',
+            chartArea: {
+                left: "3%",
+                top: "3%",
+                height: "200",
+                width: "300",
+        }
     };
 
-    const chart = new google.visualization.PieChart(chartDiv);
+        const chart = new google.visualization.PieChart(chartDiv);
 
-    chart.draw(data, options);
-}
+        chart.draw(data, options);
+    }
+})
