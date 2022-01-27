@@ -102,3 +102,107 @@ propertyListLi.forEach(li => {
         console.log(filterObject)
     }
 })
+
+// for bottom filter in search and city page
+const bottomFilterObject = {
+    saleAmount:[Number.MIN_VALUE, 2000],
+    propertyType: [],
+    homeValue:[],
+    /**
+     * lengthOfOwnership: value 1 = 3 years or fewer, value 2 = 3 - 10 years, 
+     *  value 3 = 10 - 20years, value 4 = 20+ years
+     *  @default value is 1
+     */
+    lengthOfOwnership: [Number.MIN_VALUE, 3],
+}
+const bottomLengthBar = document.querySelector("div#bottom ul.length-bar");
+const bottomSalesBar = document.querySelector("div#bottom ul.sales-amount-list");
+const bottomPropertyList = document.querySelector("div#bottom ul#property-type");
+const bottomPropertyListLi = bottomPropertyList.querySelectorAll("li");
+const bottomSalesBarLi = bottomSalesBar.querySelectorAll("li");
+const bottomLengthBarLi = bottomLengthBar.querySelectorAll("li");
+
+const bottomHomeValueInputs = document.querySelectorAll("div#bottom input.home-value");
+const bottomSaleValueInputs = document.querySelectorAll("div#bottom input.sale-value");
+bottomHomeValueInputs.forEach(input => {
+    input.onkeyup = () => bottomFilterObject.homeValue[Number(input.id) - 1] = input.valueAsNumber
+});
+bottomSaleValueInputs.forEach(input => {
+    input.onkeyup = () => bottomFilterObject.saleAmount[Number(input.id) - 1] = input.valueAsNumber
+})
+// length of property progress bar for bottom filter
+bottomLengthBarLi.forEach(element => {
+    element.onclick = event => {
+        const id = element.id;
+        switch (Number(id)) {
+            case 1:
+                bottomFilterObject.lengthOfOwnership = [Number.MIN_VALUE, 3];
+                break;
+            case 2:
+                bottomFilterObject.lengthOfOwnership = [3.001, 5];
+                break;
+            case 3:
+                bottomFilterObject.lengthOfOwnership = [5.001, 10];
+                break;
+            case 4:
+                bottomFilterObject.lengthOfOwnership = [10.001, Number.MAX_VALUE];
+                break;
+        }
+        bottomLengthBarLi.forEach(el => {
+            const _id = el.id;
+            if (id === _id) {
+                el.classList.add("active");
+                el.classList.remove("after")
+            } else {
+                el.classList.remove("active");
+                if (_id < id) el.classList.add("after");
+                else el.classList.remove("after")
+            } 
+        })
+    }
+})
+// sales amount progress bar
+bottomSalesBarLi.forEach(element => {
+    element.onclick = event => {
+        const id = element.id;
+        switch (Number(id)) {
+            case 1:
+                bottomFilterObject.saleAmount = [Number.MIN_VALUE, 2000];
+                break;
+            case 2:
+                bottomFilterObject.saleAmount = [2001, 5000];
+                break;
+            case 3:
+                bottomFilterObject.saleAmount = [5001, 10000];
+                break;
+            case 4:
+                bottomFilterObject.saleAmount = [10001, Number.MAX_VALUE];
+                break;
+        }
+        bottomSalesBarLi.forEach(el => {
+            const _id = el.id;
+            if (id === _id) {
+                el.classList.add("active");
+                el.classList.remove("after")
+            } else {
+                el.classList.remove("active");
+                if (_id < id) el.classList.add("after");
+                else el.classList.remove("after")
+            } 
+        })
+    }
+})
+
+// property type list click handler
+bottomPropertyListLi.forEach(li => {
+    li.onclick = event => {
+        if (li.classList.contains("active")) {
+            li.classList.remove("active");
+            bottomFilterObject.propertyType.splice(bottomFilterObject.propertyType.indexOf(li.textContent), 1)
+        } else {
+            li.classList.add("active");
+            bottomFilterObject.propertyType.push(li.textContent)
+        }
+        console.log(bottomFilterObject)
+    }
+})

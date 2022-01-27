@@ -5,16 +5,31 @@ const myModal = new bootstrap.Modal(modalTag, {
   keyboard: false
 })
 const selectedTax = []; //array to hold the selected tax lien for comparison
+const selectedIds = []; // array to hold the lien numbers of selected lien
+const findLienNo = (input) => {
+    const parent = input.parentElement.parentElement;
+    const text = parent.querySelector("#lienNo").textContent
+    if (text.indexOf('#') == 0) {
+        return text.substring(1);
+    }
+    return text;
+}
 const allCheckInputs = document.querySelectorAll("input.check");
 const noteDiv = document.querySelector("div#note")
 allCheckInputs.forEach(input => {
     input.onchange = () => {
+        const id = findLienNo(input);
         if (input.checked) {
             selectedTax.push(input)
+            selectedIds.push(id)
         } else {
             selectedTax.splice(selectedTax.indexOf(input), 1)
-            // console.log(selectedTax);
+            selectedIds.splice(selectedIds.indexOf(id), 1)
         }
+        // add selected ids list to the url
+        const url = new URL(window.location);
+        url.searchParams.set('myList', selectedIds.join(","));
+        history.pushState({}, '', url);
         if (selectedTax.length == 2) {
             noteDiv.textContent = "2 of 2 items selected. Ready to compare!"
         } else if (selectedTax.length < 2) {
