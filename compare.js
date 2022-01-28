@@ -6,19 +6,22 @@ const myModal = new bootstrap.Modal(modalTag, {
 })
 const selectedTax = []; //array to hold the selected tax lien for comparison
 const selectedIds = []; // array to hold the lien numbers of selected lien
-const findLienNo = (input) => {
-    const parent = input.parentElement.parentElement;
-    const text = parent.querySelector("#lienNo").textContent
+const findLienNo = (input, id) => {
+    let text = "";
+    if (id == null) {
+        const parent = input.parentElement.parentElement;
+        text = parent.querySelector("#lienNo").textContent
+    } else text = id;
     if (text.indexOf('#') == 0) {
         return text.substring(1);
-    }
+        }
     return text;
 }
 const allCheckInputs = document.querySelectorAll("input.check");
 const noteDiv = document.querySelector("div#note")
 allCheckInputs.forEach(input => {
     input.onchange = () => {
-        const id = findLienNo(input);
+        const id = findLienNo(input, null);
         if (input.checked) {
             selectedTax.push(input)
             selectedIds.push(id)
@@ -42,6 +45,31 @@ allCheckInputs.forEach(input => {
 compareBtn.onclick = event => {
     if (selectedTax.length === 2) {
         myModal.show();
+    }
+}
+
+// add selected liens to My List
+const addList = document.querySelector("ul#addList")
+const addBtn = document.querySelector("a#addBtn")
+addBtn.onclick = event => {
+    event.preventDefault();
+    if (selectedTax.length > 0) {
+        addList.classList.remove("d-none")
+        addList.innerHTML = `<span class="legend">Newly Added</span>`;
+        selectedTax.forEach(tax => {
+            const parent = tax.parentElement.parentElement.parentElement.parentElement
+            const id = parent.querySelector("#lienNo")
+            const address = parent.querySelector("address")
+            const li = document.createElement("li");
+            li.innerHTML = `<div class="row justify-content-center">
+                                <div class="col-9">
+                                    <span class="name">Lien #${findLienNo(null, id.textContent)}</span>
+                                    <span class="address">${address.textContent}</span>
+                                </div>
+                                <div class="col-3 fs-3" title="Delete"><i class="bi bi-trash text-danger"></i></div>
+                            </div>`;
+            addList.appendChild(li)
+        })
     }
 }
 
@@ -77,3 +105,4 @@ tdGraphics.forEach(td => {
         chart.draw(data, options);
     }
 })
+

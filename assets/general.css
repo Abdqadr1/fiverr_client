@@ -18,6 +18,10 @@ body {
   margin: 0;
   font-family: "Overpass", "Inconsolata", monospace;
 }
+div#myListSide {
+  max-height: 75vh;
+  overflow-y: auto;
+}
 .filter {
   display: inline-block;
   width: 80px;

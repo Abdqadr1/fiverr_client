@@ -268,14 +268,14 @@
                                 Report</a>
                         </li>
                         <li>
-                            <a class="btn btn-secondary big" style="line-height: 25px;">
+                            <a class="btn btn-secondary big" href="" style="line-height: 25px;" id="addBtn">
                                 Add to My liens</a>
                         </li>
                     </ul>
                 </div>
 
             </div>
-            <div class="col-4 border rounded p-0">
+            <div class="col-4 border rounded p-0" id="myListSide">
                 <div class="bg-light">
                     <h4 class="text-center py-3">My List</h4>
                     <!-- my list -->
@@ -331,6 +331,10 @@
                                 <div class="col-3 fs-3" title="Delete"><i class="bi bi-trash text-danger"></i></div>
                             </div>
                         </li>
+                    </ul>
+                    <!-- list to add new lien -->
+                    <ul class="list border d-none" id="addList">
+                        <span class="legend">Newly Added</span>
                     </ul>
                 </div>
             </div>
