@@ -124,7 +124,7 @@
     </nav>
     <div class="container-fluid contain">
         <div class="row justify-content-around mx-0 pt-2 img-bg">
-            <div class="col-7 border mx-0 p-0">
+            <div class="col-7 border mx-0 p-0" id="leftSide">
                 <div class="search-queries mx-4 mt-2 mb-0 pb-2 pt-2 border-bottom">
                     <b class="text-uppercase ">search criteria: </b>
                     <span class="word-space"> Lienholder: US Bank | saleAmnt: $5,000 - 10,000 | estValue: $46,000+ |
@@ -132,12 +132,12 @@
                     <div class="text-uppercase pt-3"><b>results: </b>3</div>
                 </div>
                 <!-- search results list -->
-                <div class="container my-1">
+                <div class="container my-1" id="resultsDiv">
                     <div class="row g-2">
                         <!-- for active liens -->
-                        <div class="col-6">
+                        <div class="col-6 active-lien">
                             <div class="p-2">
-                                <div class="border active-lien">
+                                <div class="border">
                                     <div class="border search-item-header py-1">
                                         <div class="d-flex">
                                             <span class="ms-2 me-1" style="font-size: 12px;">
@@ -170,9 +170,129 @@
                             </div>
                         </div>
                         <!-- for old liens -->
-                        <div class="col-6 active-lien">
+                        <div class="col-6 old-lien">
                             <div class="p-2">
-                                <div class="border old-lien">
+                                <div class="border">
+                                    <div class="border search-item-header py-1">
+                                        <div class="d-flex">
+                                            <span class="ms-2 me-1" style="font-size: 12px;">
+                                                <input class="form-check-input ms-1 check" type="checkbox" value=""
+                                                    id="flexCheckDefault"><br>Add
+                                            </span>
+                                            <span class="fs-6 ms-1 ms-lg-3 mt-1">Tax Sale Certificate<br>
+                                                <small>Sold on <a href="">Dec 24, 2018</a></small></span>
+                                            <span class="mt-2 ms-1 ms-lg-3">Cert. No
+                                                <br><b id="lienNo">18-067</b></span>
+                                        </div>
+                                        <div class="row justify-content-around mt-2 mx-0 text-center">
+                                            <span class="col-4"><small>Total
+                                                    Price</small><br><b>$4617.09</b></span>
+                                            <span class="col-3"><small>Int.
+                                                    Rate</small><br><b>352</b></span>
+                                            <span class="col-3"><small>Block</small><br><b>11</b></span>
+                                            <span class="col-2"><small>Lot</small><br><b>5</b></span>
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-between mt-2 mx-1">
+                                        <div class="col-5 p-0">
+                                            <img src="assets/img_map.png" height="80px" width="100%">
+                                        </div>
+                                        <div class="col-7 ps-1 mx-0 search-query-text">
+                                            <address class="mb-2">1499 Hackenbee St Nutley, NJ 07015
+                                            </address>
+                                            <div class="text-uppercase">STATUS: <span>OLD</span></div>
+                                        </div>
+                                        <div class="col-6 text-center">Source:<br><b>MLS</b></div>
+                                        <div class="col-6">Est. Value: <b>$191,562</b></div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <!-- for old liens -->
+                        <div class="col-6 old-lien">
+                            <div class="p-2">
+                                <div class="border">
+                                    <div class="border search-item-header py-1">
+                                        <div class="d-flex">
+                                            <span class="ms-2 me-1" style="font-size: 12px;">
+                                                <input class="form-check-input ms-1 check" type="checkbox" value=""
+                                                    id="flexCheckDefault"><br>Add
+                                            </span>
+                                            <span class="fs-6 ms-1 ms-lg-3 mt-1">Tax Sale Certificate<br>
+                                                <small>Sold on <a href="">Dec 24, 2018</a></small></span>
+                                            <span class="mt-2 ms-1 ms-lg-3">Cert. No
+                                                <br><b id="lienNo">18-067</b></span>
+                                        </div>
+                                        <div class="row justify-content-around mt-2 mx-0 text-center">
+                                            <span class="col-4"><small>Total
+                                                    Price</small><br><b>$4617.09</b></span>
+                                            <span class="col-3"><small>Int.
+                                                    Rate</small><br><b>352</b></span>
+                                            <span class="col-3"><small>Block</small><br><b>11</b></span>
+                                            <span class="col-2"><small>Lot</small><br><b>5</b></span>
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-between mt-2 mx-1">
+                                        <div class="col-5 p-0">
+                                            <img src="assets/img_map.png" height="80px" width="100%">
+                                        </div>
+                                        <div class="col-7 ps-1 mx-0 search-query-text">
+                                            <address class="mb-2">1499 Hackenbee St Nutley, NJ 07015
+                                            </address>
+                                            <div class="text-uppercase">STATUS: <span>OLD</span></div>
+                                        </div>
+                                        <div class="col-6 text-center">Source:<br><b>MLS</b></div>
+                                        <div class="col-6">Est. Value: <b>$191,562</b></div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <!-- for old liens -->
+                        <div class="col-6 old-lien">
+                            <div class="p-2">
+                                <div class="border">
+                                    <div class="border search-item-header py-1">
+                                        <div class="d-flex">
+                                            <span class="ms-2 me-1" style="font-size: 12px;">
+                                                <input class="form-check-input ms-1 check" type="checkbox" value=""
+                                                    id="flexCheckDefault"><br>Add
+                                            </span>
+                                            <span class="fs-6 ms-1 ms-lg-3 mt-1">Tax Sale Certificate<br>
+                                                <small>Sold on <a href="">Dec 24, 2018</a></small></span>
+                                            <span class="mt-2 ms-1 ms-lg-3">Cert. No
+                                                <br><b id="lienNo">18-067</b></span>
+                                        </div>
+                                        <div class="row justify-content-around mt-2 mx-0 text-center">
+                                            <span class="col-4"><small>Total
+                                                    Price</small><br><b>$4617.09</b></span>
+                                            <span class="col-3"><small>Int.
+                                                    Rate</small><br><b>352</b></span>
+                                            <span class="col-3"><small>Block</small><br><b>11</b></span>
+                                            <span class="col-2"><small>Lot</small><br><b>5</b></span>
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-between mt-2 mx-1">
+                                        <div class="col-5 p-0">
+                                            <img src="assets/img_map.png" height="80px" width="100%">
+                                        </div>
+                                        <div class="col-7 ps-1 mx-0 search-query-text">
+                                            <address class="mb-2">1499 Hackenbee St Nutley, NJ 07015
+                                            </address>
+                                            <div class="text-uppercase">STATUS: <span>OLD</span></div>
+                                        </div>
+                                        <div class="col-6 text-center">Source:<br><b>MLS</b></div>
+                                        <div class="col-6">Est. Value: <b>$191,562</b></div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <!-- for old liens -->
+                        <div class="col-6 old-lien">
+                            <div class="p-2">
+                                <div class="border">
                                     <div class="border search-item-header py-1">
                                         <div class="d-flex">
                                             <span class="ms-2 me-1" style="font-size: 12px;">
@@ -212,7 +332,7 @@
                     </div>
                 </div>
                 <!-- action tabs -->
-                <div class="fixed-bottom">
+                <div class="sticky-tab">
                     <div class="" id="note">Select any 2 items to compare</div>
                     <ul class="actions-list d-flex px-2 py-2 m-0">
                         <li class="text-white">
