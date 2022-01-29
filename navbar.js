@@ -103,6 +103,26 @@ propertyListLi.forEach(li => {
     }
 })
 
+
+
+//search suggestions list
+const searchDropdown = document.querySelector("div#search-dropdown");
+const searchInput = document.querySelector("input#search-input")
+const suggestions = document.querySelector("div#suggestions")
+searchDropdown.onmouseleave = event => {
+    suggestions.classList.remove("d-block")
+}
+searchInput.onkeyup = event => {
+    const searchQuery = event.target.value;
+    if (searchQuery.length > 0) {
+        suggestions.classList.add("d-block")
+    } else {
+        suggestions.classList.remove("d-block")
+    }
+}
+
+
+
 // for bottom filter in search and city page
 const bottomFilterObject = {
     saleAmount:[Number.MIN_VALUE, 2000],
