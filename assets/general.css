@@ -35,6 +35,7 @@ div#resultsDiv {
   overflow-x: hidden;
 }
 .filter {
+  text-align: left;
   display: inline-block;
   width: 80px;
   padding: 4px 10px;
@@ -44,8 +45,8 @@ div#resultsDiv {
   background-color: white;
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
   background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 16px 12px;
+  background-position: right 0.65rem center;
+  background-size: 16px 15px;
 }
 .dropdown {
   position: relative;
@@ -131,7 +132,6 @@ ul.sales-amount-list li {
   float: left;
   border: none;
   font-size: 12px;
-  word-wrap: break-word;
   text-align: center;
 }
 ul.sales-amount-list li::before {
@@ -420,9 +420,13 @@ div.search-item-header {
   padding: 10px 0;
   cursor: pointer;
 }
+#tax-head span {
+  font-size: 12px !important;
+}
 div.active-lien div.search-item-header {
   background-color: rgb(7, 78, 49);
   color: white;
+  cursor: pointer;
 }
 div.active-lien div.search-item-header:hover {
   background-color: rgb(31, 99, 71);
@@ -431,24 +435,28 @@ div.old-lien div.search-item-header {
   background-color: rgb(150, 142, 142);
   color: rgb(59, 53, 53);
   font-size: 12px;
+  cursor: pointer;
+}
+div.active-lien div.search-item-header {
+  font-size: 14px;
 }
 div.old-lien div.search-item-header:hover {
   background-color: rgb(165, 158, 158);
 }
 div.search-query-text {
-  text-align: center;
+  text-align: left;
+  padding-left: 10px !important;
   font-size: 14px;
 }
 div.sticky-tab {
   position: sticky;
   position: -webkit-sticky;
   bottom: 0;
-  background-color: green;
+  background-color: white;
 }
 ul.actions-list > li {
   width: 16.33%;
   text-align: center;
-  word-wrap: break-word;
   display: inline-block;
   border: 1px solid #7e7f81;
   border-radius: 5px;
@@ -457,6 +465,7 @@ ul.actions-list > li {
   font-size: 15px;
   line-height: 20px;
   cursor: pointer;
+  padding: 0;
 }
 /* ul.actions-list li:hover {
   background-color: #dee2e6;
@@ -466,8 +475,8 @@ ul.actions-list > li a.big {
   padding: 1px 0;
   width: 100%;
   height: 100%;
-  font-size: 18px;
-  line-height: 24px;
+  font-size: 14px;
+  line-height: 20px;
   color: white;
 }
 ul li.half {
@@ -520,10 +529,11 @@ div#pieChart {
 a.action-btn {
   width: 100% !important;
   height: 100% !important;
-  font-size: 16px !important;
-  padding-top: 12px;
+  font-size: 14px !important;
+  padding-top: 10px;
   color: white;
   border: none !important;
+  display: inline-block;
 }
 a#compareBtn {
   background-color: #0d6efd;

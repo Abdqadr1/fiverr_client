@@ -1,0 +1,147 @@
+<!-- modal for comparison-->
+<div class="modal fade" id="compareModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="height: 500px;">
+            <div class="modal-header py-3 text-center">
+                <h5 class="modal-title mx-auto">Comparison Report</h5>
+                <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- compare 2 cars table -->
+                <table class="table table-bordered mt-3 border table-striped table-hover" id="compareTable">
+                    <tbody class="text-center">
+                        <tr>
+                            <td class="head">Typical Snatched Up Lien</td>
+                            <td></td>
+                            <td class="head">Typical No Bid Lien</td>
+                        </tr>
+                        <tr>
+                            <td>$4,365</td>
+                            <th>Avg Sale Amnt.</th>
+                            <td>$2,312</td>
+                        </tr>
+                        <tr>
+                            <td>$5,505</td>
+                            <th>Avg Premium Paid</th>
+                            <td>--</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <th>Est. No. of Bids</th>
+                            <td>--</td>
+                        </tr>
+                        <tr>
+                            <td>Single Fam</td>
+                            <th>Property Type</th>
+                            <td>Multi Fam</td>
+                        </tr>
+                        <tr>
+                            <td>$286,765</td>
+                            <th>Home Value</th>
+                            <td>$113,654</td>
+                        </tr>
+                        <tr>
+                            <td>8 years</td>
+                            <th>Length of Ownership</th>
+                            <td>3.5 years</td>
+                        </tr>
+                        <tr>
+                            <td>1</td>
+                            <th>Active Mortgs</th>
+                            <td>1</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- modal for calculating average report -->
+<div class="modal fade" id="avgReportModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="height: 550px;">
+            <div class="modal-header py-3 text-center">
+                <h5 class="modal-title mx-auto">Calculate Average Report</h5>
+                <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="height: 400px;overflow-y: auto;">
+                <!-- report table -->
+                <table class="table table-bordered mt-3 border table-striped table-hover" id="compareTable">
+                    <tbody class="text-center">
+                        <tr>
+                            <th>Avg Sale Amnt.</th>
+                            <td>$9,345</td>
+                        </tr>
+                        <tr>
+                            <th>Avg Premium Paid</th>
+                            <td>$13,550</td>
+                        </tr>
+                        <tr>
+                            <th>Property Type</th>
+                            <td class="graphic">
+                                <div id="pieChart"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Avg. No. of Bids</th>
+                            <td>5.25</td>
+                        </tr>
+                        <tr>
+                            <th>Avg Home Value</th>
+                            <td>$113,654</td>
+                        </tr>
+                        <tr>
+                            <th>Avg. Length of Ownership</th>
+                            <td>3.5 years</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- modal for regular tax lien -->
+<div class="modal fade" id="regularLienModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header py-3 text-center">
+                <h5 class="modal-title mx-auto">Tax Lien</h5>
+                <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0 fw-bold">
+                <!-- regular pop up -->
+                <address class="text-center border p-1">1499 Hackenbee St Nutley, NJ 07015</address>
+                <div class="active-lien" id="lien">
+                    <div class="p-2">
+                        <div class="border">
+                            <div class="border search-item-header py-1">
+                                <div class="d-flex justify-content-center">
+                                    <span class="fs-6 ms-lg-2 mt-2">Tax Sale Certificate
+                                        <span class="ms-2 text-center" id="lienNo">#21-009</span></span>
+                                </div>
+                                <div class="row justify-content-around mt-2 mx-0 text-center">
+                                    <span class="col-6">Total Price<br><b>$4617.09</b></span>
+                                    <span class="col-3">Block<br><b>352</b></span>
+                                    <span class="col-2">Lot<br><b>11</b></span>
+                                </div>
+                            </div>
+                            <div class="row justify-content-between mt-2 mx-1">
+                                <div class="col-5 p-0">
+                                    <img src="assets/img_map.png" height="80px" width="100%">
+                                </div>
+                                <div class="col-7 ps-1 mx-0 search-query-text">
+                                    <div class="ps-3">Est. Value: <b>$191,562</b></div>
+                                    <div class="text-uppercase ps-3">STATUS: <span>Active</span></div>
+                                    <div class="ps-3">Source: <b>MLS</b></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

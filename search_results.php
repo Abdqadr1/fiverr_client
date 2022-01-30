@@ -1,127 +1,9 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-    <meta charset="ISO-8859-1">
-    <title>Lien</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inconsolata&family=Overpass&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="assets/bootstrap.min.css">
-    <link rel="stylesheet" href="assets/general.css">
-</head>
+<?php include_once "head.html"; ?>
 
 <body>
-    <nav class="navbar navbar-expand-md navbar-light bg-light">
-        <div class="container-fluid">
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <form class="d-flex">
-                    <div class="dropdown" id="search-dropdown">
-                        <input class="form-control me-1 p-2 border border-primary" type="search" placeholder="Search"
-                            aria-label="Search" id="search-input">
-                        <div class="" id="suggestions">
-                            <ul class="dropdown-list text-center border" id="suggestionsList">
-                                <li>
-                                    <div class="row justify-content-center mx-0">
-                                        <div class="col-4 p-2 pb-1">
-                                            <span id="taxLien">Tax Liens</span>
-                                        </div>
-                                        <div class="col-8 p-2 pb-1 border-start">
-                                            <address class="mb-1">1439 Hackensack St. Nutley, NJ 07015</address>
-                                            <span class="text-uppercase">active: old</span>
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="row justify-content-center mx-0">
-                                        <div class="col-4 p-2 pb-1">
-                                            <span id="taxLien">Tax Liens</span>
-                                        </div>
-                                        <div class="col-8 p-2 pb-1 border-start">
-                                            <address class="mb-1">1439 Hackensack St. Nutley, NJ 07015</address>
-                                            <span class="text-uppercase">active: old</span>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="dropdown">
-                        <span class="filter mx-1">Filter</span>
-                        <div class="dropdown-content">
-                            <ul class="dropdown-list">
-                                <li>
-                                    <div class="row justify-content-center">
-                                        <span class="col-4">Sale Amount:</span>
-                                        <div class="col-8">
-                                            <ul class="sales-amount-list">
-                                                <li id="1" class="active">$2k or less</li>
-                                                <li id="2">$2k - $5k</li>
-                                                <li id="3">$5k - $10k</li>
-                                                <li id="4">$10k +</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div class="row justify-content-center mt-2">
-                                        <span class="col-4 fw-bold">OR between:</span>
-                                        <div class="col-8 flex flex-wrap or">
-                                            <span>$</span>
-                                            <input id="1" type="number" class="sale-value">
-                                            <span class="mx-2">and</span>
-                                            <span>$</span>
-                                            <input id="2" type="number" class="sale-value">
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="row justify-content-center">
-                                        <span class="col-4">Property Type:</span>
-                                        <ul class="col-8 d-flex flex-wrap" id="property-type">
-                                            <li class="prop">Single Family</li>
-                                            <li class="prop">Multi Family</li>
-                                            <li class="prop">Land</li>
-                                            <li class="prop">Commercial</li>
-                                        </ul>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="row justify-content-center">
-                                        <span class="col-4">Est. Home Value:</span>
-                                        <div class="col-8 flex flex-wrap or mt-2">
-                                            <span class="fw-bold mx-1">between</span>
-                                            <span>$</span>
-                                            <input type="number" id="1" class="home-value">
-                                            <span class="mx-1">and</span>
-                                            <span>$</span>
-                                            <input type="number" id="2" class="home-value">
-                                        </div>
-                                    </div>
-                                </li>
-                                <li>
-                                    <div class="row justify-content-center">
-                                        <span class="col-4">Length of Ownership:</span>
-                                        <div class="col-8">
-                                            <ul class="length-bar">
-                                                <li class="active" id="1" aria-value="1">3 years or fewer</li>
-                                                <li id="2" aria-value="2">3 - 10</li>
-                                                <li id="3" aria-value="3">10 - 20</li>
-                                                <li id="4" aria-value="4">20+ years</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                    <button class="btn btn-outline-primary ms-1 rounded-pill py-0" type="submit">Go</button>
-                </form>
-            </div>
-        </div>
-    </nav>
+    <?php include_once "navbar.html"; ?>
     <div class="container-fluid contain">
         <div class="row justify-content-around mx-0 pt-2 img-bg">
             <div class="col-7 border mx-0 p-0" id="leftSide">
@@ -135,19 +17,18 @@
                 <div class="container my-1" id="resultsDiv">
                     <div class="row g-2">
                         <!-- for active liens -->
-                        <div class="col-6 active-lien">
+                        <div class="col-6 active-lien" id="lien">
                             <div class="p-2">
                                 <div class="border">
                                     <div class="border search-item-header py-1">
-                                        <div class="d-flex">
+                                        <div class="d-flex justify-content-around" id="tax-head">
                                             <span class="ms-2 me-1" style="font-size: 12px;">
-                                                <input class="form-check-input ms-1 check" type="checkbox" value=""
-                                                    id="flexCheckDefault"><br>Add
+                                                <input class="form-check-input ms-1 check" type="checkbox" value="" id="flexCheckDefault"><br>Add
                                             </span>
                                             <span class="fs-6 ms-lg-2 mt-2">Tax Sale Certificate
                                                 <span class="ms-2 text-center" id="lienNo">#21-009</span></span>
                                         </div>
-                                        <div class="row justify-content-around mt-2 mx-0 text-center">
+                                        <div class="row justify-content-between mt-2 mx-0 text-center">
                                             <span class="col-6">Total Price<br><b>$4617.09</b></span>
                                             <span class="col-3">Block<br><b>352</b></span>
                                             <span class="col-2">Lot<br><b>11</b></span>
@@ -170,14 +51,13 @@
                             </div>
                         </div>
                         <!-- for old liens -->
-                        <div class="col-6 old-lien">
+                        <div class="col-6 old-lien" id="lien">
                             <div class="p-2">
                                 <div class="border">
                                     <div class="border search-item-header py-1">
-                                        <div class="d-flex">
+                                        <div class="d-flex  justify-content-around" id="tax-head">
                                             <span class="ms-2 me-1" style="font-size: 12px;">
-                                                <input class="form-check-input ms-1 check" type="checkbox" value=""
-                                                    id="flexCheckDefault"><br>Add
+                                                <input class="form-check-input ms-1 check" type="checkbox" value="" id="flexCheckDefault"><br>Add
                                             </span>
                                             <span class="fs-6 ms-1 ms-lg-3 mt-1">Tax Sale Certificate<br>
                                                 <small>Sold on <a href="">Dec 24, 2018</a></small></span>
@@ -187,9 +67,8 @@
                                         <div class="row justify-content-around mt-2 mx-0 text-center">
                                             <span class="col-4"><small>Total
                                                     Price</small><br><b>$4617.09</b></span>
-                                            <span class="col-3"><small>Int.
-                                                    Rate</small><br><b>352</b></span>
-                                            <span class="col-3"><small>Block</small><br><b>11</b></span>
+                                            <span class="col-4"><small>Int. Rate</small><br><b>352</b></span>
+                                            <span class="col-2"><small>Block</small><br><b>1133</b></span>
                                             <span class="col-2"><small>Lot</small><br><b>5</b></span>
                                         </div>
                                     </div>
@@ -210,14 +89,13 @@
                             </div>
                         </div>
                         <!-- for old liens -->
-                        <div class="col-6 old-lien">
+                        <div class="col-6 old-lien" id="lien">
                             <div class="p-2">
                                 <div class="border">
                                     <div class="border search-item-header py-1">
-                                        <div class="d-flex">
+                                        <div class="d-flex  justify-content-around" id="tax-head">
                                             <span class="ms-2 me-1" style="font-size: 12px;">
-                                                <input class="form-check-input ms-1 check" type="checkbox" value=""
-                                                    id="flexCheckDefault"><br>Add
+                                                <input class="form-check-input ms-1 check" type="checkbox" value="" id="flexCheckDefault"><br>Add
                                             </span>
                                             <span class="fs-6 ms-1 ms-lg-3 mt-1">Tax Sale Certificate<br>
                                                 <small>Sold on <a href="">Dec 24, 2018</a></small></span>
@@ -227,9 +105,8 @@
                                         <div class="row justify-content-around mt-2 mx-0 text-center">
                                             <span class="col-4"><small>Total
                                                     Price</small><br><b>$4617.09</b></span>
-                                            <span class="col-3"><small>Int.
-                                                    Rate</small><br><b>352</b></span>
-                                            <span class="col-3"><small>Block</small><br><b>11</b></span>
+                                            <span class="col-4"><small>Int. Rate</small><br><b>352</b></span>
+                                            <span class="col-2"><small>Block</small><br><b>1133</b></span>
                                             <span class="col-2"><small>Lot</small><br><b>5</b></span>
                                         </div>
                                     </div>
@@ -250,14 +127,13 @@
                             </div>
                         </div>
                         <!-- for old liens -->
-                        <div class="col-6 old-lien">
+                        <div class="col-6 old-lien" id="lien">
                             <div class="p-2">
                                 <div class="border">
                                     <div class="border search-item-header py-1">
-                                        <div class="d-flex">
+                                        <div class="d-flex  justify-content-around" id="tax-head">
                                             <span class="ms-2 me-1" style="font-size: 12px;">
-                                                <input class="form-check-input ms-1 check" type="checkbox" value=""
-                                                    id="flexCheckDefault"><br>Add
+                                                <input class="form-check-input ms-1 check" type="checkbox" value="" id="flexCheckDefault"><br>Add
                                             </span>
                                             <span class="fs-6 ms-1 ms-lg-3 mt-1">Tax Sale Certificate<br>
                                                 <small>Sold on <a href="">Dec 24, 2018</a></small></span>
@@ -267,9 +143,8 @@
                                         <div class="row justify-content-around mt-2 mx-0 text-center">
                                             <span class="col-4"><small>Total
                                                     Price</small><br><b>$4617.09</b></span>
-                                            <span class="col-3"><small>Int.
-                                                    Rate</small><br><b>352</b></span>
-                                            <span class="col-3"><small>Block</small><br><b>11</b></span>
+                                            <span class="col-4"><small>Int. Rate</small><br><b>352</b></span>
+                                            <span class="col-2"><small>Block</small><br><b>1133</b></span>
                                             <span class="col-2"><small>Lot</small><br><b>5</b></span>
                                         </div>
                                     </div>
@@ -290,14 +165,13 @@
                             </div>
                         </div>
                         <!-- for old liens -->
-                        <div class="col-6 old-lien">
+                        <div class="col-6 old-lien" id="lien">
                             <div class="p-2">
                                 <div class="border">
                                     <div class="border search-item-header py-1">
-                                        <div class="d-flex">
+                                        <div class="d-flex  justify-content-around" id="tax-head">
                                             <span class="ms-2 me-1" style="font-size: 12px;">
-                                                <input class="form-check-input ms-1 check" type="checkbox" value=""
-                                                    id="flexCheckDefault"><br>Add
+                                                <input class="form-check-input ms-1 check" type="checkbox" value="" id="flexCheckDefault"><br>Add
                                             </span>
                                             <span class="fs-6 ms-1 ms-lg-3 mt-1">Tax Sale Certificate<br>
                                                 <small>Sold on <a href="">Dec 24, 2018</a></small></span>
@@ -307,9 +181,46 @@
                                         <div class="row justify-content-around mt-2 mx-0 text-center">
                                             <span class="col-4"><small>Total
                                                     Price</small><br><b>$4617.09</b></span>
-                                            <span class="col-3"><small>Int.
-                                                    Rate</small><br><b>352</b></span>
-                                            <span class="col-3"><small>Block</small><br><b>11</b></span>
+                                            <span class="col-4"><small>Int. Rate</small><br><b>352</b></span>
+                                            <span class="col-2"><small>Block</small><br><b>1133</b></span>
+                                            <span class="col-2"><small>Lot</small><br><b>5</b></span>
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-between mt-2 mx-1">
+                                        <div class="col-5 p-0">
+                                            <img src="assets/img_map.png" height="80px" width="100%">
+                                        </div>
+                                        <div class="col-7 ps-1 mx-0 search-query-text">
+                                            <address class="mb-2">1499 Hackenbee St Nutley, NJ 07015
+                                            </address>
+                                            <div class="text-uppercase">STATUS: <span>OLD</span></div>
+                                        </div>
+                                        <div class="col-6 text-center">Source:<br><b>MLS</b></div>
+                                        <div class="col-6">Est. Value: <b>$191,562</b></div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <!-- for old liens -->
+                        <div class="col-6 old-lien" id="lien">
+                            <div class="p-2">
+                                <div class="border">
+                                    <div class="border search-item-header py-1">
+                                        <div class="d-flex  justify-content-around" id="tax-head">
+                                            <span class="ms-2 me-1" style="font-size: 12px;">
+                                                <input class="form-check-input ms-1 check" type="checkbox" value="" id="flexCheckDefault"><br>Add
+                                            </span>
+                                            <span class="fs-6 ms-1 ms-lg-3 mt-1">Tax Sale Certificate<br>
+                                                <small>Sold on <a href="">Dec 24, 2018</a></small></span>
+                                            <span class="mt-2 ms-1 ms-lg-3">Cert. No
+                                                <br><b id="lienNo">18-067</b></span>
+                                        </div>
+                                        <div class="row justify-content-around mt-2 mx-0 text-center">
+                                            <span class="col-4"><small>Total
+                                                    Price</small><br><b>$4617.09</b></span>
+                                            <span class="col-4"><small>Int. Rate</small><br><b>352</b></span>
+                                            <span class="col-2"><small>Block</small><br><b>1133</b></span>
                                             <span class="col-2"><small>Lot</small><br><b>5</b></span>
                                         </div>
                                     </div>
@@ -336,10 +247,10 @@
                     <div class="" id="note">Select any 2 items to compare</div>
                     <ul class="actions-list d-flex px-2 py-2 m-0">
                         <li class="text-white">
-                            <a class="btn btn-success action-btn">Select all</a>
+                            <a class="btn btn-success action-btn pt-sm-1 pt-lg-2" id="selectAllBtn">Select all</a>
                         </li>
                         <li class="text-white">
-                            <a class="btn btn-danger action-btn">Deselect all</a>
+                            <a class="btn btn-danger action-btn pt-sm-1" id="deselectAllBtn">Deselect all</a>
                         </li>
                         <li class="dropdown">
                             <a class="btn action-btn text-dark filter mt-0">Filter</a>
@@ -412,8 +323,7 @@
                             <a id="compareBtn" class="btn action-btn">Compare</a>
                         </li>
                         <li>
-                            <a class="btn btn-secondary big">Calculate Avg
-                                Report</a>
+                            <a class="btn btn-secondary big" id="avgReportBtn">Calculate Avg Report</a>
                         </li>
                         <li>
                             <a class="btn btn-secondary big" href="" style="line-height: 25px;" id="addBtn">
@@ -421,7 +331,6 @@
                         </li>
                     </ul>
                 </div>
-
             </div>
             <div class="col-4 border rounded p-0" id="myListSide">
                 <div class="bg-light">
@@ -488,81 +397,9 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content" style="height: 600px;">
-                <div class="modal-header py-3 text-center">
-                    <h5 class="modal-title mx-auto">Calculate Average Report</h5>
-                    <button type="button" class="btn-close ms-0" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" style="height: 400px;overflow-y: auto;">
-                    <!-- compare 2 cars table -->
-                    <table class="table table-bordered mt-3 border table-striped table-hover" id="compareTable">
-                        <tbody class="text-center">
-                            <tr>
-                                <td class="head">Typical Snatched Up Lien
-                                    <a href="" class="btn btn-secondary py-0 px-2" data-bs-toggle="modal"
-                                        data-bs-target="#exampleModal">
-                                        <i class="bi bi-box-arrow-up-right"></i>
-                                    </a>
-                                </td>
-                                <td></td>
-                                <td class="head">Typical No Bid Lien
-                                    <a href="" class="btn btn-secondary py-0 px-2" data-bs-toggle="modal"
-                                        data-bs-target="#exampleModal">
-                                        <i class="bi bi-box-arrow-up-right"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>$4,365</td>
-                                <th>Avg Sale Amnt.</th>
-                                <td>$2,312</td>
-                            </tr>
-                            <tr>
-                                <td>$5,505</td>
-                                <th>Avg Premium Paid</th>
-                                <td>--</td>
-                            </tr>
-                            <tr>
-                                <td>3</td>
-                                <th>Est. No. of Bids</th>
-                                <td>0</td>
-                            </tr>
-                            <tr>
-                                <td class="graphic">
-                                    <div id="pieChart"></div>
-                                </td>
-                                <th>Property Type</th>
-                                <td class="graphic">
-                                    <div id="pieChart"></div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>$286,765</td>
-                                <th>Avg Home Value</th>
-                                <td>$113,654</td>
-                            </tr>
-                            <tr>
-                                <td>10+ years</td>
-                                <th>Length of Ownership</th>
-                                <td>Less than 2 years</td>
-                            </tr>
-                            <tr>
-                                <td>1-2</td>
-                                <th>Active Mortgs</th>
-                                <td>0</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php include_once "modals.html" ?>
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"
-        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
     <script src="search_results.js" type="module"></script>
 </body>
 

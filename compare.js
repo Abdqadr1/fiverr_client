@@ -1,11 +1,17 @@
 //modal
 const compareBtn = document.querySelector("li a#compareBtn")
-const modalTag = document.querySelector("div#modal");
-const myModal = new bootstrap.Modal(modalTag, {
-  keyboard: false
-})
-const selectedTax = []; //array to hold the selected tax lien for comparison
-const selectedIds = []; // array to hold the lien numbers of selected lien
+const compareModalTag = document.querySelector("div#compareModal");
+const avgReportModalTag = document.querySelector("div#avgReportModal");
+const regularLienModalTag = document.querySelector("div#regularLienModal");
+
+// pop ups 
+const regularLienModal = new bootstrap.Modal(regularLienModalTag, {keyboard: false})
+const avgReportModal = new bootstrap.Modal(avgReportModalTag, {keyboard: false})
+const compareModal = new bootstrap.Modal(compareModalTag, { keyboard: false })
+
+let selectedTax = []; //array to hold the selected tax lien for comparison
+let selectedIds = []; // array to hold the lien numbers of selected lien
+
 const findLienNo = (input, id) => {
     let text = "";
     if (id == null) {
@@ -20,6 +26,7 @@ const findLienNo = (input, id) => {
 const allCheckInputs = document.querySelectorAll("input.check");
 const noteDiv = document.querySelector("div#note")
 allCheckInputs.forEach(input => {
+    input.onclick = event => event.stopPropagation();
     input.onchange = () => {
         const id = findLienNo(input, null);
         if (input.checked) {
@@ -42,11 +49,6 @@ allCheckInputs.forEach(input => {
         }
     }
 })
-compareBtn.onclick = event => {
-    if (selectedTax.length === 2) {
-        myModal.show();
-    }
-}
 
 // add selected liens to My List
 const addList = document.querySelector("ul#addList")
@@ -73,36 +75,104 @@ addBtn.onclick = event => {
     }
 }
 
-// google pie chart
-const tdGraphics = document.querySelectorAll("td.graphic")
-google.charts.load('current', { 'packages': ['corechart'] });
-tdGraphics.forEach(td => {
-    const chartDiv = td.querySelector("div#pieChart");
-    google.charts.setOnLoadCallback(drawChart);
-    function drawChart() {
-        const data = google.visualization.arrayToDataTable([
-            ['Property Type', 'Number'],
-            ['Single Family',  2],
-            ['Multi Family', 4],
-            ['Commercial',  6]
-        ]);
-        const options = {
-            backgroundColor: 'transparent',
-            legend:'none',
-            width: '100%',
-            height: '100%',
-            pieSliceText: 'none',
-            chartArea: {
-                left: "3%",
-                top: "3%",
-                height: "200",
-                width: "300",
-        }
-    };
 
-        const chart = new google.visualization.PieChart(chartDiv);
+// select all button
+const selectAllBtn = document.querySelector("a#selectAllBtn")
+selectAllBtn.onclick = event => {
+    selectedIds = [];
+    selectedTax = [];
+    allCheckInputs.forEach(input => {
+        input.checked = true;
+        const id = findLienNo(input, null);
+        selectedTax.push(input)
+        selectedIds.push(id);
+    })
+    
+    // add selected ids list to the url
+    const url = new URL(window.location);
+    url.searchParams.set('myList', selectedIds.join(","));
+    history.pushState({}, '', url);
 
-        chart.draw(data, options);
+    if (selectedTax.length == 2) {
+        noteDiv.textContent = "2 of 2 items selected. Ready to compare!"
+    } else if (selectedTax.length < 2) {
+        noteDiv.textContent = `${selectedTax.length} of 2 items selected.`
+    } else {
+        noteDiv.textContent = "You've selected one too many.. can't compare more than two!"
+    }
+}
+
+// deselect all button
+const deselectAllBtn = document.querySelector("a#deselectAllBtn")
+deselectAllBtn.onclick = event => {
+    selectedIds = [];
+    selectedTax = [];
+    allCheckInputs.forEach(input => {
+        input.checked = false;
+    })
+    // add selected ids list to the url
+    const url = new URL(window.location);
+    url.searchParams.set('myList', selectedIds.join(","));
+    history.pushState({}, '', url);
+    noteDiv.textContent = "select any 2 items to compare";
+}
+
+//  comparing two liens
+compareBtn.onclick = event => {
+    if (selectedTax.length === 2) {
+        compareModal.show();
+    }
+}
+// option for pie chart, Don't change unless needed
+const options = {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#8c8c8c',
+    legend: 'none',
+    pieSliceText: 'label',
+    chartArea: {
+        left: "3%",
+        top: "3%",
+        height: "200",
+        width: "300",
+    },
+    is3D: true
+};
+// calculate average report button
+const tdGraphics = document.querySelector("td.graphic");
+let chart;
+const avgReportBtn = document.querySelector("a#avgReportBtn");
+avgReportBtn.onclick = event => {
+    if (selectedTax.length > 1) {
+        avgReportModal.show()
+    } else {
+        console.log("cannot calculating report for one lien")
+    }
+    
+    /**
+     * To show pie chart with correct data. You have to change the data variable below
+     */
+    var data = [
+        ['Property Type', 'Number'],
+        ['Single Family', 2],
+        ['Multi Family', 4],
+        ['Commercial', 6]
+    ]
+    
+    chart.draw(google.visualization.arrayToDataTable(data), options);
+}
+
+// registering click for all tax lien for pop up
+const allTaxLiens = document.querySelectorAll("div#lien")
+allTaxLiens.forEach(lien => {
+    lien.onclick = () => {
+        regularLienModal.show();
     }
 })
 
+// google pie chart
+google.charts.load('current', {'packages':['corechart']});
+google.charts.setOnLoadCallback(drawChart);
+function drawChart() {
+    chart = new google.visualization.PieChart(document.getElementById('pieChart'));
+}
