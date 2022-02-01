@@ -57,6 +57,5 @@ links.forEach(link => {
     }
 })
 
-
 import "./compare.js"
 

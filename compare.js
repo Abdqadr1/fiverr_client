@@ -70,6 +70,8 @@ addBtn.onclick = event => {
                                 </div>
                                 <div class="col-3 fs-3" title="Delete"><i class="bi bi-trash text-danger"></i></div>
                             </div>`;
+            const deleteBtn = li.querySelector("div i.bi.bi-trash");
+            deleteBtn.onclick = event => deleteFromList(event.target)
             addList.appendChild(li)
         })
     }
@@ -146,13 +148,13 @@ avgReportBtn.onclick = event => {
     if (selectedTax.length > 1) {
         avgReportModal.show()
     } else {
-        console.log("cannot calculating report for one lien")
+        console.log("cannot calculate report for one lien or less")
     }
     
     /**
      * To show pie chart with correct data. You have to change the data variable below
      */
-    var data = [
+    let data = [
         ['Property Type', 'Number'],
         ['Single Family', 2],
         ['Multi Family', 4],
@@ -175,4 +177,53 @@ google.charts.load('current', {'packages':['corechart']});
 google.charts.setOnLoadCallback(drawChart);
 function drawChart() {
     chart = new google.visualization.PieChart(document.getElementById('pieChart'));
+     /**
+     * To show pie chart with correct data. You have to change the data variable below
+     */
+    let data = [
+        ['Property Type', 'Number'],
+        ['Single Family', 2],
+        ['Multi Family', 4],
+        ['Commercial', 6]
+    ]
+    
+    // charts in city page
+    const chartDivs = document.querySelectorAll("div#cityChart");
+    chartDivs.forEach(div => {
+        let cityChart = new google.visualization.PieChart(div); 
+        const options = {
+            width: '80%',
+            height: '100%',
+            backgroundColor: '#8c8c8c',
+            legend: 'none',
+            pieSliceText: 'label',
+            chartArea: {
+                left: "1%",
+                top: "3%",
+                height: "140",
+                width: "170",
+            },
+            is3D: true
+        };
+        cityChart.draw(google.visualization.arrayToDataTable(
+            data) /** You can define your custom data, just follow the same array pattern */,
+            options /** don't change this unless you have to */
+        );
+    })
+    
+    
+    chart.draw(google.visualization.arrayToDataTable(data), options);
+}
+
+
+// delete icon for myList
+const deleteBtns = document.querySelectorAll("div#myListSide i.bi.bi-trash");
+deleteBtns.forEach(btn => {
+    btn.onclick = event => deleteFromList(event.target)
+})
+// delete liens from myList function
+const deleteFromList = (btn) => {
+     const li = btn.parentElement.parentElement.parentElement;
+    const ul = li.parentElement;
+    ul.removeChild(li);
 }

@@ -75,7 +75,7 @@
                                         </div>
                                     </div>
                                     <div class="carousel-item" id="2">
-                                        <img src="assets/img_values.png" class="d-block w-100" height="350px" alt="">
+                                        <img src="assets/img_values.png" class="d-block w-100" height="500px" alt="">
                                     </div>
                                     <div class="carousel-item" id="3">
                                         <div class="third-slide my-3 mx-1">
@@ -94,7 +94,11 @@
                                                 <div class="row justify-content-start gx-2 mt-2 mx-1">
                                                     <div class="col-4">
                                                         <span class="fs-6 d-inline-block">Top</span>
-                                                        <span class="filter mx-1">3</span>
+                                                        <select class="form-select d-inline w-50" aria-label="Default select example">
+                                                            <option value="1" selected>3</option>
+                                                            <option value="2">5</option>
+                                                            <option value="3">10</option>
+                                                        </select>
                                                     </div>
                                                     <div class="col fs-6">
                                                         <span class="d-inline-block mt-2">Biggest Players <a>in
@@ -129,6 +133,59 @@
                                                             <th>7</th>
                                                             <td>$11,143.05</td>
                                                             <td>$7,700</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                                <!-- compare 2 cars table -->
+                                                <table class="table table-bordered mt-5 border table-striped table-hover" id="compareTable">
+                                                    <tbody class="text-center">
+                                                        <tr>
+                                                            <td class="head">Typical Snatched Up Lien
+                                                                <i class="bi bi-box-arrow-up-right bg-secondary py-1 px-2 rounded text-white" title="show report" data-bs-toggle="modal" data-bs-target="#avgReportModal"></i>
+                                                            </td>
+                                                            <td></td>
+                                                            <td class="head">Typical No Bid Lien
+                                                                <i class="bi bi-box-arrow-up-right bg-secondary py-1 px-2 rounded text-white" title="show report" data-bs-toggle="modal" data-bs-target="#avgReportModal"></i>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>$4,365</td>
+                                                            <th>Avg Sale Amnt.</th>
+                                                            <td>$2,312</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>$5,505</td>
+                                                            <th>Avg Premium Paid</th>
+                                                            <td>--</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>3</td>
+                                                            <th>Est. No. of Bids</th>
+                                                            <td>--</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td class="cityGraphic">
+                                                                <div id="cityChart"></div>
+                                                            </td>
+                                                            <th>Property Type</th>
+                                                            <td class="cityGraphic">
+                                                                <div id="cityChart"></div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>$286,765</td>
+                                                            <th>Home Value</th>
+                                                            <td>$113,654</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>8 years</td>
+                                                            <th>Length of Ownership</th>
+                                                            <td>3.5 years</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>1</td>
+                                                            <th>Active Mortgs</th>
+                                                            <td>1</td>
                                                         </tr>
                                                     </tbody>
                                                 </table>

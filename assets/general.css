@@ -22,7 +22,7 @@ body {
   transform: scale(0.8, 0.8);
 }
 div#myListSide {
-  max-height: 80vh;
+  max-height: 90vh;
   overflow-y: auto;
   overflow-x: hidden;
   position: sticky;
@@ -34,6 +34,12 @@ div#leftSide {
 }
 div#resultsDiv {
   height: auto;
+}
+img.calendar-image {
+  display: inline-block;
+  width: min(95%, 300px);
+  height: min(180px, 80%);
+  margin: 0px auto;
 }
 .filter {
   text-align: left;
@@ -519,7 +525,16 @@ td.graphic {
   height: 0;
   overflow: hidden;
 }
-div#pieChart {
+td.cityGraphic {
+  display: block;
+  width: 100%;
+  position: relative;
+  padding-bottom: 50%;
+  height: 160px;
+  overflow: hidden;
+}
+div#pieChart,
+div#cityChart {
   margin: 0;
   position: absolute;
   top: 0;

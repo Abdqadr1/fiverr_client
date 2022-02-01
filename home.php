@@ -27,8 +27,8 @@
                             </li>
                         </ul>
                         <!-- calender  -->
-                        <div class="my-3 mx-0 px-1">
-                            <img src="assets/img_calendar.png" class="d-inline-block" alt="calendar" height="180px" style="width: 95%;">
+                        <div class="my-3 mx-0 d-flex justify-content-center">
+                            <img src="assets/img_calendar.png" class="calendar-image" alt="calendar">
                         </div>
                     </div>
                     <div class="text-center see-full">
