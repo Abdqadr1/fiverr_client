@@ -1,0 +1,20 @@
+{
+    "name": "fiverr/web_scraper",
+    "description": "web scraper",
+    "type": "project",
+    "require": {
+        "facebook/webdriver": "^1.1"
+    },
+    "license": "apache",
+    "autoload": {
+        "psr-4": {
+            "Fiverr\\WebScraper\\": "goutte/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Abdqadr1",
+            "email": "abolarinwaquadri@gmail.com"
+        }
+    ]
+}
