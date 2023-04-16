@@ -136,7 +136,7 @@
         @[$owner_street, $owner_city, $state_code] = explode(',', $owner_loc, 3);
 
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
-        @[$owner_state, $zip_code] = explode(" ", trim($state_code), 2);
+        @[$owner_state, $zip_code] = preg_split('/\s+/', trim($state_code), 2);
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
 
@@ -149,8 +149,6 @@
         $taxes_as_text = getTaxesAsText($appraisedValue);
         $date_bought = $propInfo['Sale Date'] ?? "";
 
-        // Generate a string of sale entries in XML format
-        $sale_hist_data = "";
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
 

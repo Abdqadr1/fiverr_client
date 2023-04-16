@@ -9,64 +9,16 @@
 
     /******** SETTINGS *********/
     $city = 'Absecon';
-    $state = 'NJ';
+    $state = 'NY';
     $district = "0101";
     /***************************/
 
 
-    $open = fopen("./absecon_2022_TEST FILE.csv", "r") // open the file for reading only
-        or exit("Unable to open file");
-    $array = [];
-    if ($open !== FALSE) {
-
-        while (($data = fgetcsv($open, 1000, ",")) !== FALSE) {
-            $array[] = $data;
-        }
-    } else
-        exit("Problem occured opening file");
-
-    fclose($open);
-
-    // To display a segment of the array data
-    //var_dump( $array[1] ); exit;
-
-
-    function removeWhitespace($str)
-    {
-
-        // -- REMOVES EXCESS WHITESPACE while preserving single spaces between words --
-        // Matches whitespace of any kind incl. multiple whitespace chars between words
-        // and returns it in a capturing group, then replaces it with the empty string ""
-        return preg_replace('/(^\s+|\s+$|\s+(?=\s))/', "", $str);
-    }
-
-    function keepOnlyDesired($str)
-    {
-        // Uses removeWhitespace to remove any leading or trailing whitespace
-        // then removes any non-desired characters but preserves inner spacing
-        // i.e. remove any non-alphanumeric char, underscore or whitespace (ex. tab/space/line break)
-        return preg_replace('/([^\w\s!@#$%^&*()`~\-+=,\.\/\?<>\\|:]+)/', "", removeWhitespace($str));
-    }
-
-
-    if (!function_exists('str_contains')) {
-
-        // Polyfill for PHP 4 - PHP 7, safe to utilize with PHP 8
-
-        function str_contains(string $haystack, string $needle)
-        {
-            // stripos is case-insensitive
-            return empty($needle) || stripos($haystack, $needle) !== false;
-        }
-    }
-
+    $array = openFile('./TEST FILES/broome county_ny_TEST FILE.csv');
 
     $header = array_shift($array); // remove the first element from the array
-    //$header_map = array_map( 'keepOnlyDesired', $header );
 
-
-
-    for ($i = 0; $i < 3; $i++) { //count($array)
+    for ($i = 0; $i < 1; $i++) { //count($array)
 
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
@@ -75,11 +27,8 @@
 
         [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
 
-
         // remove non-numeric characters and cast to float
         $face_amount = (float) preg_replace("/([^0-9\\.]+)/i", "", $face_amount);
-
-
         $status = ($status == 'Active') ? 1 : 0;
 
 
@@ -127,7 +76,7 @@
         $lot_asArray = explode(".", $lot, 2);
         $qual_str = empty($qual) ? "_____" : substr("_____", 0, strlen($qual) * -1) . $qual;
 
-        $options = "nDistrict=$district&szBlockNum=$block&szLotNum=$lotNumber&szBlockStuff=$sub_block&szLotStuff=$sub_lot&szQual=$qual";
+        $options = "file=muni0302/T000027/030200160031000302600000000001.JPG&swiscode=030200&printkey=16003100030270000000&sitetype=res&siteNum=1";
         $tax_link = $url . $options;
 
         /******************** TEST BELOW *************************/
@@ -136,10 +85,11 @@
 
 
 
-
         // GO TO THE LINK AND DOWNLOAD THE PAGE
 
         $parsedPage = parsePage($tax_link);
+
+        exit;
         if (!$parsedPage) {
             echo "Page failed to Load for lienNo: " . $adv_num . "<br/>";
             continue;
@@ -263,6 +213,8 @@
         $headers = $page['headers'];
         $http_status_code = $headers['status_info']['status_code'];
         //var_dump($headers);
+
+        exit($page['body']);
 
         if ($http_status_code >= 400)
             return FALSE;

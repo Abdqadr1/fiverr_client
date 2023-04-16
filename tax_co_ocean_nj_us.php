@@ -148,7 +148,7 @@
         $city_state = $propInfo["City/State:"] ?? "";
 
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
-        @[, $owner_state, $zip_code] = explode(" ", $city_state, 3);
+        @[, $owner_state, $zip_code] = preg_split('/\s+/', $city_state, 3);
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
 

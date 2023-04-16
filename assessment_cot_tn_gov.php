@@ -13,40 +13,6 @@
 
     $array = openFile("./gibson_tn_2023_TEST FILE.csv");
 
-    // To display a segment of the array data
-    //var_dump( $array[1] ); exit;
-
-
-    function removeWhitespace($str)
-    {
-
-        // -- REMOVES EXCESS WHITESPACE while preserving single spaces between words --
-        // Matches whitespace of any kind incl. multiple whitespace chars between words
-        // and returns it in a capturing group, then replaces it with the empty string ""
-        return preg_replace('/(^\s+|\s+$|\s+(?=\s))/', "", $str);
-    }
-
-    function keepOnlyDesired($str)
-    {
-        // Uses removeWhitespace to remove any leading or trailing whitespace
-        // then removes any non-desired characters but preserves inner spacing
-        // i.e. remove any non-alphanumeric char, underscore or whitespace (ex. tab/space/line break)
-        return preg_replace('/([^\w\s!@#$%^&*()`~\-+=,\.\/\?<>\\|:]+)/', "", removeWhitespace($str));
-    }
-
-
-    if (!function_exists('str_contains')) {
-
-        // Polyfill for PHP 4 - PHP 7, safe to utilize with PHP 8
-
-        function str_contains(string $haystack, string $needle)
-        {
-            // stripos is case-insensitive
-            return empty($needle) || stripos($haystack, $needle) !== false;
-        }
-    }
-
-
     $header = array_shift($array); // remove the first element from the array
     //$header_map = array_map( 'keepOnlyDesired', $header );
 
@@ -64,8 +30,6 @@
 
         // remove non-numeric characters and cast to float
         $face_amount = (float) preg_replace("/([^0-9\\.]+)/i", "", $face_amount);
-
-
         $status = ($status == 'Active') ? 1 : 0;
 
 
@@ -89,7 +53,7 @@
         /*********************************************************/
 
         // @  <=>  suppress undefined index errors
-        @[$jur, $control_map, $group, $parcel, $identifier, $special_interest] = explode(" ", $parcel_str, 6);
+        @[$jur, $control_map, $group, $parcel, $identifier, $special_interest] = preg_split('/\s+/', $parcel_str, 6);
         $special_interest = $special_interest ?? "000";
         $parcel = str_replace('.', '', $parcel);
         $jur = (strlen($jur) < 3) ? '0' . $jur : $jur;
@@ -131,7 +95,7 @@
         $city_state = $propInfo["city_state"] ?? "";
 
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
-        @[$city, $owner_state, $zip_code] = explode(" ", $city_state, 3);
+        @[$city, $owner_state, $zip_code] = preg_split('/\s+/', $city_state, 3);
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
 

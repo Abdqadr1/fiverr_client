@@ -240,6 +240,8 @@ function listData(array $data)
 
 function getTaxesAsText($taxes)
 {
+
+	$taxes = (float) preg_replace("/([^0-9\\.]+)/i", "", $taxes);
 	$taxes_as_text = NULL;
 
 	if (!empty($taxes)) {
@@ -262,7 +264,7 @@ function getElementsByClassName($dom, $className, $is_path = false)
 	$results = $xpath->query($query);
 
 
-	// echo "Length: " . $results->length . "<br/>";
+	// echo "Length: " . $results?->length . "<br/>";
 
 	// if ($results->length > 0) {
 	// 	foreach ($results as $child) {
@@ -271,7 +273,7 @@ function getElementsByClassName($dom, $className, $is_path = false)
 	// }
 
 
-	return $results->length == 1 ? $results->item(0) : $results;
+	return $results?->length == 1 ? $results->item(0) : $results;
 }
 
 function getPropTypeFromClass(string $prop_class)
@@ -313,4 +315,33 @@ function openFile(string $path): array
 
 	fclose($open);
 	return $array;
+}
+
+function removeWhitespace($str)
+{
+
+	// -- REMOVES EXCESS WHITESPACE while preserving single spaces between words --
+	// Matches whitespace of any kind incl. multiple whitespace chars between words
+	// and returns it in a capturing group, then replaces it with the empty string ""
+	return preg_replace('/(^\s+|\s+$|\s+(?=\s))/', "", $str);
+}
+
+function keepOnlyDesired($str)
+{
+	// Uses removeWhitespace to remove any leading or trailing whitespace
+	// then removes any non-desired characters but preserves inner spacing
+	// i.e. remove any non-alphanumeric char, underscore or whitespace (ex. tab/space/line break)
+	return preg_replace('/([^\w\s!@#$%^&*()`~\-+=,\.\/\?<>\\|:]+)/', "", removeWhitespace($str));
+}
+
+
+if (!function_exists('str_contains')) {
+
+	// Polyfill for PHP 4 - PHP 7, safe to utilize with PHP 8
+
+	function str_contains(string $haystack, string $needle)
+	{
+		// stripos is case-insensitive
+		return empty($needle) || stripos($haystack, $needle) !== false;
+	}
 }

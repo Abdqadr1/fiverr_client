@@ -1,0 +1,25 @@
+﻿ADV Num,Parcel ID,Alternate ID,Charge Type,Face Amount,Status
+1,15-1,,T   S  W     ,2089.29,Active
+2,1-24,,T        ,945.91,Active
+3,2-27,,   S     ,476,Active
+4,12-14,,   S     ,169,Active
+5,14-20,,T        ,3867.55,Active
+6,17-7,,T   S     ,3223.45,Active
+7,17-26--BLDG,,   S     ,273,Active
+8,18-39--CE,,   S     ,169,Active
+9,18-39.01--C1,,   S     1 O,169,Active
+10,18-39.01--C3X,,T   S     ,7480.49,Active
+11,24-29--BLDG,,   S     ,481,Active
+12,32-18.01--C2X,,   S     1 O,377,Active
+13,34-28.02,,   W  O,73.62,Active
+14,PIPELINE-1,,   S     ,481,Active
+15,57.02-56,,   S     ,377,Active
+16,57.02-57,,T   S     ,5529.5,Active
+17,57.04-103,,   S     ,169,Active
+18,57.04-138--BLDG,,   S     ,456,Active
+19,57.05-3.01--BLDG,,   1 ,377,Active
+20,60-33.01,,W,169,Active
+21,62-1-C0005,,   S     ,93.82,Active
+22,62-1--CE,,   S     W,273,Active
+23,73-92.02,,   S     ,376,Active
+24,89-1-BLDG,,   S     1,273,Active
