@@ -13,40 +13,7 @@
     $district = "0101";
     /***************************/
 
-    $array = openFile("./absecon_2022_TEST FILE.csv");
-
-    // To display a segment of the array data
-    //var_dump( $array[1] ); exit;
-
-
-    function removeWhitespace($str)
-    {
-
-        // -- REMOVES EXCESS WHITESPACE while preserving single spaces between words --
-        // Matches whitespace of any kind incl. multiple whitespace chars between words
-        // and returns it in a capturing group, then replaces it with the empty string ""
-        return preg_replace('/(^\s+|\s+$|\s+(?=\s))/', "", $str);
-    }
-
-    function keepOnlyDesired($str)
-    {
-        // Uses removeWhitespace to remove any leading or trailing whitespace
-        // then removes any non-desired characters but preserves inner spacing
-        // i.e. remove any non-alphanumeric char, underscore or whitespace (ex. tab/space/line break)
-        return preg_replace('/([^\w\s!@#$%^&*()`~\-+=,\.\/\?<>\\|:]+)/', "", removeWhitespace($str));
-    }
-
-
-    if (!function_exists('str_contains')) {
-
-        // Polyfill for PHP 4 - PHP 7, safe to utilize with PHP 8
-
-        function str_contains(string $haystack, string $needle)
-        {
-            // stripos is case-insensitive
-            return empty($needle) || stripos($haystack, $needle) !== false;
-        }
-    }
+    $array = openFile("./TEST FILES/ocean county_nj_TEST FILE.csv");
 
 
     $header = array_shift($array); // remove the first element from the array
@@ -54,20 +21,16 @@
 
 
 
-    for ($i = 0; $i < 3; $i++) { //count($array)
+    for ($i = 0; $i < 1; $i++) { //count($array)
 
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
         $row = array_map('keepOnlyDesired', $array[$i]);
-
-
         [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
 
 
         // remove non-numeric characters and cast to float
         $face_amount = (float) preg_replace("/([^0-9\\.]+)/i", "", $face_amount);
-
-
         $status = ($status == 'Active') ? 1 : 0;
 
 
@@ -100,20 +63,15 @@
         @[$lot, $qual] = explode("--", $lot_qual, 2);
         $qual ??= "";
 
-        $parcelNo = $block . "-" . $lot . "-" . $qual;
+        $parcelNo = $block . "-" . $lot . "--" . $qual;
 
         /**************** CREATE THE TAX ASSESSMENT URL *******************/
         $url = "tax.co.ocean.nj.us/frmTaxBoardTaxListDetail?";
 
         @[$block, $sub_block] = explode(".", $block, 2);
         $sub_block ??= "";
-        // offset is made negative to start counting from the end of the str
-        $block_str = substr("00000", 0, strlen($block) * -1) . $block .
-            (!empty($sub_block) ? substr("____", strlen($sub_block) * -1) . $sub_block
-                : "____");
         @[$lotNumber, $sub_lot] = explode(".", $lot, 2);
         $lot_asArray = explode(".", $lot, 2);
-        $qual_str = empty($qual) ? "_____" : substr("_____", 0, strlen($qual) * -1) . $qual;
 
         $options = "nDistrict=$district&szBlockNum=$block&szLotNum=$lotNumber&szBlockStuff=$sub_block&szLotStuff=$sub_lot&szQual=$qual";
         $tax_link = $url . $options;
@@ -148,7 +106,7 @@
         $city_state = $propInfo["City/State:"] ?? "";
 
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
-        @[, $owner_state, $zip_code] = preg_split('/\s+/', $city_state, 3);
+        @[$city, $owner_state, $zip_code] = preg_split('/\s+/', $city_state, 3);
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
 
@@ -157,31 +115,34 @@
         if (!empty($bldg_desc) && empty($bldg_descrip))
             $bldg_descrip = $bldg_desc;
 
-        $taxes_as_text = getTaxesAsText($propInfo['Last yr taxes:'] ?? "");
+        $last_year_taxes = $propInfo['Last yr taxes:'] ?? "";
+        $net_value = $propInfo["Net value:"] ?? "";
+
+        $taxes_as_text = getTaxesAsText($last_year_taxes);
         $date_bought = $propInfo['Deed date:'] ?? "";
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
-        foreach (array_reverse($saleHist) as ['Deed date:' => $date, 'Sales price:' => $price, 'Book/page:' => $page]) {
+        if (count($saleHist) > 0) {
+            foreach (array_reverse($saleHist) as ['Deed date:' => $date, 'Sales price:' => $price, 'Book/page:' => $page]) {
 
-            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $page . "</b><m>" . $sale_descrip . "</m></e>";
-            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
+                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $page . "</b><m>" . $sale_descrip . "</m></e>";
+                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
+            }
+            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
         }
-        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
 
 
         $_qual = $propInfo['Qual:'] !== "n/a" ? $propInfo['Qual:'] : "";
         $_1 = ($propInfo['Block / Lot:'] ?? "") . "/" . $_qual;
-        $_6 = $propInfo["Last yr taxes:"] ?? "";
-        $ass_value = $propInfo["Net value:"] ?? "";
-        $_10 = $taxAssessInfo["Type/use:"] ?? "";
-        $_11 = $taxAssessInfo["# bedrooms:"] ?? "";
-        $_12 = $taxAssessInfo["# bathrooms:"] ?? "";
+        $beds = $taxAssessInfo["# bedrooms:"] ?? "";
+        $baths = $taxAssessInfo["# bathrooms:"] ?? "";
         $p_class = $propInfo["Prop class:"] ?? "";
 
         [$prop_class, $prop_type] = getPropTypeFromClass($p_class);
+        $prop_type = $taxAssessInfo["Type/use:"] ?? "";
 
 
         $structure = [
@@ -192,16 +153,16 @@
             'chargeType'        =>    $charge_descrip,
             'faceAmnt'        =>    $face_amount,
             'status'        => ($status ? '1' : '0'),
-            'assessedValue'        =>    $ass_value ?? '',
-            'appraisedValue'    =>    NULL,
+            'assessedValue'        =>    $last_year_taxes ?? '',
+            'appraisedValue'    =>    $net_value,
             'propClass'        =>    $prop_class,
             'propType'        =>    $prop_type,
             'propLocation'        =>    $prop_loc,
             'city'            =>    $city,
-            'zip'            =>    NULL,
+            'zip'            =>    $zip_code ?? '',
             'buildingDescrip'    =>    $bldg_descrip,
-            'numBeds'        =>    NULL,
-            'numBaths'        =>    NULL,
+            'numBeds'        =>    $beds,
+            'numBaths'        =>    $baths,
             'lastRecordedOwner'    =>    $owner_name,
             'lastRecordedOwnerType'    =>    $owner_type,
             'lastRecordedDateOfSale' =>    date('Y-m-d', strtotime($date_bought)),
@@ -212,6 +173,7 @@
             'propertyTaxes'        =>    $taxes_as_text,
             'taxJurisdictionID'    =>    NULL
         ];
+        listData($structure);
     }
 
 
@@ -249,12 +211,6 @@
             'Sale Info'       =>     $saleInfo,
             'Tax Assess Info'  =>    $detailsInfo
         ];
-
-        /******************** END OF PARSING - TEST BELOW *************************/
-        //var_dump($data_1);
-        //var_dump($data_2);
-        //var_dump($data_3);
-        /**************************************************************************/
     }
 
     function parseTableData($table, $useFirstRowAsKey = true)

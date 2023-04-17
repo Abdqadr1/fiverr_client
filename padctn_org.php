@@ -13,45 +13,8 @@
     $district = "0101";
     /***************************/
 
-    $array = openFile("./davidson_tn_2023_TEST FILE.csv");
-
-    // To display a segment of the array data
-    //var_dump( $array[1] ); exit;
-
-
-    function removeWhitespace($str)
-    {
-
-        // -- REMOVES EXCESS WHITESPACE while preserving single spaces between words --
-        // Matches whitespace of any kind incl. multiple whitespace chars between words
-        // and returns it in a capturing group, then replaces it with the empty string ""
-        return preg_replace('/(^\s+|\s+$|\s+(?=\s))/', "", $str);
-    }
-
-    function keepOnlyDesired($str)
-    {
-        // Uses removeWhitespace to remove any leading or trailing whitespace
-        // then removes any non-desired characters but preserves inner spacing
-        // i.e. remove any non-alphanumeric char, underscore or whitespace (ex. tab/space/line break)
-        return preg_replace('/([^\w\s!@#$%^&*()`~\-+=,\.\/\?<>\\|:]+)/', "", removeWhitespace($str));
-    }
-
-
-    if (!function_exists('str_contains')) {
-
-        // Polyfill for PHP 4 - PHP 7, safe to utilize with PHP 8
-
-        function str_contains(string $haystack, string $needle)
-        {
-            // stripos is case-insensitive
-            return empty($needle) || stripos($haystack, $needle) !== false;
-        }
-    }
-
-
-    $header = array_shift($array); // remove the first element from the array
-    //$header_map = array_map( 'keepOnlyDesired', $header );
-
+    $array = openFile("./TEST FILES/davidson county_tn_TEST FILE.csv");
+    $header = array_shift($array);
 
 
     for ($i = 0; $i < 1; $i++) { //count($array)
@@ -66,8 +29,6 @@
 
         // remove non-numeric characters and cast to float
         $face_amount = (float) preg_replace("/([^0-9\\.]+)/i", "", $face_amount);
-
-
         $status = ($status == 'Active') ? 1 : 0;
 
 
@@ -105,8 +66,6 @@
         echo "<a href='http://" . $tax_link . "'>" . $tax_link . "</a>
         <br/><a href='http://" . $history_link . "'>" . $history_link . "</a><br>";
         /*********************************************************/
-
-
 
 
         // GO TO THE LINK AND DOWNLOAD THE PAGE
@@ -149,44 +108,45 @@
         $taxes_as_text = getTaxesAsText($appraisedValue);
         $date_bought = $propInfo['Sale Date'] ?? "";
 
-        // Generate a string of sale entries in XML format
-        $sale_hist_data = "";
-
-        foreach (array_reverse($saleHist)
-            as
-            [
-                'Sale Date' => $date, 'Sale Price' => $price, 'Deed Type' => $dt, 'Deed Book & Page' => $bg
-            ]) {
-
-            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><d>" . $dt . "</d><bg>" . $bg . "</bg><m>" . $sale_descrip . "</m></e>";
-
-            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-        }
-        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
-
-        $_qual =  "";
+        $assessment_classification = $propInfo['Assessment Classification*'] ?? '';
         $ass_value = $taxAssessInfo["Assessed Value"] ?? "";
-        $p_class = $propInfo["Prop class:"] ?? "";
         $prop_use = $taxAssessInfo["Property Use"] ?? "";
         $beds = $taxAssessInfo["Number of Beds"] ?? "";
         $baths = $taxAssessInfo["Number of Baths"] ?? "";
-        $half_bath = $taxAssessInfo["Number of Half Bath"] ?? "";
+        $half_baths = $taxAssessInfo["Number of Half Bath"] ?? "";
+        $story_height = $taxAssessInfo['Story Height'] ?? '';
+        $exterior_wall = $taxAssessInfo['Exterior Wall'] ?? '';
+        $prop_type = $story_height . ' ' . $exterior_wall;
 
-        [$prop_class, $prop_type] = getPropTypeFromClass($p_class);
+        // Generate a string of sale entries in XML format
+        $sale_hist_data = "";
+        if (count($saleHist) > 0) {
+            foreach (array_reverse($saleHist)
+                as
+                [
+                    'Sale Date' => $date, 'Sale Price' => $price, 'Deed Type' => $dt, 'Deed Book & Page' => $bg
+                ]) {
+
+                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><d>" . $dt . "</d><bg>" . $bg . "</bg><m>" . $sale_descrip . "</m></e>";
+
+                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
+            }
+            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+        }
 
         $structure = [
             'certNo'        =>    $adv_num,
             'auctionID'        =>    NULL,
-            'parcelNo'        =>    $propInfo['Map & Parcel'] ?? "",
+            'parcelNo'        =>    $propInfo['Map & Parcel'] ?? NULL,
             'alternateID'        =>    NULL,
             'chargeType'        =>    $charge_descrip,
             'faceAmnt'        =>    $face_amount,
             'status'        => ($status ? '1' : '0'),
             'assessedValue'        =>    $ass_value ?? '',
             'appraisedValue'    =>    $appraisedValue ?? NULL,
-            'propClass'        =>    $prop_class,
+            'propClass'        =>    $prop_use,
             'propType'        =>    $prop_type,
             'propLocation'        =>    $prop_loc,
             'city'            =>    $city,

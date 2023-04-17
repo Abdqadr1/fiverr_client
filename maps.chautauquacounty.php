@@ -13,8 +13,6 @@
 
 
     $array = openFile('./TEST FILES/chautauqua county_ny_TEST FILE.csv');
-
-
     $header = array_shift($array); // remove the first element from the array
 
 
@@ -104,6 +102,7 @@
 
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
         @[$city, $owner_state] = preg_split('/\s+/', $city_state, 2);
+        $city = str_replace(',', '', $city);
         $zip_code = $propInfo['Mailing ZIP Code'] ?? "";
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
@@ -113,32 +112,35 @@
         if (!empty($bldg_desc) && empty($bldg_descrip))
             $bldg_descrip = $bldg_desc;
 
-        $taxes_as_text = getTaxesAsText($propInfo['Full Market Value'] ?? "");
-        $date_bought = $propInfo['Last Sale Date'] ?? "";
 
-        // Generate a string of sale entries in XML format
-        $sale_hist_data = "";
-        foreach (array_reverse($saleHist)
-            as
-            [
-                'Sale Date' => $date, 'Sale Price' => $price, 'Deed Book' => $db, 'Deed Page' => $dp
-            ]) {
+        $ass_value = $propInfo['Total Assessed Value (100.00% Market)'] ?? "";
+        $full_market_value = $propInfo['Full Market Value'] ?? 0;
+        $taxes_as_text = getTaxesAsText($full_market_value);
 
-            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><db>" . $db . "</db><dp>" . $dp . "</dp><m>" . $sale_descrip . "</m></e>";
-
-            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-        }
-        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
-
-
-        $ass_value = $propInfo["Total Assessed Value(100.00% Market)"] ?? "";
         $beds = $propInfo["# of Bedrooms"] ?? "";
         $baths = $propInfo["# of Baths"] ?? "";
 
         $prop_type = $propInfo["Property Type"] ?? "";
         $prop_class = ($propInfo["# of Stories"] ?? "") . ' ' . ($propInfo["Home/Building Style"] ?? "");
+        $date_bought = $propInfo['Last Sale Date'] ?? "";
+
+        // Generate a string of sale entries in XML format
+        $sale_hist_data = "";
+        if (count($saleHist) > 0) {
+            foreach (array_reverse($saleHist)
+                as
+                [
+                    'Sale Date' => $date, 'Sale Price' => $price, 'Deed Book' => $db, 'Deed Page' => $dp
+                ]) {
+
+                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><db>" . $db . "</db><dp>" . $dp . "</dp><m>" . $sale_descrip . "</m></e>";
+
+                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
+            }
+            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+        }
 
         $structure = [
             'certNo'        =>    $adv_num,
@@ -149,7 +151,7 @@
             'faceAmnt'        =>    $face_amount,
             'status'        => ($status ? '1' : '0'),
             'assessedValue'        =>    $ass_value ?? '',
-            'appraisedValue'    =>    $appraisedValue ?? NULL,
+            'appraisedValue'    =>    $full_market_value ?? NULL,
             'propClass'        =>    $prop_class,
             'propType'        =>    $prop_type,
             'propLocation'        =>    $prop_loc,
@@ -245,6 +247,7 @@
             for ($n = 0; $n < $num_td_elements; $n += 2) {
 
                 $key = trim($td_elements[$n]?->textContent);
+                $key = preg_replace('/\s+/', ' ', $key);
                 $value = trim($td_elements[$n + 1]?->textContent);
 
                 if (!$key) continue;

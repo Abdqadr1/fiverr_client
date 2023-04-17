@@ -13,9 +13,7 @@
 
 
     $array = openFile('./TEST FILES/nassau county_ny_TEST FILE.csv');
-
-    $header = array_shift($array); // remove the first element from the array
-
+    $header = array_shift($array);
 
 
     for ($i = 0; $i < 1; $i++) { //count($array)
@@ -137,8 +135,6 @@
             $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
         }
 
-        // exit($prop_class);
-
 
         $structure = [
             'certNo'        =>    $adv_num,
@@ -151,7 +147,7 @@
             'assessedValue'        =>    $ass_value ?? '',
             'appraisedValue'    =>    $appraisedValue ?? NULL,
             'propClass'        =>    $prop_class,
-            'propType'        =>    $prop_type,
+            'propType'        =>    $land_category,
             'propLocation'        =>    $prop_loc,
             'city'            =>    $city,
             'zip'            =>    $zip_code ?? NULL,

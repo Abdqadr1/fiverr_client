@@ -233,7 +233,7 @@ function listData(array $data)
 {
 	echo "============================================ <br/>";
 	foreach ($data as $x => $x_value) {
-		echo $x . " = " . (gettype($x_value) === 'array' ? listData($x_value) : $x_value);
+		echo "[$x]" . " = " . (gettype($x_value) === 'array' ? listData($x_value) : "[$x_value]");
 		echo "<br>";
 	}
 }

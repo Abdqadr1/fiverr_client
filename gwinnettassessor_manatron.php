@@ -13,9 +13,7 @@
 
 
     $array = openFile('./TEST FILES/gwinnett county_ga_TEST FILE.csv');
-
-    $header = array_shift($array); // remove the first element from the array
-    //$header_map = array_map( 'keepOnlyDesired', $header );
+    $header = array_shift($array);
 
 
 
@@ -52,8 +50,6 @@
         //echo $charge_type ." | ". $charge_descrip ."<br>";
         /*********************************************************/
 
-
-        $qual ??= "";
         $parcelNo = $parcel_id;
 
         /**************** CREATE THE TAX ASSESSMENT URL *******************/
@@ -98,36 +94,37 @@
         if (!empty($bldg_desc) && empty($bldg_descrip))
             $bldg_descrip = $bldg_desc;
 
-        $taxes_as_text = getTaxesAsText($taxAssessInfo['Total Appr'] ?? "");
+        $total_appr = $taxAssessInfo['Total Appr'] ?? 0;
+        $total_assd = $taxAssessInfo["Total Assd"] ?? "";
+        $taxes_as_text = getTaxesAsText($total_appr);
         $date_bought = $saleHist[0]['Date'] ?? "";
-
-        // Generate a string of sale entries in XML format
-        $sale_hist_data = "";
-
-        foreach (array_reverse($saleHist)
-            as
-            [
-                'Date' => $date, 'Sale Price' => $price, 'Deed' => $dt, 'Book' => $b, 'Page' => $p
-            ]) {
-
-            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><d>" . $dt . "</d><b>" . $b . "</b><p>" . $p . "</p><m>" . $sale_descrip . "</m></e>";
-
-            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-        }
-        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
 
 
         $prop_class = $propInfo["Property Class"] ?? "";
         $prop_type = ($propInfo["Stories"] ?? "") . ' ' . ($taxAssessInfo["Type"] ?? "");
-        $ass_value = $taxAssessInfo["Total Assd"] ?? "";
 
         $prop_use = $taxAssessInfo["Occupancy"] ?? "";
         $beds = $propInfo["Bedrooms"] ?? "";
         $baths = $propInfo["Bathrooms"] ?? "";
         $half_bath = $propInfo["Bathrooms (Half)"] ?? "";
 
+        // Generate a string of sale entries in XML format
+        $sale_hist_data = "";
+        if (count($saleHist) > 0) {
+            foreach (array_reverse($saleHist)
+                as
+                [
+                    'Date' => $date, 'Sale Price' => $price, 'Deed' => $dt, 'Book' => $b, 'Page' => $p
+                ]) {
+
+                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><d>" . $dt . "</d><b>" . $b . "</b><p>" . $p . "</p><m>" . $sale_descrip . "</m></e>";
+
+                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
+            }
+            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+        }
 
         $structure = [
             'certNo'        =>    $adv_num,
@@ -137,8 +134,8 @@
             'chargeType'        =>    $charge_descrip,
             'faceAmnt'        =>    $face_amount,
             'status'        => ($status ? '1' : '0'),
-            'assessedValue'        =>    $ass_value ?? '',
-            'appraisedValue'    =>    NULL,
+            'assessedValue'        =>    $total_assd ?? '',
+            'appraisedValue'    =>    $total_appr,
             'propClass'        =>    $prop_class,
             'propType'        =>    $prop_type,
             'propLocation'        =>    $prop_loc,

@@ -13,8 +13,7 @@
 
 
     $array = openFile('./TEST FILES/shelby county_tn_TEST FILE.csv');
-    $header = array_shift($array); // remove the first element from the array
-    //$header_map = array_map( 'keepOnlyDesired', $header );
+    $header = array_shift($array);
 
 
     for ($i = 0; $i < 1; $i++) { //count($array)

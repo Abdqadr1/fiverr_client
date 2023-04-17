@@ -13,10 +13,7 @@
 
 
     $array = openFile('./TEST FILES/genesee county_ny_TEST FILE.csv');
-
-    $header = array_shift($array); // remove the first element from the array
-    //$header_map = array_map( 'keepOnlyDesired', $header );
-
+    $header = array_shift($array);
 
 
     for ($i = 0; $i < 1; $i++) { //count($array)
@@ -24,7 +21,6 @@
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
         $row = array_map('keepOnlyDesired', $array[$i]);
-
         [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
 
 
@@ -104,9 +100,17 @@
         if (!empty($bldg_desc) && empty($bldg_descrip))
             $bldg_descrip = $bldg_desc;
 
-        $ass_value = $taxAssessInfo["Total Assessed Value*"] ?? "";
-        $taxes_as_text = getTaxesAsText($taxAssessInfo['Full Market Value'] ?? "");
+        $ass_value = $taxAssessInfo["Total Assessed Value*"] ?? 0;
+        $full_market_value = $taxAssessInfo['Full Market Value'] ?? 0;
+        $taxes_as_text = getTaxesAsText($full_market_value);
         $date_bought = $saleHist[0]['Sale Date'] ?? "";
+
+        $beds = $propInfo["Number of Bedrooms"] ?? "";
+        $baths = $propInfo["Number of Full Baths"] ?? "";
+        $half_bath = $propInfo["Number of Half Baths"] ?? "";
+
+        $prop_class = ($propInfo["Number of Stories"] ?? "") . ' ' . ($propInfo["Building Style"] ?? "");
+        $prop_type = $propInfo["Property Type"] ?? "";
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
@@ -127,12 +131,6 @@
             $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
         }
 
-        $beds = $propInfo["Number of Bedrooms"] ?? "";
-        $baths = $propInfo["Number of Full Baths"] ?? "";
-        $half_bath = $propInfo["Number of Half Baths"] ?? "";
-
-        $prop_class = ($propInfo["Number of Stories"] ?? "") . ' ' . ($propInfo["Building Style"] ?? "");
-        $prop_type = $propInfo["Property Type"] ?? "";
 
 
         $structure = [
@@ -143,8 +141,8 @@
             'chargeType'        =>    $charge_descrip,
             'faceAmnt'        =>    $face_amount,
             'status'        => ($status ? '1' : '0'),
-            'assessedValue'        =>    $ass_value ?? '',
-            'appraisedValue'    =>    NULL,
+            'assessedValue'        =>    $ass_value,
+            'appraisedValue'    =>    $full_market_value,
             'propClass'        =>    $prop_class,
             'propType'        =>    $prop_type,
             'propLocation'        =>    $prop_loc,
@@ -175,8 +173,6 @@
         $headers = $page['headers'];
         $http_status_code = $headers['status_info']['status_code'];
         //var_dump($headers);
-
-
 
         if ($http_status_code >= 400)
             return FALSE;
