@@ -1,44 +1,50 @@
 <?php
 require_once "vendor/autoload.php";
 
-
+use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition;
-use Facebook\WebDriver\Remote\WebDriverCapabilityType;
 
-function _dynamicCrawler($link, $timeout = 60)
+function _dynamicCrawler($link, $timeout = 60, $containsPath)
 {
+    $output = false;
+    try {
+        $link = str_starts_with($link, 'https://') ? $link : "https://" . $link;
 
-    $driver_path = './geckodriver-v0.33.0-win/geckodriver.exe';
+        $host = 'http://localhost:9515';
 
-    $capabilities = array(
-        WebDriverCapabilityType::BROWSER_NAME => 'firefox',
-    );
+        $capabilities = DesiredCapabilities::chrome();
 
+        // Start the Selenium WebDriver with the specified capabilities
+        $driver = RemoteWebDriver::create($host, $capabilities);
 
-    // Start the Selenium WebDriver with the specified capabilities
-    $driver = RemoteWebDriver::create($driver_path, $capabilities);
+        // Navigate to the website you want to scrape
+        $driver->get($link);
 
-    $driver = RemoteWebDriver::create($host, $capabilities, 5000, 10000, null, null, null, $driver_path);
+        if ($timeout > 0) {
+            // Wait for the page to load
+            $driver->wait($timeout)->until(
+                WebDriverExpectedCondition::presenceOfElementLocated(
+                    WebDriverBy::xpath($containsPath)
+                )
+            );
+        }
 
-    // Navigate to the website you want to scrape
-    $driver->get($link);
+        // Find the element(s) on the page that contain the data you want to scrape
+        $title = $driver->getTitle();
+        $current_url  = $driver->getCurrentURL();
+        // Print the scraped data
+        echo "Page Title: $title <br/>";
+        echo "Current URL: $current_url <br/>";
 
-    // Wait for the page to load
-    $driver->wait($timeout)->until(
-        WebDriverExpectedCondition::titleContains('Example Domain')
-    );
-
-    // Find the element(s) on the page that contain the data you want to scrape
-    $element = $driver->findElement(WebDriverBy::tagName('h1'));
-
-    // Extract the text content of the element(s)
-    $text = $element->getText();
-
-    // Print the scraped data
-    echo $text;
-
-    // Quit the Selenium WebDriver
-    $driver->quit();
+        $output =  $driver->getPageSource();
+        // Quit the Selenium WebDriver
+    } catch (Exception $ex) {
+    } finally {
+        $driver->quit();
+        return $output ?? false;
+    }
 }
+
+// _dynamicCrawler('https://gis.dutchessny.gov/parcelaccess/property-card/?parcelgrid=13020000595400289208930000&parcelid=463');

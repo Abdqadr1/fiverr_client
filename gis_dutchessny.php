@@ -4,7 +4,7 @@
 <body>
 
     <?php
-    include 'web-crawler.php';
+    include './dynamic_crawler.php';
     include 'tax-codes.php';
 
     /******** SETTINGS *********/
@@ -13,7 +13,6 @@
 
 
     $array = openFile('./TEST FILES/dutchess county_ny_TEST FILE.csv');
-
     $header = array_shift($array); // remove the first element from the array
     //$header_map = array_map( 'keepOnlyDesired', $header );
 
@@ -166,7 +165,8 @@
 
     function parsePage($target)
     {
-        $page = _http($target);
+        $page = _dynamicCrawler('https://' . $target);
+        exit;
         $headers = $page['headers'];
         $http_status_code = $headers['status_info']['status_code'];
         //var_dump($headers);
