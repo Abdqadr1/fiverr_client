@@ -88,6 +88,7 @@
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
         $city_state_zip = $propInfo["City State Zip"] ?? "";
         @[$city, $owner_state, $zip_code] = explode(" ", $city_state_zip, 3);
+        $city = str_replace(',', '', $city);
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
 
@@ -111,18 +112,15 @@
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
 
-        if (count($saleHist) > 0) {
-            foreach (array_reverse($saleHist) as ['Sale Date' => $date, 'Sale Price' => $price, 'Grantee' => $buyer, 'Grantor' => $seller]) {
+        foreach (array_reverse($saleHist) as ['Sale Date' => $date, 'Sale Price' => $price, 'Grantee' => $buyer, 'Grantor' => $seller]) {
 
-                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $buyer . "</b><m>" . $sale_descrip . "</m></e>";
-                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-            }
-            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $buyer . "</b><m>" . $sale_descrip . "</m></e>";
+            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
         }
+        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
 
-        // exit(listData($propInfo));
 
         $structure = [
             'certNo'        =>    $adv_num,
@@ -161,37 +159,41 @@
 
     function parsePage($target)
     {
-        $require_element_path = "/html/body/form/div[6]/div/div[1]/main/section[1]/div/div/table";
-        $page = _dynamicCrawler($target, 20, $require_element_path);
+        try {
+            $require_element_path = "/html/body/form/div[6]/div/div[1]/main/section[1]/div/div/table";
+            $page = _dynamicCrawler($target, 20, $require_element_path);
 
-        if (!$page)
-            return FALSE;
+            if (!$page)
+                return FALSE;
 
 
-        $doc = new DOMDocument('1.0', 'utf-8');
-        // don't propagate DOM errors to PHP interpreter
-        libxml_use_internal_errors(true);
-        // converts all special characters to utf-8
-        $content = mb_convert_encoding($page, 'HTML-ENTITIES', 'UTF-8');
-        $doc->loadHTML($content);
+            $doc = new DOMDocument('1.0', 'utf-8');
+            // don't propagate DOM errors to PHP interpreter
+            libxml_use_internal_errors(true);
+            // converts all special characters to utf-8
+            $content = mb_convert_encoding($page, 'HTML-ENTITIES', 'UTF-8');
+            $doc->loadHTML($content);
 
-        $summary_table = getElementsByClassName($doc, $require_element_path, true);
-        $owner_info_th = getElementsByClassName($doc, "/html/body/form/div[6]/div/div[1]/main/section[2]/div/table/tbody/tr/th", true);
-        $residential_table = getElementsByClassName($doc, "/html/body/form/div[6]/div/div[1]/main/section[4]/div/table", true);
-        $sales_table = getElementsByClassName($doc, '//*[@id="ctlBodyPane_ctl11_ctl01_gvwSales"]', true);
-        $valuation_table = getElementsByClassName($doc, '//*[@id="ctlBodyPane_ctl13_ctl01_grdValuation"]', true);
+            $summary_table = getElementByPath($doc, $require_element_path, true);
+            $owner_info_th = getElementByPath($doc, "/html/body/form/div[6]/div/div[1]/main/section[2]/div/table/tbody/tr/th", true);
+            $residential_table = getElementByPath($doc, "/html/body/form/div[6]/div/div[1]/main/section[4]/div/table", true);
+            $sales_table = getElementByPath($doc, '//*[@id="ctlBodyPane_ctl11_ctl01_gvwSales"]', true);
+            $valuation_table = getElementByPath($doc, '//*[@id="ctlBodyPane_ctl13_ctl01_grdValuation"]', true);
 
-        $summary_data = parseAttributesTable($summary_table);
-        $owner_data = parseOwnerTh($owner_info_th);
-        $residential_data = parseAttributesTable($residential_table);
-        $sales_data = parseTableData($sales_table, true, false);
-        $valuation_data = parseAttributesTable($valuation_table, true, true, 0, 1);
+            $summary_data = parseAttributesTable($summary_table);
+            $owner_data = parseOwnerTh($owner_info_th);
+            $residential_data = parseAttributesTable($residential_table);
+            $sales_data = parseTableData($sales_table, true, false);
+            $valuation_data = parseAttributesTable($valuation_table, true, true, 0, 1);
 
-        return [
-            'Property Info'    =>     array_merge($summary_data, $owner_data, $residential_data),
-            'Sale Info'       =>     $sales_data,
-            'Tax Assess Info'  =>    $valuation_data
-        ];
+            return [
+                'Property Info'    =>     array_merge($summary_data, $owner_data, $residential_data),
+                'Sale Info'       =>     $sales_data,
+                'Tax Assess Info'  =>    $valuation_data
+            ];
+        } catch (Exception | Error $x) {
+            return false;
+        }
     }
 
     function parseOwnerTh($th)

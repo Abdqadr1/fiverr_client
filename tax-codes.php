@@ -256,7 +256,7 @@ function getTaxesAsText($taxes)
 	return $taxes_as_text;
 }
 
-function getElementsByClassName($dom, $className, $is_path = false)
+function getElementByPath($dom, $className, $is_path = false)
 {
 
 	$xpath = new DOMXpath($dom);

@@ -8,9 +8,7 @@
     include 'tax-codes.php';
 
     /******** SETTINGS *********/
-    $city = 'Absecon';
     $state = 'TN';
-    $district = "0101";
     /***************************/
 
     $array = openFile("./TEST FILES/davidson county_tn_TEST FILE.csv");
@@ -92,7 +90,7 @@
 
         $owner_loc = $propInfo["Mailing Address"] ?? "";
 
-        @[$owner_street, $owner_city, $state_code] = explode(',', $owner_loc, 3);
+        @[$owner_street, $city, $state_code] = explode(',', $owner_loc, 3);
 
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
         @[$owner_state, $zip_code] = preg_split('/\s+/', trim($state_code), 2);
@@ -120,21 +118,20 @@
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
-        if (count($saleHist) > 0) {
-            foreach (array_reverse($saleHist)
-                as
-                [
-                    'Sale Date' => $date, 'Sale Price' => $price, 'Deed Type' => $dt, 'Deed Book & Page' => $bg
-                ]) {
+        foreach (array_reverse($saleHist)
+            as
+            [
+                'Sale Date' => $date, 'Sale Price' => $price, 'Deed Type' => $dt, 'Deed Book & Page' => $bg
+            ]) {
 
-                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><d>" . $dt . "</d><bg>" . $bg . "</bg><m>" . $sale_descrip . "</m></e>";
+            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><d>" . $dt . "</d><bg>" . $bg . "</bg><m>" . $sale_descrip . "</m></e>";
 
-                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-            }
-            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
         }
+        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+
 
         $structure = [
             'certNo'        =>    $adv_num,
@@ -187,10 +184,10 @@
         $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
         $doc->loadHTML($content);
 
-        $LocAddDiv = getElementsByClassName($doc, "/html/body/div/section/div/div[2]/div", true);
+        $LocAddDiv = getElementByPath($doc, "/html/body/div/section/div/div[2]/div", true);
         [$key, $val] = explode(':', trim($LocAddDiv?->nodeValue), 2);
 
-        $historyTable = getElementsByClassName($doc, "/html/body/div/section/div/div[4]/div/table", true);
+        $historyTable = getElementByPath($doc, "/html/body/div/section/div/div[4]/div/table", true);
 
         $saleInfo = parseTableData($historyTable);
 
@@ -199,38 +196,42 @@
 
     function parsePage($target)
     {
-        $page = _http($target);
-        $headers = $page['headers'];
-        $http_status_code = $headers['status_info']['status_code'];
-        //var_dump($headers);
+        try {
+            $page = _http($target);
+            $headers = $page['headers'];
+            $http_status_code = $headers['status_info']['status_code'];
+            //var_dump($headers);
 
-        if ($http_status_code >= 405)
-            return FALSE;
+            if ($http_status_code >= 405)
+                return FALSE;
 
 
-        $doc = new DOMDocument('1.0', 'utf-8');
-        // don't propagate DOM errors to PHP interpreter
-        libxml_use_internal_errors(true);
-        // converts all special characters to utf-8
-        $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
-        $doc->loadHTML($content);
+            $doc = new DOMDocument('1.0', 'utf-8');
+            // don't propagate DOM errors to PHP interpreter
+            libxml_use_internal_errors(true);
+            // converts all special characters to utf-8
+            $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
+            $doc->loadHTML($content);
 
-        $genPropDiv = getElementsByClassName($doc, "/html/body/div[1]/section/div/div[2]/div[1]/ul", true);
-        $morePropDiv = getElementsByClassName($doc, "/html/body/div[1]/section/div/div[2]/div[1]/div[4]/ul", true);
-        $assessmentPropDiv = getElementsByClassName($doc, "/html/body/div[1]/section/div/div[4]/div[1]/ul", true);
-        $genAttributesDiv = getElementsByClassName($doc, "/html/body/div[1]/section/div/div[4]/div[2]/div/div[1]/ul", true);
-        $numbersDiv = getElementsByClassName($doc, "/html/body/div[1]/section/div/div[4]/div[2]/div/div[2]/ul", true);
+            $genPropDiv = getElementByPath($doc, "/html/body/div[1]/section/div/div[2]/div[1]/ul", true);
+            $morePropDiv = getElementByPath($doc, "/html/body/div[1]/section/div/div[2]/div[1]/div[4]/ul", true);
+            $assessmentPropDiv = getElementByPath($doc, "/html/body/div[1]/section/div/div[4]/div[1]/ul", true);
+            $genAttributesDiv = getElementByPath($doc, "/html/body/div[1]/section/div/div[4]/div[2]/div/div[1]/ul", true);
+            $numbersDiv = getElementByPath($doc, "/html/body/div[1]/section/div/div[4]/div[2]/div/div[2]/ul", true);
 
-        $genInfo = parseList($genPropDiv);
-        $morePropInfo = parseList($morePropDiv);
-        $assessmentInfo = parseList($assessmentPropDiv);
-        $genAttributesInfo = parseList($genAttributesDiv);
-        $numbersInfo = parseList($numbersDiv);
+            $genInfo = parseList($genPropDiv);
+            $morePropInfo = parseList($morePropDiv);
+            $assessmentInfo = parseList($assessmentPropDiv);
+            $genAttributesInfo = parseList($genAttributesDiv);
+            $numbersInfo = parseList($numbersDiv);
 
-        return [
-            'propInfo'    =>     array_merge($genInfo, $morePropInfo),
-            'Tax_Assess_Info'  =>    array_merge($assessmentInfo, $genAttributesInfo, $numbersInfo)
-        ];
+            return [
+                'propInfo'    =>     array_merge($genInfo, $morePropInfo),
+                'Tax_Assess_Info'  =>    array_merge($assessmentInfo, $genAttributesInfo, $numbersInfo)
+            ];
+        } catch (Exception | Error $x) {
+            return false;
+        }
     }
 
     function parseList($list)

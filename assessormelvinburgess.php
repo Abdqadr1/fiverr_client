@@ -99,21 +99,20 @@
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
-        if (count($saleHist) > 0) {
-            foreach (array_reverse($saleHist)
-                as
-                [
-                    'Date of Sale' => $date, 'Sales Price' => $price, 'Deed Number' => $db, 'Instrument Type' => $it
-                ]) {
+        foreach (array_reverse($saleHist)
+            as
+            [
+                'Date of Sale' => $date, 'Sales Price' => $price, 'Deed Number' => $db, 'Instrument Type' => $it
+            ]) {
 
-                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><db>" . $db . "</db><it>" . $it . "</it><m>" . $sale_descrip . "</m></e>";
+            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><db>" . $db . "</db><it>" . $it . "</it><m>" . $sale_descrip . "</m></e>";
 
-                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-            }
-            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
         }
+        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+
 
         $beds = $propInfo["Bedrooms:"] ?? "";
         $baths = $propInfo["Bathrooms :"] ?? "";
@@ -159,38 +158,42 @@
 
     function parsePage($target)
     {
-        $page = _http($target);
-        $headers = $page['headers'];
-        $headers = $page['headers'];
-        $http_status_code = $headers['status_info']['status_code'];
-        //var_dump($headers);
+        try {
+            $page = _http($target);
+            $headers = $page['headers'];
+            $headers = $page['headers'];
+            $http_status_code = $headers['status_info']['status_code'];
+            //var_dump($headers);
 
-        if ($http_status_code >= 400)
-            return FALSE;
+            if ($http_status_code >= 400)
+                return FALSE;
 
 
-        $doc = new DOMDocument('1.0', 'utf-8');
-        // don't propagate DOM errors to PHP interpreter
-        libxml_use_internal_errors(true);
-        // converts all special characters to utf-8
-        $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
-        $doc->loadHTML($content);
+            $doc = new DOMDocument('1.0', 'utf-8');
+            // don't propagate DOM errors to PHP interpreter
+            libxml_use_internal_errors(true);
+            // converts all special characters to utf-8
+            $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
+            $doc->loadHTML($content);
 
-        $prop_table = getElementsByClassName($doc, "/html/body/main/div/div/div/div/div[1]/div[2]/div/table", true);
-        $appr_table = getElementsByClassName($doc, "/html/body/main/div/div/div/div/div[2]/div[2]/div/table", true);
-        $improv_table = getElementsByClassName($doc, "/html/body/main/div/div/div/div/div[3]/div[2]/div/table", true);
-        $sales_table = getElementsByClassName($doc, "/html/body/main/div/div/div/div/div[6]/div[2]/div/table", true);
+            $prop_table = getElementByPath($doc, "/html/body/main/div/div/div/div/div[1]/div[2]/div/table", true);
+            $appr_table = getElementByPath($doc, "/html/body/main/div/div/div/div/div[2]/div[2]/div/table", true);
+            $improv_table = getElementByPath($doc, "/html/body/main/div/div/div/div/div[3]/div[2]/div/table", true);
+            $sales_table = getElementByPath($doc, "/html/body/main/div/div/div/div/div[6]/div[2]/div/table", true);
 
-        $prop_data = parseAttributesTable($prop_table, false, false, 0, 1);
-        $appr_data = parseAttributesTable($appr_table, false, false, 0, 1);
-        $improv_data = parseAttributesTable($improv_table, false, false, 0, 1);
-        $saleInfo = parseTableData($sales_table);
+            $prop_data = parseAttributesTable($prop_table, false, false, 0, 1);
+            $appr_data = parseAttributesTable($appr_table, false, false, 0, 1);
+            $improv_data = parseAttributesTable($improv_table, false, false, 0, 1);
+            $saleInfo = parseTableData($sales_table);
 
-        return [
-            'Property Info'    =>     array_merge($prop_data, $improv_data),
-            'Sale Info'       =>     $saleInfo,
-            'Tax Assess Info'  =>    $appr_data
-        ];
+            return [
+                'Property Info'    =>     array_merge($prop_data, $improv_data),
+                'Sale Info'       =>     $saleInfo,
+                'Tax Assess Info'  =>    $appr_data
+            ];
+        } catch (Exception | Error $x) {
+            return false;
+        }
     }
 
     function parseTableData($table, $useFirstRow_asHeader = true)

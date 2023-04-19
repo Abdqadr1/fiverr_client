@@ -119,21 +119,20 @@
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
-        if (count($saleHist) > 0) {
-            foreach (array_reverse($saleHist)
-                as
-                [
-                    'Date of Sale' => $date, 'Sale Price' => $price, 'Book' => $db, 'Page' => $dp
-                ]) {
+        foreach (array_reverse($saleHist)
+            as
+            [
+                'Date of Sale' => $date, 'Sale Price' => $price, 'Book' => $db, 'Page' => $dp
+            ]) {
 
-                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><db>" . $db . "</db><dp>" . $dp . "</dp><m>" . $sale_descrip . "</m></e>";
+            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><db>" . $db . "</db><dp>" . $dp . "</dp><m>" . $sale_descrip . "</m></e>";
 
-                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-            }
-            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
         }
+        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+
 
 
         $structure = [
@@ -185,16 +184,16 @@
         $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
         $doc->loadHTML($content);
 
-        $address_div = getElementsByClassName($doc, "/html/body/div[2]/div/div[4]/div[1]/div[2]/section[1]/div[1]/div", true);
-        $block_div_1 = getElementsByClassName($doc, "/html/body/div[2]/div/div[4]/div[1]/div[2]/section[2]/div[1]", true);
-        $block_div_2 = getElementsByClassName($doc, "/html/body/div[2]/div/div[4]/div[1]/div[2]/section[2]/div[2]", true);
-        $tax_info_table = getElementsByClassName($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[1]/div/table", true);
-        $tab_content_div = getElementsByClassName($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[1]/div/div", true);
+        $address_div = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[1]/div[2]/section[1]/div[1]/div", true);
+        $block_div_1 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[1]/div[2]/section[2]/div[1]", true);
+        $block_div_2 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[1]/div[2]/section[2]/div[2]", true);
+        $tax_info_table = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[1]/div/table", true);
+        $tab_content_div = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[1]/div/div", true);
         $tables = $tab_content_div?->getElementsByTagName('table');
         $latest_desc_table = $tables[0];
-        $recent_sales_table = getElementsByClassName($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[5]/div/table", true);
-        $inventory_table_1 = getElementsByClassName($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[2]/div[2]/table", true);
-        $inventory_table_2 = getElementsByClassName($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[2]/div[3]/table", true);
+        $recent_sales_table = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[5]/div/table", true);
+        $inventory_table_1 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[2]/div[2]/table", true);
+        $inventory_table_2 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[2]/div[3]/table", true);
 
 
         $address = explode(':', $address_div->nodeValue, 2)[1] ?? '';

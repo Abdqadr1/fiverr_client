@@ -181,7 +181,7 @@
         foreach (array_reverse($saleHist) as ['Date' => $date, 'Price' => $price, 'Grantee' => $buyer]) {
 
             $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $buyer . "</b><m>" . $saleDescrip . "</m></e>";
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $buyer . "</b><m>" . $sale_descrip . "</m></e>";
             if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
                 $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
         }

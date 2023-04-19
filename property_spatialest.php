@@ -112,19 +112,15 @@
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
+        foreach (array_reverse($saleHist) as ['Transfer Date' => $date, 'Sales Price' => $price, 'Grantee' => $buyer, 'Grantor' => $seller]) {
 
-        if (count($saleHist) > 0) {
-            foreach (array_reverse($saleHist) as ['Transfer Date' => $date, 'Sales Price' => $price, 'Grantee' => $buyer, 'Grantor' => $seller]) {
-
-                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $buyer . "</b><m>" . $sale_descrip . "</m></e>";
-                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-            }
-            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $buyer . "</b><m>" . $sale_descrip . "</m></e>";
+            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
         }
+        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
 
-        // exit(listData($building_data));
 
         $structure = [
             'certNo'        =>    $adv_num,
@@ -163,47 +159,53 @@
 
     function parsePage($target)
     {
-        $require_element_path = "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[1]/div[2]/header/div/div/div[1]/div[2]";
-        $page = _dynamicCrawler($target, 20, $require_element_path);
+        try {
+            $require_element_path = "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[1]/div[2]/header/div/div/div[1]/div[2]";
+            $page = _dynamicCrawler($target, 20, $require_element_path);
 
-        if (!$page)
-            return FALSE;
+            if (!$page)
+                return FALSE;
 
 
-        $doc = new DOMDocument('1.0', 'utf-8');
-        // don't propagate DOM errors to PHP interpreter
-        libxml_use_internal_errors(true);
-        // converts all special characters to utf-8
-        $content = mb_convert_encoding($page, 'HTML-ENTITIES', 'UTF-8');
-        $doc->loadHTML($content);
+            $doc = new DOMDocument('1.0', 'utf-8');
+            // don't propagate DOM errors to PHP interpreter
+            libxml_use_internal_errors(true);
+            // converts all special characters to utf-8
+            $content = mb_convert_encoding($page, 'HTML-ENTITIES', 'UTF-8');
+            $doc->loadHTML($content);
 
-        $key_info_list  = getElementsByClassName($doc, "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[4]/div/div/div/div[1]/div/div/div[2]/div/div/div/div[1]/div/div/div/div/div/div/div/ul", true);
-        $appr_info_list  = getElementsByClassName($doc, "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[4]/div/div/div/div[1]/div/div/div[2]/div/div/div/div[2]/div/div/div/div/div/div/div/ul", true);
-        $location_div = getElementsByClassName($doc, $require_element_path, true);
-        $owner_div = getElementsByClassName($doc, "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[1]/div[2]/header/div/div/div[2]/div/div", true);
-        $zoner_info_list = getElementsByClassName($doc, "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[4]/div/div/div/div[3]/div/div/div[2]/div/div/div/div/div/div/div/div/div/div/div/ul", true);
-        $sales_table = getElementsByClassName($doc, "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[4]/div/div/div/div[6]/div/div/div[2]/div/div/div/div/div/div/div/div/div/table", true);
-        $building_data_table = getElementsByClassName($doc, "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[4]/div/div/div/div[7]/div/div/div[2]/div/div/div/div[2]/div/div/div/div/div/table", true);
+            $key_info_list  = getElementByPath($doc, "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[4]/div/div/div/div[1]/div/div/div[2]/div/div/div/div[1]/div/div/div/div/div/div/div/ul", true);
+            $appr_info_list  = getElementByPath($doc, "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[4]/div/div/div/div[1]/div/div/div[2]/div/div/div/div[2]/div/div/div/div/div/div/div/ul", true);
+            $location_div = getElementByPath($doc, $require_element_path, true);
+            $owner_div = getElementByPath($doc, "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[1]/div[2]/header/div/div/div[2]/div/div", true);
+            $zoner_info_list = getElementByPath($doc, "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[4]/div/div/div/div[3]/div/div/div[2]/div/div/div/div/div/div/div/div/div/div/div/ul", true);
+            $sales_table = getElementByPath($doc, "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[4]/div/div/div/div[6]/div/div/div[2]/div/div/div/div/div/div/div/div/div/table", true);
+            $building_data_table = getElementByPath($doc, "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[4]/div/div/div/div[7]/div/div/div[2]/div/div/div/div[2]/div/div/div/div/div/table", true);
 
-        $key_info_data = parseAttributesList($key_info_list);
-        $appr_info_data = parseAttributesList($appr_info_list);
-        $owner_data = parseOwnerDiv($owner_div);
-        $zoner_info_data = parseAttributesList($zoner_info_list);
-        $sales_data = parseTableData($sales_table, true, false);
-        $building_data = parseTableData($building_data_table, true, false);
+            $key_info_data = parseAttributesList($key_info_list);
+            $appr_info_data = parseAttributesList($appr_info_list);
+            $owner_data = parseOwnerDiv($owner_div);
+            $zoner_info_data = parseAttributesList($zoner_info_list);
+            $sales_data = parseTableData($sales_table, true, false);
+            $building_data = parseTableData($building_data_table, true, false);
 
-        return [
-            'Property Info'    =>     array_merge(
-                $owner_data,
-                $key_info_data,
-                $zoner_info_data,
-                ['prop_loc' => $location_div?->nodeValue]
-            ),
-            'Sale Info'       =>     $sales_data,
-            'Tax Assess Info'  =>    $appr_info_data,
-            'Building Data' => $building_data
-        ];
+            return [
+                'Property Info'    =>     array_merge(
+                    $owner_data,
+                    $key_info_data,
+                    $zoner_info_data,
+                    ['prop_loc' => $location_div?->nodeValue]
+                ),
+                'Sale Info'       =>     $sales_data,
+                'Tax Assess Info'  =>    $appr_info_data,
+                'Building Data' => $building_data
+            ];
+        } catch (Exception | Error $x) {
+            return false;
+        }
     }
+
+
     function parseOwnerDiv($div)
     {
         $arr = explode('<br>', innerHTML($div), 3);

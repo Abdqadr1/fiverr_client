@@ -126,21 +126,20 @@
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
-        if (count($saleHist) > 0) {
-            foreach (array_reverse($saleHist)
-                as
-                [
-                    'Sale Date' => $date, 'Sale Price' => $price, 'Deed Book' => $db, 'Deed Page' => $dp
-                ]) {
+        foreach (array_reverse($saleHist)
+            as
+            [
+                'Sale Date' => $date, 'Sale Price' => $price, 'Deed Book' => $db, 'Deed Page' => $dp
+            ]) {
 
-                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><db>" . $db . "</db><dp>" . $dp . "</dp><m>" . $sale_descrip . "</m></e>";
+            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><db>" . $db . "</db><dp>" . $dp . "</dp><m>" . $sale_descrip . "</m></e>";
 
-                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-            }
-            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
         }
+        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+
 
         $structure = [
             'certNo'        =>    $adv_num,
@@ -201,35 +200,39 @@
 
     function parsePage($target)
     {
-        $page = _http($target);
-        $headers = $page['headers'];
-        $http_status_code = $headers['status_info']['status_code'];
+        try {
+            $page = _http($target);
+            $headers = $page['headers'];
+            $http_status_code = $headers['status_info']['status_code'];
 
-        if ($http_status_code >= 400)
-            return FALSE;
+            if ($http_status_code >= 400)
+                return FALSE;
 
 
-        $doc = new DOMDocument('1.0', 'utf-8');
-        // don't propagate DOM errors to PHP interpreter
-        libxml_use_internal_errors(true);
-        // converts all special characters to utf-8
-        $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
-        $doc->loadHTML($content);
+            $doc = new DOMDocument('1.0', 'utf-8');
+            // don't propagate DOM errors to PHP interpreter
+            libxml_use_internal_errors(true);
+            // converts all special characters to utf-8
+            $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
+            $doc->loadHTML($content);
 
-        $location_div = getElementsByClassName($doc, "/html/body/div[1]/div/div[2]/div[2]/div/div[1]/h4", true);
-        [$loc_key, $loc_val] = explode(':', $location_div->nodeValue, 2);
-        $prop_table = getElementsByClassName($doc, "/html/body/div[1]/div/div[3]/div[2]/div[1]/div/table", true);
-        $physical_info_table = getElementsByClassName($doc, "/html/body/div[1]/div/div[3]/div[2]/div[2]/div/table", true);
-        $history_table = getElementsByClassName($doc, "/html/body/div[1]/div/div[3]/div[2]/div[6]/div/table", true);
+            $location_div = getElementByPath($doc, "/html/body/div[1]/div/div[2]/div[2]/div/div[1]/h4", true);
+            [$loc_key, $loc_val] = explode(':', $location_div->nodeValue, 2);
+            $prop_table = getElementByPath($doc, "/html/body/div[1]/div/div[3]/div[2]/div[1]/div/table", true);
+            $physical_info_table = getElementByPath($doc, "/html/body/div[1]/div/div[3]/div[2]/div[2]/div/table", true);
+            $history_table = getElementByPath($doc, "/html/body/div[1]/div/div[3]/div[2]/div[6]/div/table", true);
 
-        $prop_data = parsePropTable($prop_table);
-        $info_data = parsePropTable($physical_info_table);
-        $saleInfo = parseTableData($history_table);
+            $prop_data = parsePropTable($prop_table);
+            $info_data = parsePropTable($physical_info_table);
+            $saleInfo = parseTableData($history_table);
 
-        return [
-            'Property Info'    =>     array_merge($prop_data, $info_data, [$loc_key => $loc_val]),
-            'Sale Info'       =>     $saleInfo
-        ];
+            return [
+                'Property Info'    =>     array_merge($prop_data, $info_data, [$loc_key => $loc_val]),
+                'Sale Info'       =>     $saleInfo
+            ];
+        } catch (Exception | Error $x) {
+            return false;
+        }
     }
 
     function parsePropTable($table)

@@ -6,13 +6,13 @@ use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition;
 
-function _dynamicCrawler($link, $timeout = 60, $containsPath)
+function _dynamicCrawler($link, $timeout = 60, $containsPath, $buttonId = null)
 {
     $output = false;
     try {
         $link = str_starts_with($link, 'https://') ? $link : "https://" . $link;
 
-        $host = 'http://localhost:9515';
+        $host = 'http://localhost:9515'; // this is the link and the port of the chromedriver, geckodriver, msedgedriver
 
         $capabilities = DesiredCapabilities::chrome();
 
@@ -21,6 +21,10 @@ function _dynamicCrawler($link, $timeout = 60, $containsPath)
 
         // Navigate to the website you want to scrape
         $driver->get($link);
+
+        if ($buttonId) {
+            $driver->findElement(WebDriverBy::id($buttonId))->click();
+        }
 
         if ($timeout > 0) {
             // Wait for the page to load
@@ -31,9 +35,9 @@ function _dynamicCrawler($link, $timeout = 60, $containsPath)
             );
         }
 
-        // Find the element(s) on the page that contain the data you want to scrape
         $title = $driver->getTitle();
         $current_url  = $driver->getCurrentURL();
+
         // Print the scraped data
         echo "Page Title: $title <br/>";
         echo "Current URL: $current_url <br/>";
@@ -43,7 +47,7 @@ function _dynamicCrawler($link, $timeout = 60, $containsPath)
     } catch (Exception $ex) {
     } finally {
         $driver->quit();
-        return $output ?? false;
+        return $output;
     }
 }
 

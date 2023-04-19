@@ -17,7 +17,7 @@
 
 
 
-    for ($i = 0; $i < 1; $i++) { //count($array)
+    for ($i = 0; $i < 2; $i++) { //count($array)
 
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
@@ -113,23 +113,22 @@
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
 
-        if (count($saleHist) > 0) {
-            foreach (array_reverse($saleHist)
-                as
-                [
-                    'Sale Date' => $date, 'Price' => $price, 'Book' => $book, 'Page' => $page, 'Vacant/Improved' => $vacantImproved,
-                    'Type Instrument' => $instrument, 'Qualification' => $qualification
-                ]) {
+        foreach (array_reverse($saleHist)
+            as
+            [
+                'Sale Date' => $date, 'Price' => $price, 'Book' => $book, 'Page' => $page, 'Vacant/Improved' => $vacantImproved,
+                'Type Instrument' => $instrument, 'Qualification' => $qualification
+            ]) {
 
-                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $book . "</b><pa>" . $page . "</pa><v>" . $vacantImproved . "<v/>
+            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $book . "</b><pa>" . $page . "</pa><v>" . $vacantImproved . "<v/>
             <t>" . $instrument . "</t><q>" . $qualification . "</q><m>" . $sale_descrip . "</m></e>";
 
-                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-            }
-            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
         }
+        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+
 
 
         $structure = [
@@ -168,51 +167,55 @@
 
     function parsePage($target)
     {
-        $page = _http($target);
-        $headers = $page['headers'];
-        $http_status_code = $headers['status_info']['status_code'];
-        //var_dump($headers);
+        try {
+            $page = _http($target);
+            $headers = $page['headers'];
+            $http_status_code = $headers['status_info']['status_code'];
+            //var_dump($headers);
 
-        if ($http_status_code >= 400)
-            return FALSE;
-
-
-        $doc = new DOMDocument('1.0', 'utf-8');
-        // don't propagate DOM errors to PHP interpreter
-        libxml_use_internal_errors(true);
-        // converts all special characters to utf-8
-        $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
-        $doc->loadHTML($content);
-
-        $ownerDiv = getElementsByClassName($doc, "/html/body/div/main/div/div[2]/div[2]/div[1]/div/div[2]/div/div", true);
-        $propAddress = getElementsByClassName($doc, "//html/body/div/main/div/div[2]/div[2]/div[2]/div/div[2]/div[1]/div/p", true)
-            ?->nodeValue ?? "";
-        // $propDiv = getElementsByClassName($doc, "/html/body/div/main/div/div[2]/div[2]/div[2]/div/div[2]", true);
-        $valueDiv = getElementsByClassName($doc, "/html/body/div/main/div/div[2]/div[3]/div[1]/div/div[2]/div", true);
-        $generalDiv1 = getElementsByClassName($doc, "/html/body/div/main/div/div[2]/div[4]/div/div/div[2]/div/div[1]", true);
-        $generalDiv2 = getElementsByClassName($doc, "/html/body/div/main/div/div[2]/div[4]/div/div/div[2]/div/div[2]", true);
-
-        $buildingInfoDiv1 = getElementsByClassName($doc, "/html/body/div/main/div/div[2]/div[5]/div/div/div[2]/div[2]/div[1]", true);
-        $buildingInfoDiv2 = getElementsByClassName($doc, "/html/body/div/main/div/div[2]/div[5]/div/div/div[2]/div[2]/div[2]", true);
-
-        $saleInfoTable = getElementsByClassName($doc, "/html/body/div/main/div/div[2]/div[7]/div/div/div[2]/div/table", true);
+            if ($http_status_code >= 400)
+                return FALSE;
 
 
-        $ownerInfo = parseOwnerDiv($ownerDiv);
-        $valueInfo = parseValueDiv($valueDiv);
-        $generalInfo1 = parseGeneralDiv($generalDiv1);
-        $generalInfo2 = parseGeneralDiv($generalDiv2);
+            $doc = new DOMDocument('1.0', 'utf-8');
+            // don't propagate DOM errors to PHP interpreter
+            libxml_use_internal_errors(true);
+            // converts all special characters to utf-8
+            $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
+            $doc->loadHTML($content);
 
-        $buildingInfo1 = parseGeneralDiv($buildingInfoDiv1);
-        $buildingInfo2 = parseGeneralDiv($buildingInfoDiv2);
+            $ownerDiv = getElementByPath($doc, "/html/body/div/main/div/div[2]/div[2]/div[1]/div/div[2]/div/div", true);
+            $propAddress = getElementByPath($doc, "//html/body/div/main/div/div[2]/div[2]/div[2]/div/div[2]/div[1]/div/p", true)
+                ?->nodeValue ?? "";
+            // $propDiv = getElementByPath($doc, "/html/body/div/main/div/div[2]/div[2]/div[2]/div/div[2]", true);
+            $valueDiv = getElementByPath($doc, "/html/body/div/main/div/div[2]/div[3]/div[1]/div/div[2]/div", true);
+            $generalDiv1 = getElementByPath($doc, "/html/body/div/main/div/div[2]/div[4]/div/div/div[2]/div/div[1]", true);
+            $generalDiv2 = getElementByPath($doc, "/html/body/div/main/div/div[2]/div[4]/div/div/div[2]/div/div[2]", true);
 
-        $saleInfo = parseTableData($saleInfoTable);
+            $buildingInfoDiv1 = getElementByPath($doc, "/html/body/div/main/div/div[2]/div[5]/div/div/div[2]/div[2]/div[1]", true);
+            $buildingInfoDiv2 = getElementByPath($doc, "/html/body/div/main/div/div[2]/div[5]/div/div/div[2]/div[2]/div[2]", true);
 
-        return [
-            'Property Info'    =>     array_merge($ownerInfo, ['prop_address' => explode(':', $propAddress, 2)[1]], $generalInfo1, $generalInfo2),
-            'Sale Info'       =>     $saleInfo,
-            'Tax Assess Info'  =>    array_merge($buildingInfo1, $buildingInfo2, $valueInfo)
-        ];
+            $saleInfoTable = getElementByPath($doc, "/html/body/div/main/div/div[2]/div[7]/div/div/div[2]/div/table", true);
+
+
+            $ownerInfo = parseOwnerDiv($ownerDiv);
+            $valueInfo = parseValueDiv($valueDiv);
+            $generalInfo1 = parseGeneralDiv($generalDiv1);
+            $generalInfo2 = parseGeneralDiv($generalDiv2);
+
+            $buildingInfo1 = parseGeneralDiv($buildingInfoDiv1);
+            $buildingInfo2 = parseGeneralDiv($buildingInfoDiv2);
+
+            $saleInfo = parseTableData($saleInfoTable);
+
+            return [
+                'Property Info'    =>     array_merge($ownerInfo, ['prop_address' => explode(':', $propAddress, 2)[1]], $generalInfo1, $generalInfo2),
+                'Sale Info'       =>     $saleInfo,
+                'Tax Assess Info'  =>    array_merge($buildingInfo1, $buildingInfo2, $valueInfo)
+            ];
+        } catch (Exception | Error  $x) {
+            return false;
+        }
     }
 
     function parseOwnerDiv($div)
@@ -278,7 +281,6 @@
                 $data_map[trim($key)] = trim($val ?? "");
             }
         }
-        // listData($data_map);
         return $data_map;
     }
 

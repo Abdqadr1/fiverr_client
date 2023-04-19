@@ -8,7 +8,7 @@
     include 'tax-codes.php';
 
     /******** SETTINGS *********/
-    $state = 'TN';
+    $state = 'GA';
     /***************************/
 
 
@@ -82,10 +82,10 @@
         $prop_loc = $propInfo["Address"] ?? "";
 
         $owner_loc = $propInfo["owner_street"] ?? "";
-        $city_state = $propInfo["city_state"] ?? "";
+        $city_state_zip = $propInfo["city_state"] ?? "";
 
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
-        @[$city, $owner_state, $zip_code] = explode(" ", $city_state, 3);
+        @[$city, $owner_state, $zip_code] = preg_split('/\s+/', trim($city_state_zip), 3);
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
 
@@ -110,21 +110,20 @@
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
-        if (count($saleHist) > 0) {
-            foreach (array_reverse($saleHist)
-                as
-                [
-                    'Date' => $date, 'Sale Price' => $price, 'Deed' => $dt, 'Book' => $b, 'Page' => $p
-                ]) {
+        foreach (array_reverse($saleHist)
+            as
+            [
+                'Date' => $date, 'Sale Price' => $price, 'Deed' => $dt, 'Book' => $b, 'Page' => $p
+            ]) {
 
-                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><d>" . $dt . "</d><b>" . $b . "</b><p>" . $p . "</p><m>" . $sale_descrip . "</m></e>";
+            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><d>" . $dt . "</d><b>" . $b . "</b><p>" . $p . "</p><m>" . $sale_descrip . "</m></e>";
 
-                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-            }
-            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
         }
+        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+
 
         $structure = [
             'certNo'        =>    $adv_num,
@@ -162,44 +161,48 @@
 
     function parsePage($target)
     {
-        $page = _http($target);
-        $headers = $page['headers'];
-        $http_status_code = $headers['status_info']['status_code'];
-        //var_dump($headers);
+        try {
+            $page = _http($target);
+            $headers = $page['headers'];
+            $http_status_code = $headers['status_info']['status_code'];
+            //var_dump($headers);
 
 
-        if ($http_status_code >= 400)
-            return FALSE;
+            if ($http_status_code >= 400)
+                return FALSE;
 
 
-        $doc = new DOMDocument('1.0', 'utf-8');
-        // don't propagate DOM errors to PHP interpreter
-        libxml_use_internal_errors(true);
-        // converts all special characters to utf-8
-        $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
-        $doc->loadHTML($content);
+            $doc = new DOMDocument('1.0', 'utf-8');
+            // don't propagate DOM errors to PHP interpreter
+            libxml_use_internal_errors(true);
+            // converts all special characters to utf-8
+            $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
+            $doc->loadHTML($content);
 
-        $tables = $doc->getElementsByTagName('table');
-        $owner_table = $tables[1];
-        $owner_td = $owner_table->getElementsByTagName('td')[0];
-        $value_table = $tables[2];
-        $history_table = $tables[3];
-        $attributes_table = $doc->getElementById('Attribute');
-        $more_attr_table = $tables[6];
+            $tables = $doc->getElementsByTagName('table');
+            $owner_table = $tables[1];
+            $owner_td = $owner_table->getElementsByTagName('td')[0];
+            $value_table = $tables[2];
+            $history_table = $tables[3];
+            $attributes_table = $doc->getElementById('Attribute');
+            $more_attr_table = $tables[6];
 
-        $owner_data = parseAttributesTable($owner_table);
-        $attrData = parseAttributesTable($attributes_table, true, false, 1, 2);
-        $more_attrData = parseAttributesTable($more_attr_table);
-        $value_data = parseValueTable($value_table);
-        $saleInfo = parseTableData($history_table);
+            $owner_data = parseAttributesTable($owner_table);
+            $attrData = parseAttributesTable($attributes_table, true, false, 1, 2);
+            $more_attrData = parseAttributesTable($more_attr_table);
+            $value_data = parseValueTable($value_table);
+            $saleInfo = parseTableData($history_table);
 
-        $owner_details = parseOwnerTd($owner_td);
+            $owner_details = parseOwnerTd($owner_td);
 
-        return [
-            'Property Info'    =>     array_merge($owner_details, $owner_data, $attrData),
-            'Sale Info'       =>     $saleInfo,
-            'Tax Assess Info'  =>    array_merge($value_data, $more_attrData)
-        ];
+            return [
+                'Property Info'    =>     array_merge($owner_details, $owner_data, $attrData),
+                'Sale Info'       =>     $saleInfo,
+                'Tax Assess Info'  =>    array_merge($value_data, $more_attrData)
+            ];
+        } catch (Exception | Error $x) {
+            return false;
+        }
     }
 
     function parseOwnerTd($td)
@@ -215,7 +218,7 @@
         return $data;
     }
 
-    function parseTableData($table, $useFirstRow_asHeader = true, $header = null)
+    function parseTableData($table, $useFirstRow_asHeader = true)
     {
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows); // count only once
@@ -226,8 +229,6 @@
             foreach ($rows[0]->getElementsByTagName('th') as $col) { // get child elements
                 $header_map[] = trim($col->textContent);
             }
-        } else {
-            $header_map = $header;
         }
 
         $data_map = [];

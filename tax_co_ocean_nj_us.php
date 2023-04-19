@@ -123,16 +123,16 @@
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
-        if (count($saleHist) > 0) {
-            foreach (array_reverse($saleHist) as ['Deed date:' => $date, 'Sales price:' => $price, 'Book/page:' => $page]) {
 
-                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $page . "</b><m>" . $sale_descrip . "</m></e>";
-                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-            }
-            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+        foreach (array_reverse($saleHist) as ['Deed date:' => $date, 'Sales price:' => $price, 'Book/page:' => $page]) {
+
+            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $page . "</b><m>" . $sale_descrip . "</m></e>";
+            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
         }
+        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+
 
 
         $_qual = $propInfo['Qual:'] !== "n/a" ? $propInfo['Qual:'] : "";
@@ -180,37 +180,42 @@
 
     function parsePage($target)
     {
-        $page = _http($target);
-        $headers = $page['headers'];
-        $http_status_code = $headers['status_info']['status_code'];
-        //var_dump($headers);
+        try {
 
-        if ($http_status_code >= 400)
-            return FALSE;
+            $page = _http($target);
+            $headers = $page['headers'];
+            $http_status_code = $headers['status_info']['status_code'];
+            //var_dump($headers);
+
+            if ($http_status_code >= 400)
+                return FALSE;
 
 
-        $doc = new DOMDocument('1.0', 'utf-8');
-        // don't propagate DOM errors to PHP interpreter
-        libxml_use_internal_errors(true);
-        // converts all special characters to utf-8
-        $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
-        $doc->loadHTML($content);
+            $doc = new DOMDocument('1.0', 'utf-8');
+            // don't propagate DOM errors to PHP interpreter
+            libxml_use_internal_errors(true);
+            // converts all special characters to utf-8
+            $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
+            $doc->loadHTML($content);
 
-        $taxListDetailsTable = $doc->getElementById("MainContent_MOD4Table");
-        $assessmentHistoryTable = $doc->getElementById("MainContent_AssmtHistTable");
-        $propertyDetailsTable = $doc->getElementById("MainContent_CAMATable");
-        $saleHistoryTable = $doc->getElementById("MainContent_SR1ATable");
+            $taxListDetailsTable = $doc->getElementById("MainContent_MOD4Table");
+            $assessmentHistoryTable = $doc->getElementById("MainContent_AssmtHistTable");
+            $propertyDetailsTable = $doc->getElementById("MainContent_CAMATable");
+            $saleHistoryTable = $doc->getElementById("MainContent_SR1ATable");
 
-        $propInfo = parseTableData($taxListDetailsTable, false);
-        $saleInfo = parseSaleHistoryTable($saleHistoryTable);
-        $detailsInfo = parseTableData($propertyDetailsTable, false);
-        $assessmentInfo = parseTableData($assessmentHistoryTable);
+            $propInfo = parseTableData($taxListDetailsTable, false);
+            $saleInfo = parseSaleHistoryTable($saleHistoryTable);
+            $detailsInfo = parseTableData($propertyDetailsTable, false);
+            $assessmentInfo = parseTableData($assessmentHistoryTable);
 
-        return [
-            'Property Info'    =>     $propInfo,
-            'Sale Info'       =>     $saleInfo,
-            'Tax Assess Info'  =>    $detailsInfo
-        ];
+            return [
+                'Property Info'    =>     $propInfo,
+                'Sale Info'       =>     $saleInfo,
+                'Tax Assess Info'  =>    $detailsInfo
+            ];
+        } catch (Exception | Error $x) {
+            return false;
+        }
     }
 
     function parseTableData($table, $useFirstRowAsKey = true)

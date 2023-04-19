@@ -115,21 +115,20 @@
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
 
-        if (count($saleHist) > 0) {
-            foreach (array_reverse($saleHist)
-                as
-                [
-                    'Deed Date' => $date, 'Sale Price' => $price, 'Deed Book' => $b, 'Deed Page' => $p
-                ]) {
+        foreach (array_reverse($saleHist)
+            as
+            [
+                'Deed Date' => $date, 'Sale Price' => $price, 'Deed Book' => $b, 'Deed Page' => $p
+            ]) {
 
-                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $b . "</b><p>" . $p . "</p><m>" . $sale_descrip . "</m></e>";
+            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $b . "</b><p>" . $p . "</p><m>" . $sale_descrip . "</m></e>";
 
-                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-            }
-            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
         }
+        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+
 
 
 
@@ -169,49 +168,53 @@
 
     function parsePage($target)
     {
-        $page = _http($target);
-        $headers = $page['headers'];
-        $http_status_code = $headers['status_info']['status_code'];
-        //var_dump($headers);
+        try {
+            $page = _http($target);
+            $headers = $page['headers'];
+            $http_status_code = $headers['status_info']['status_code'];
+            //var_dump($headers);
 
-        if ($http_status_code >= 400)
-            return FALSE;
-
-
-        $doc = new DOMDocument('1.0', 'utf-8');
-        // don't propagate DOM errors to PHP interpreter
-        libxml_use_internal_errors(true);
-        // converts all special characters to utf-8
-        $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
-        $doc->loadHTML($content);
+            if ($http_status_code >= 400)
+                return FALSE;
 
 
-        $h2_tags = $doc->getElementsByTagName('h2');
-        $build_prop_table = $doc->getElementById('residential_building_hdr');
-        $assess_div = $doc->getElementById('assessment_hdr');
-        $prop_desc_div = $doc->getElementById('property_description_hdr');
-        $assess_table = $assess_div->getElementsByTagName('table')[0];
-        $prop_desc_table = $prop_desc_div->getElementsByTagName('table')[0];
-        $owners_table = $doc->getElementById('parcel-owners');
-        $sales_history_table = $doc->getElementById('parcel-sales');
-        [$d, $prop_loc, $parcel_no, $swis] = explode(' - ', $h2_tags[0]->nodeValue, 4);
+            $doc = new DOMDocument('1.0', 'utf-8');
+            // don't propagate DOM errors to PHP interpreter
+            libxml_use_internal_errors(true);
+            // converts all special characters to utf-8
+            $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
+            $doc->loadHTML($content);
 
 
-        $prop_data = ['Location' => $prop_loc, 'Parcel_data' => $parcel_no];
+            $h2_tags = $doc->getElementsByTagName('h2');
+            $build_prop_table = $doc->getElementById('residential_building_hdr');
+            $assess_div = $doc->getElementById('assessment_hdr');
+            $prop_desc_div = $doc->getElementById('property_description_hdr');
+            $assess_table = $assess_div->getElementsByTagName('table')[0];
+            $prop_desc_table = $prop_desc_div->getElementsByTagName('table')[0];
+            $owners_table = $doc->getElementById('parcel-owners');
+            $sales_history_table = $doc->getElementById('parcel-sales');
+            [$d, $prop_loc, $parcel_no, $swis] = explode(' - ', $h2_tags[0]->nodeValue, 4);
 
 
-        $building_data = parseAttributesTable($build_prop_table, true, false, 0, 1);
-        $assess_data = parseAttributesTable($assess_table, false, false, 0, 1);
-        $prop_desc_data = parseAttributesTable($prop_desc_table, false, false, 0, 1);
-        $owners_info = parseTableData($owners_table);
-        $saleInfo = parseTableData($sales_history_table);
+            $prop_data = ['Location' => $prop_loc, 'Parcel_data' => $parcel_no];
 
-        return [
-            'Property Info'    =>     array_merge($prop_data, $building_data, $prop_desc_data),
-            'Sale Info'       =>     $saleInfo,
-            'Owners Info' => $owners_info,
-            'Tax Assess Info'  =>    $assess_data
-        ];
+
+            $building_data = parseAttributesTable($build_prop_table, true, false, 0, 1);
+            $assess_data = parseAttributesTable($assess_table, false, false, 0, 1);
+            $prop_desc_data = parseAttributesTable($prop_desc_table, false, false, 0, 1);
+            $owners_info = parseTableData($owners_table);
+            $saleInfo = parseTableData($sales_history_table);
+
+            return [
+                'Property Info'    =>     array_merge($prop_data, $building_data, $prop_desc_data),
+                'Sale Info'       =>     $saleInfo,
+                'Owners Info' => $owners_info,
+                'Tax Assess Info'  =>    $assess_data
+            ];
+        } catch (Exception | Error $x) {
+            return false;
+        }
     }
 
     function parseOwnerTd($td)
