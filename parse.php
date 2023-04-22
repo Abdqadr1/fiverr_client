@@ -4,8 +4,8 @@
 <body>
 
     <?php
-    include 'web-crawler.php';
-    include 'tax-codes.php';
+    require_once 'web-crawler.php';
+    require_once 'tax-codes.php';
 
     /******** SETTINGS *********/
     $city = 'Absecon';

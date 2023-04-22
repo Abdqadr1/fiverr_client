@@ -94,13 +94,15 @@
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
         $total_appraised_value = $taxAssessInfo['Total Appraised Value'] ?? 0;
+        $total_appraised_value = (int) filter_var($total_appraised_value, FILTER_SANITIZE_NUMBER_INT);
         $total_assessed_value = $taxAssessInfo['Total Assessed Value'] ?? 0;
-        $taxes_as_text = getTaxesAsText($total_appraised_value);
+        $total_assessed_value = (int) filter_var($total_assessed_value, FILTER_SANITIZE_NUMBER_INT);
+        $taxes_as_text = getTaxesAsText_TN($total_appraised_value, 0);
 
         $beds = $propInfo["Number Of Bedrooms"] ?? NULL;
         $baths = $propInfo["Number Of Full Bathrooms"] ?? NULL;
         $half_baths = $propInfo["Number Of Half Bathrooms"] ?? NULL;
-        $date_bought = $saleHist[0]['TRANSFER Date'] ?? "";
+        $date_bought = $saleHist[0]['Transfer Date'] ?? NULL;
 
         $zoning = $propInfo['Zoning'] ?? "";
         $split = explode('-', $zoning, 4);
@@ -161,7 +163,7 @@
     {
         try {
             $require_element_path = "/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[1]/div[2]/header/div/div/div[1]/div[2]";
-            $page = _dynamicCrawler($target, 20, $require_element_path);
+            $page = _dynamicCrawler($target, 30, $require_element_path);
 
             if (!$page)
                 return FALSE;
@@ -194,7 +196,7 @@
                     $owner_data,
                     $key_info_data,
                     $zoner_info_data,
-                    ['prop_loc' => $location_div?->nodeValue]
+                    ['prop_loc' => $location_div->nodeValue]
                 ),
                 'Sale Info'       =>     $sales_data,
                 'Tax Assess Info'  =>    $appr_info_data,
@@ -208,19 +210,23 @@
 
     function parseOwnerDiv($div)
     {
+        $data = [];
+        if (!$div || !$div instanceof DOMElement) return $data;
+
         $arr = explode('<br>', innerHTML($div), 3);
 
-        $data = [];
-        $data["owner_name"] = $arr[0];
-        $data['owner_street'] = $arr[1];
-        $data['city_state_zip'] = $arr[2];
+        $count = count($arr);
+        // $arr = explode("\n", $owner_td->nod, 3);
+        $data["owner_name"] = ($count > 3) ? $arr[0] . ', ' . $arr[1] : $arr[0];
+        $data['owner_street'] = ($count > 3) ? $arr[2] : $arr[1];
+        $data['city_state'] = ($count > 3) ? $arr[3] : $arr[2];
         return $data;
     }
 
     function parseAttributesList($list)
     {
         $data_map = [];
-        if (!$list instanceof DOMElement) return $data_map;
+        if (!$list || !$list instanceof DOMElement) return $data_map;
 
         $rows = $list->getElementsByTagName('li');
         $rows_count = count($rows);
@@ -247,6 +253,9 @@
 
     function parseTableData($table, $useFirstRow_asHeader = true, $ignore_first_row = true)
     {
+        $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
+
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows);
 
@@ -260,7 +269,6 @@
             }
         }
 
-        $data_map = [];
         $head_count = count($header_map);
 
         for ($i = ++$startIndex; $i < $rows_count; $i++) { // go thru the table starting at row #2

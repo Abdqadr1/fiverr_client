@@ -91,7 +91,6 @@
         $parcel_number = $propInfo['Parcel Number'] ?? '';
         $prop_loc = $propInfo["Parcel Address"] ?? "";
         $municipality = $propInfo["Municipality"] ?? "";
-        $prop_loc = empty($municipality) ? $prop_loc : $prop_loc . ',' . $municipality;
 
         $owner_name = $propInfo['Owner Name'] ?? "";
         $owner_type = determineOwnerType($owner_name);
@@ -109,8 +108,10 @@
         $prop_type = ($arr[1] ?? "") . ' ' . ($arr[2] ?? "");
 
         $total_value = $taxAssessInfo["Total:"] ?? 0;
+        $total_value = (int) filter_var($total_value, FILTER_SANITIZE_NUMBER_INT);
         $full_market_value = $taxAssessInfo['Full Market Value:'] ?? 0;
-        $taxes_as_text = getTaxesAsText($total_value);
+        $full_market_value = (int) filter_var($full_market_value, FILTER_SANITIZE_NUMBER_INT);
+        $taxes_as_text = getTaxesAsText_NY($total_value, 0);
 
         $beds = $propInfo["No. Bedrooms:"] ?? NULL;
         $baths = $propInfo["No. Full Baths:"] ?? NULL;
@@ -118,9 +119,7 @@
 
         $date_bought = $saleHist['Sale Date:'] ?? NULL;
 
-        $bldg_descrip = parseNJBldgDescrip($prop_type);
-        if (!empty($bldg_desc) && empty($bldg_descrip))
-            $bldg_descrip = $bldg_desc;
+        $bldg_descrip = "";
 
 
         // Generate a string of sale entries in XML format
@@ -154,8 +153,8 @@
             'propClass'        =>    $prop_class,
             'propType'        =>    $prop_type,
             'propLocation'        =>    $prop_loc,
-            'city'            =>    $city,
-            'zip'            =>    $zipcode,
+            'city'            =>    $municipality,
+            'zip'            =>    NULL,
             'buildingDescrip'    =>    $bldg_descrip,
             'numBeds'        =>    $beds ?? NULL,
             'numBaths'        =>    $baths ?? NULL,
@@ -215,6 +214,8 @@
     function parseInfoDiv($div)
     {
         $data = [];
+        if (!$div || !$div instanceof DOMElement) return $data;
+
         $divs = $div->getElementsByTagName('div');
         $div_count = count($divs);
 
@@ -234,7 +235,7 @@
     function parseAttributesDiv($parent)
     {
         $data_map = [];
-        if (!$parent instanceof DOMElement) return $data_map;
+        if (!$parent || !$parent instanceof DOMElement) return $data_map;
 
         $props = $parent->getElementsByTagName('div');
         $props_count = count($props);

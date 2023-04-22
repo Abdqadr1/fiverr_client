@@ -15,7 +15,7 @@
     $array = openFile('./TEST FILES/broome county_ny_TEST FILE.csv');
     $header = array_shift($array);
 
-    for ($i = 0; $i < 1; $i++) { //count($array)
+    for ($i = 1; $i < 2; $i++) { //count($array)
 
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
@@ -91,15 +91,22 @@
         [
             'Property Info' => $propInfo,
             'Sale Info' => $saleHist,
-            'Tax Assess Info' => $taxAssessInfo
+            'Tax Assess Info' => $taxAssessInfo,
+            'Owner Info' => $ownerInfo
         ] = $parsedPage;
 
-        $owner_name = $propInfo['owner_name'] ?? "";
+
+        $owner_loc = $ownerInfo[0]["owner_street"] ?? "";
+        $owner_name = $ownerInfo[0]['owner_name'] ?? "";
         $owner_type = determineOwnerType($owner_name);
+        for ($o = 1; $o < count($ownerInfo); $o++) {
+            $name = $ownerInfo[$o]['owner_name'] ?? "";
+            if (!empty($name)) $owner_name .= ', ' . $name;
+        }
+
         $prop_loc = $propInfo["prop_loc"] ?? "";
-        $owner_loc = $propInfo["owner_street"] ?? "";
-        $city_state_zip = $propInfo["city_state_zip"] ?? "";
-        @[$city, $owner_state, $zip_code] = explode(" ", $city_state_zip, 3);
+        $city_state_zip = $ownerInfo[0]["city_state_zip"] ?? "";
+        @[, $owner_state,] = explode(" ", $city_state_zip, 3);
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
@@ -110,17 +117,17 @@
         $prop_type =  $stories . ' ' . $building_style;
 
         $total_assessment = $propInfo["Total Assessment:"] ?? 0;
+        $total_assessment = (int) filter_var($total_assessment, FILTER_SANITIZE_NUMBER_INT);
         $full_market_value = $propInfo['Full Market Value:'] ?? 0;
-        $taxes_as_text = getTaxesAsText($total_assessment);
+        $full_market_value = (int) filter_var($full_market_value, FILTER_SANITIZE_NUMBER_INT);
+        $taxes_as_text = getTaxesAsText_NY($total_assessment, 0);
 
         $beds = $propInfo["Bedrooms:"] ?? NULL;
         $baths = $propInfo["Bathrooms (Full - Half):"] ?? NULL;
 
         $date_bought = $saleHist[0]['Sale Date'] ?? NULL;
 
-        $bldg_descrip = parseNJBldgDescrip($prop_type);
-        if (!empty($bldg_desc) && empty($bldg_descrip))
-            $bldg_descrip = $bldg_desc;
+        $bldg_descrip = "";
         $tax_map_id = $propInfo['Tax Map ID #:'] ?? NULL;
 
         // Generate a string of sale entries in XML format
@@ -150,8 +157,8 @@
             'propClass'        =>    $prop_class,
             'propType'        =>    $prop_type,
             'propLocation'        =>    $prop_loc,
-            'city'            =>    $city,
-            'zip'            =>    $zip_code,
+            'city'            =>    $city ?? NULL,
+            'zip'            =>    $zip_code ?? NULL,
             'buildingDescrip'    =>    $bldg_descrip,
             'numBeds'        =>    $beds,
             'numBaths'        =>    $baths,
@@ -198,6 +205,7 @@
             $owner_div = $doc->getElementById('pnlOwne');
             $taxes_table = $doc->getElementById('tblTax');
 
+
             $info_data = parseAttributesTable($info_table, true, true, 0, 0);
             $area_data = parseAttributesTable($area_info_table, false, true, 0, 0);
             $structure_data = parseAttributesTable($structure_info_table, false, true, 0, 0);
@@ -212,9 +220,10 @@
             parseValueSpan($lblFullMarketValue, $info_data, "Full Market Value:");
 
             return [
-                'Property Info'    =>     array_merge($info_data, $owner_data, $area_data, $structure_data),
+                'Property Info'    =>     array_merge($info_data, $area_data, $structure_data),
                 'Sale Info'       =>     $sales_data,
-                'Tax Assess Info'  =>    $taxes_data
+                'Tax Assess Info'  =>    $taxes_data,
+                'Owner Info' => $owner_data
             ];
         } catch (Exception | Error $x) {
             return false;
@@ -226,16 +235,19 @@
         $arr = explode('<br>', innerHTML($div), 3);
         [, $price] = explode(' - ', trim($arr[0]), 2);
 
-        $map[$name] = $price;
+        $map[$name ?? ''] = $price ?? '';
     }
 
 
     function parseAttributesTable($table, $removeFirstRow = false, $is_key_th = true, $key_i = 0, $val_i = 0)
     { // $index of td that contains the key
+        $data_map = [];
+        if (
+            !$table || !$table instanceof DOMElement
+        ) return $data_map;
+
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows);
-
-        $data_map = [];
 
         $start = $removeFirstRow ? 1 : 0;
 
@@ -266,6 +278,9 @@
 
     function parseTableData($table, $useFirstRow_asHeader = true)
     {
+        $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
+
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows); // count only once
 
@@ -276,8 +291,6 @@
                 $header_map[] = trim($col->textContent);
             }
         }
-
-        $data_map = [];
 
         for ($i = 1; $i < $rows_count; $i++) { // go thru the table starting at row #2
             $td_elements = $rows[$i]->getElementsByTagName('td');
@@ -302,13 +315,24 @@
 
     function parseOwnerDiv($div)
     {
-        $div = $div->getElementsByTagName('div')[0];
-        $arr = explode('<br>', innerHTML($div), 3);
-
         $data = [];
-        $data["owner_name"] = $arr[0];
-        $data['owner_street'] = $arr[1];
-        $data['city_state_zip'] = $arr[2];
+        if (!$div || !$div instanceof DOMElement) return $data;
+
+        $div = $div->getElementsByTagName('div');
+        $div_count = $div->count();
+        for ($i = 0; $i < $div_count; $i++) {
+            $owner = [];
+            $child = $div[$i];
+            if (empty($child->nodeValue)) continue;
+
+            $arr = explode('<br>', innerHTML($child), 3);
+
+            $owner["owner_name"] = $arr[0];
+            $owner['owner_street'] = $arr[1];
+            $owner['city_state_zip'] = $arr[2];
+
+            $data[] = $owner;
+        }
         return $data;
     }
 

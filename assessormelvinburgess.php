@@ -4,8 +4,8 @@
 <body>
 
     <?php
-    include 'web-crawler.php';
-    include 'tax-codes.php';
+    require_once 'web-crawler.php';
+    require_once 'tax-codes.php';
 
     /******** SETTINGS *********/
     $state = 'TN';
@@ -16,7 +16,7 @@
     $header = array_shift($array);
 
 
-    for ($i = 0; $i < 1; $i++) { //count($array)
+    for ($i = 1; $i < count($array); $i++) { //count($array)
 
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
@@ -47,20 +47,23 @@
         //echo $charge_type ." | ". $charge_descrip ."<br>";
         /*********************************************************/
 
-        // @  <=>  suppress undefined index errors
-        [$block, $lot] = explode(" ", $parcel_id, 2);
-        $parcelNo = $block . " " . $lot;
+        $parcel_id = str_ends_with($parcel_id, '0') ? substr($parcel_id, 0, strlen($parcel_id) - 1) : $parcel_id;
+        $len = strlen($parcel_id);
+        $first_6 = substr($parcel_id, 0, 5);
+        $last_6 = substr($parcel_id,  $len - 5);
+        $middle = substr($parcel_id, 5, $len - 10);
+        $middle = str_replace('0', '%20', $middle);
+        $parcel_key = "$first_6$middle$last_6";
 
         /**************** CREATE THE TAX ASSESSMENT URL *******************/
         $url = "www.assessormelvinburgess.com/propertyDetails?";
 
-        $options = "parcelid=$block%20%20$lot&IR=true";
+        $options = "parcelid=$parcel_key&IR=true";
         $tax_link = $url . $options;
 
         /******************** TEST BELOW *************************/
         echo "<a href='http://" . $tax_link . "'>" . $tax_link . "</a><br>";
         /*********************************************************/
-
         // GO TO THE LINK AND DOWNLOAD THE PAGE
 
         $parsedPage = parsePage($tax_link);
@@ -78,35 +81,38 @@
 
         $owner_name = $propInfo['Owner Name :'] ?? "";
         $owner_type = determineOwnerType($owner_name);
-        $prop_loc = ($propInfo["Property Address:"] ?? "") . ' ' . ($propInfo['Municipal Jurisdiction:'] ?? '');
+        $prop_loc = $propInfo["Property Address:"] ?? "";
+        $city = $propInfo['Municipal Jurisdiction:'] ?? '';
 
         $owner_loc = $propInfo["Owner Mailing Address:"] ?? "";
         $city_state_zip = $propInfo["Owner City/State/Zip:"] ?? "";
-        [$city, $owner_state, $zip_code] = preg_split('/\s+/', $city_state_zip, 3);
+        $arr = preg_split('/\s+/', $city_state_zip);
+        $arr_count = count($arr);
+        $zip_code = array_pop($arr) ?? "";
+        $owner_state = array_pop($arr) ?? "";
+        $owner_city = join(' ', $arr);
+
+        if ($zip_code) $zip_code = removeAllWhitespace($zip_code);
 
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
-        $bldg_desc = $propInfo["Bldg desc:"] ?? "";
-        $bldg_descrip = parseNJBldgDescrip($bldg_desc);
-        if (!empty($bldg_desc) && empty($bldg_descrip))
-            $bldg_descrip = $bldg_desc;
-
         $total_assessment = $taxAssessInfo['Total Assessment:'] ?? "";
+        $assess_value = (int) filter_var($total_assessment, FILTER_SANITIZE_NUMBER_INT);
         $total_appraisal = $taxAssessInfo['Total Appraisal:'] ?? "";
-        $taxes_as_text = getTaxesAsText($total_appraisal);
+        $appraised_value = (int) filter_var($total_appraisal, FILTER_SANITIZE_NUMBER_INT);
+        $taxes_as_text = getTaxesAsText_TN($appraised_value, 0.532);
         $date_bought = $saleHist[0]['Date of Sale'] ?? "";
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
-        foreach (array_reverse($saleHist)
+        foreach ($saleHist
             as
             [
-                'Date of Sale' => $date, 'Sales Price' => $price, 'Deed Number' => $db, 'Instrument Type' => $it
+                'Date of Sale' => $date, 'Sales Price' => $price, 'Instrument Type' => $it
             ]) {
 
-            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><db>" . $db . "</db><it>" . $it . "</it><m>" . $sale_descrip . "</m></e>";
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><m>" . parseInstrumentType_TN($it) . "</m></e>";
 
             if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
                 $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
@@ -114,33 +120,34 @@
         $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
 
 
-        $beds = $propInfo["Bedrooms:"] ?? "";
-        $baths = $propInfo["Bathrooms :"] ?? "";
-        $half_baths = $propInfo["Half Baths:"] ?? "";
-        $land_use = $propInfo['Land Use:'] ?? "";
+        $beds = intval($propInfo["Bedrooms:"] ?? NULL); // intVal(NULL) returns 0
+        $baths = intval($propInfo["Bathrooms :"] ?? NULL);
+        $half_baths = intval($propInfo["Half Baths:"] ?? NULL);
+        $total_baths = $baths + $half_baths;
 
-        $prop_type = ($propInfo["Stories:"] ?? "") . ' ' . ($propInfo["Exterior Walls:"] ?? "");
+        $bldg_descrip = (isset($propInfo["Stories:"]) ? $propInfo["Stories:"] . "-story" : "") . ' ' . ($propInfo["Exterior Walls:"] ?? "");
         $prop_class = $taxAssessInfo['Class:'] ?? "";
+        $prop_type = $propInfo['Land Use:'] ?? "";
 
 
         $structure = [
-            'certNo'        =>    $adv_num,
+            'certNo'        =>    intval($adv_num),
             'auctionID'        =>    NULL,
             'parcelNo'        =>    $parcel_id,
-            'alternateID'        =>    $alternate_id,
+            'alternateID'        =>    NULL,
             'chargeType'        =>    $charge_descrip,
             'faceAmnt'        =>    $face_amount,
             'status'        => ($status ? '1' : '0'),
-            'assessedValue'        =>    $total_assessment ?? NULL,
-            'appraisedValue'    =>    $total_appraisal ?? NULL,
+            'assessedValue'        =>    $assess_value,
+            'appraisedValue'    =>    $appraised_value,
             'propClass'        =>    $prop_class,
             'propType'        =>    $prop_type,
             'propLocation'        =>    $prop_loc,
             'city'            =>    $city ?? '',
-            'zip'            =>    $zip_code ?? '',
+            'zip'            =>    $zip_code,
             'buildingDescrip'    =>    $bldg_descrip,
             'numBeds'        =>    $beds,
-            'numBaths'        =>    $baths,
+            'numBaths'        =>    $total_baths,
             'lastRecordedOwner'    =>    $owner_name,
             'lastRecordedOwnerType'    =>    $owner_type,
             'lastRecordedDateOfSale' =>    date('Y-m-d', strtotime($date_bought)),
@@ -151,7 +158,9 @@
             'propertyTaxes'        =>    $taxes_as_text,
             'taxJurisdictionID'    =>    NULL
         ];
-        listData($structure);
+
+        // listData($structure);
+        var_dump($structure);
     }
 
 
@@ -198,7 +207,11 @@
 
     function parseTableData($table, $useFirstRow_asHeader = true)
     {
+
+        $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
         $rows = $table->getElementsByTagName('tr');
+
         $rows_count = count($rows); // count only once
 
         $header_map = [];
@@ -208,8 +221,6 @@
                 $header_map[] = trim($col->textContent);
             }
         }
-
-        $data_map = [];
 
         for ($i = 1; $i < $rows_count; $i++) { // go thru the table starting at row #2
             $td_elements = $rows[$i]->getElementsByTagName('td');
@@ -235,6 +246,7 @@
     function parseAttributesTable($table, $removeFirstRow = false, $is_key_th = true, $key_i = 0, $val_i = 0)
     {
         $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
 
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows);

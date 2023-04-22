@@ -4,8 +4,8 @@
 <body>
 
     <?php
-    include 'web-crawler.php';
-    include 'tax-codes.php';
+    require_once 'web-crawler.php';
+    require_once 'tax-codes.php';
 
     /******** SETTINGS *********/
     $state = 'TN';
@@ -17,7 +17,7 @@
 
 
 
-    for ($i = 0; $i < 2; $i++) { //count($array)
+    for ($i = 0; $i < 1; $i++) { //count($array)
 
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
@@ -55,6 +55,8 @@
         $jur = str_pad($jur, 3, '0', STR_PAD_LEFT);
         $identifier = "%20";
         $special_interest = "000";
+        $group ??= "%20";
+        $group = empty($group) ? "%20" : $group;
 
         /**************** CREATE THE TAX ASSESSMENT URL *******************/
         $url = "assessment.cot.tn.gov/TPAD/Parcel/Details?&";
@@ -92,37 +94,36 @@
         $city_state = $propInfo["city_state"] ?? "";
 
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
-        @[$city, $owner_state, $zip_code] = preg_split('/\s+/', $city_state, 3);
+        $arr = preg_split('/\s+/', $city_state);
+        $arr_count = count($arr);
+        $owner_zip_code = array_pop($arr) ?? "";
+        $owner_state = array_pop($arr) ?? "";
+        $city = $propInfo['City'] ?? '';
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
-        $appraisal_value = $taxAssessInfo['Total Market Appraisal:'] ?? 0;
+        $appr_value = $taxAssessInfo['Total Market appraised:'] ?? 0;
+        $appraised_value = (int) filter_var($appr_value, FILTER_SANITIZE_NUMBER_INT);
         $ass_value = $taxAssessInfo["Assessment:"] ?? 0;
-        $taxes_as_text = getTaxesAsText($appraisal_value);
+        $assess_value = (int) filter_var($ass_value, FILTER_SANITIZE_NUMBER_INT);
+        $taxes_as_text = getTaxesAsText_TN($assess_value, 0.416);
 
         $improvement_type = $taxAssessInfo['Improvement Type'] ?? '';
         $prop_class = $propInfo["Class"] ?? "";
 
         $date_bought = $saleHist[0]['Sale Date'] ?? NULL;
 
-        $bldg_desc = $propInfo["Bldg desc:"] ?? "";
-        $bldg_descrip = parseNJBldgDescrip($bldg_desc);
-        if (!empty($bldg_desc) && empty($bldg_descrip))
-            $bldg_descrip = $bldg_desc;
-
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
 
-        foreach (array_reverse($saleHist)
+        foreach ($saleHist
             as
             [
-                'Sale Date' => $date, 'Price' => $price, 'Book' => $book, 'Page' => $page, 'Vacant/Improved' => $vacantImproved,
+                'Sale Date' => $date, 'Price' => $price,
                 'Type Instrument' => $instrument, 'Qualification' => $qualification
             ]) {
 
-            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $book . "</b><pa>" . $page . "</pa><v>" . $vacantImproved . "<v/>
-            <t>" . $instrument . "</t><q>" . $qualification . "</q><m>" . $sale_descrip . "</m></e>";
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . "N/A" . "</b><m>" . $instrument . ", " . $qualification . "</m></e>";
 
             if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
                 $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
@@ -132,21 +133,21 @@
 
 
         $structure = [
-            'certNo'        =>    $adv_num,
+            'certNo'        =>    intval($adv_num),
             'auctionID'        =>    NULL,
             'parcelNo'        =>    urldecode($parcel_id),
             'alternateID'        =>    NULL,
             'chargeType'        =>    $charge_descrip,
             'faceAmnt'        =>    $face_amount,
             'status'        => ($status ? '1' : '0'),
-            'assessedValue'        =>    $ass_value ?? NULL,
-            'appraisedValue'    =>    $appraisal_value,
+            'assessedValue'        =>    $assess_value,
+            'appraisedValue'    =>    $appraised_value,
             'propClass'        =>    $prop_class,
             'propType'        =>    $improvement_type,
             'propLocation'        =>    $prop_loc,
             'city'            =>    $city,
-            'zip'            =>    $zip_code,
-            'buildingDescrip'    =>    $bldg_descrip,
+            'zip'            =>    NULL,
+            'buildingDescrip'    =>    NULL,
             'numBeds'        =>    NULL,
             'numBaths'        =>    NULL,
             'lastRecordedOwner'    =>    $owner_name,
@@ -160,7 +161,8 @@
             'taxJurisdictionID'    =>    NULL
         ];
 
-        listData($structure);
+        // listData($structure);
+        var_dump($structure);
     }
 
 
@@ -186,7 +188,7 @@
 
             $ownerDiv = getElementByPath($doc, "/html/body/div/main/div/div[2]/div[2]/div[1]/div/div[2]/div/div", true);
             $propAddress = getElementByPath($doc, "//html/body/div/main/div/div[2]/div[2]/div[2]/div/div[2]/div[1]/div/p", true)
-                ?->nodeValue ?? "";
+                ->nodeValue ?? "";
             // $propDiv = getElementByPath($doc, "/html/body/div/main/div/div[2]/div[2]/div[2]/div/div[2]", true);
             $valueDiv = getElementByPath($doc, "/html/body/div/main/div/div[2]/div[3]/div[1]/div/div[2]/div", true);
             $generalDiv1 = getElementByPath($doc, "/html/body/div/main/div/div[2]/div[4]/div/div/div[2]/div/div[1]", true);
@@ -207,9 +209,11 @@
             $buildingInfo2 = parseGeneralDiv($buildingInfoDiv2);
 
             $saleInfo = parseTableData($saleInfoTable);
+            $prop_arr = explode(':', $propAddress, 2);
+            $prop_address = preg_replace('/\s+/', '', $prop_arr[1] ?? '');
 
             return [
-                'Property Info'    =>     array_merge($ownerInfo, ['prop_address' => explode(':', $propAddress, 2)[1]], $generalInfo1, $generalInfo2),
+                'Property Info'    =>     array_merge($ownerInfo, ['prop_address' => $prop_address], $generalInfo1, $generalInfo2),
                 'Sale Info'       =>     $saleInfo,
                 'Tax Assess Info'  =>    array_merge($buildingInfo1, $buildingInfo2, $valueInfo)
             ];
@@ -221,29 +225,24 @@
     function parseOwnerDiv($div)
     {
         $data_map = [];
+        if (!$div || !$div instanceof DOMElement) return $data_map;
         $divs = $div->getElementsByTagName('div');
 
-        if ($divs->length > 0) {
+        $startIndex = 0;
 
-            for ($i = 1; $i < $divs->length; $i++) {
-                $node = $divs->item($i);
-                $val = trim($node->nodeValue);
-
-                switch ($i) {
-                    case 1:
-                        $data_map['owner'] = $val ?? "";
-                        break;
-                    case 2:
-                        $data_map['owner_street'] = $val ?? "";
-                        break;
-                    case 4:
-                        $data_map['city_state'] = $val ?? "";
-                        break;
-                    default:
-                        break;
-                }
-            }
+        $val = trim($divs[++$startIndex]->nodeValue);
+        $data_map['owner'] = $val ?? "";
+        if (str_contains($val, '&')) {
+            $val = trim($divs[++$startIndex]->nodeValue);
+            $data_map['owner'] = $data_map['owner'] . ' ' . $val;
         }
+
+        $val = trim($divs[++$startIndex]->nodeValue);
+        $data_map['owner_street'] = $val ?? "";
+
+        $val = trim($divs[$startIndex + 2]->nodeValue);
+        $data_map['city_state'] = $val ?? "";
+
 
         return $data_map;
     }
@@ -251,13 +250,15 @@
     function parseValueDiv($div)
     {
         $data_map = [];
+        if (!$div || !$div instanceof DOMElement) return $data_map;
+
         $divs = $div->getElementsByTagName('div');
 
         if ($divs->length > 0) {
 
             for ($i = 0; $i < $divs->length; $i += 2) {
-                $key = trim($divs->item($i)?->nodeValue ?? "");
-                $val = trim($divs->item($i + 1)?->nodeValue ?? "");
+                $key = trim($divs->item($i)->nodeValue ?? "");
+                $val = trim($divs->item($i + 1)->nodeValue ?? "");
 
                 $data_map[$key] = $val;
             }
@@ -268,12 +269,14 @@
     function parseGeneralDiv($div)
     {
         $data_map = [];
+        if (!$div || !$div instanceof DOMElement) return $data_map;
+
         $divs = $div->getElementsByTagName('div');
 
         if ($divs->length > 0) {
 
             for ($i = 0; $i < $divs->length; $i++) {
-                $str = trim($divs->item($i)?->nodeValue ?? "");
+                $str = trim($divs->item($i)->nodeValue ?? "");
 
                 @[$key, $val] = explode(':', $str, 2);
 
@@ -286,6 +289,10 @@
 
     function parseTableData($table, $useFirstRow_asHeader = true, $header = null)
     {
+
+        $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
+
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows); // count only once
 
@@ -298,8 +305,6 @@
         } else {
             $header_map = $header;
         }
-
-        $data_map = [];
 
         for ($i = 1; $i < $rows_count; $i++) { // go thru the table starting at row #2
             $td_elements = $rows[$i]->getElementsByTagName('td');

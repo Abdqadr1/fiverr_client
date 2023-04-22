@@ -12,7 +12,7 @@ function _dynamicCrawler($link, $timeout = 60, $containsPath, $buttonId = null)
     try {
         $link = str_starts_with($link, 'https://') ? $link : "https://" . $link;
 
-        $host = 'http://localhost:9515'; // this is the link and the port of the chromedriver, geckodriver, msedgedriver
+        $host = 'http://localhost:9515'; // this is the link and the port of the chromedriver
 
         $capabilities = DesiredCapabilities::chrome();
 
@@ -35,18 +35,19 @@ function _dynamicCrawler($link, $timeout = 60, $containsPath, $buttonId = null)
             );
         }
 
-        $title = $driver->getTitle();
-        $current_url  = $driver->getCurrentURL();
+        // $title = $driver->getTitle();
+        // $current_url  = $driver->getCurrentURL();
 
         // Print the scraped data
-        echo "Page Title: $title <br/>";
-        echo "Current URL: $current_url <br/>";
+        // echo "Page Title: $title <br/>";
+        // echo "Current URL: $current_url <br/>";
 
         $output =  $driver->getPageSource();
         // Quit the Selenium WebDriver
     } catch (Exception $ex) {
+        echo $ex->getMessage();
     } finally {
-        $driver->quit();
+        $driver?->quit();
         return $output;
     }
 }

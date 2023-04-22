@@ -64,12 +64,43 @@ $garage_patterns = [
 ];
 
 
+$instrument_types_tn = [
+	'A'	=>	'Affidavit of Heirship',
+	'CA'	=>	'Cash Deed',
+	'CC'	=>	'Circuit Court (divorce decree)',
+	'CD'	=>	'Correction Deed',
+	'CH'	=>	'represents a Chancery Court or Foreclosure decree or judgement',
+	'FJ'	=> 	'U.S. Bankruptcy Court Western District of TN or Marshall\'s Deed',
+	'PC'	=>	'Probate Wills',
+	'PS'	=>	'Sovereign Citizen Claim - Squatter',
+	'QC'	=>	'Executor\'s Deed/Gift-Grant Deed/Quit Claim Deed',
+	'RS'	=>	'Rights of Survivorship',
+	'SW'	=>	'Special Warranty Deed',
+	'TD'	=>	'Substitute Trustee\’s Deed (Foreclosure)',
+	'WD'	=>	'Warranty/General Warranty Deed/Lieu of Foreclosure Deed',
+
+	'DN'	=>	'Death Notice',
+	'L'	=>	'Letters to clear title/mapping size request',
+	'MC'	=>	'Marriage Certificate'
+];
+
 
 function parseChargeTypeDescrip($type)
 {
 	global $charge_patterns;
 
 	return strtr(strtoupper(trim($type)), $charge_patterns);
+}
+
+function parseInstrumentType_TN($type)
+{
+	global $instrument_types_tn;
+	$type = strtoupper(trim($type));
+
+	$result = strtr($type, $instrument_types_tn);
+	if (strlen($result) > strlen($type))
+		return $type . " - " . $result;
+	return $type;
 }
 
 /** 
@@ -79,7 +110,7 @@ function parseChargeTypeDescrip($type)
     But oftentimes it just appears as '2SF ...' or '2 B' or '2SF2UG COLONIAL'
  **/
 
-function parseNJBldgDescrip($descrip)
+function parseBldgDescrip_NJ($descrip)
 {
 	global  $structure_patterns,
 		$style_patterns,
@@ -166,6 +197,10 @@ function parseNJBldgDescrip($descrip)
 
 function determineOwnerType($owner_name)
 {
+
+	if (empty($owner_name))
+		return "Unknown";
+
 	// Using regex expressions to check if $owner_name contains the following substrings
 	// The '/i' ensures case-insensitivity
 	$owner_type = "";
@@ -194,7 +229,7 @@ function determineOwnerType($owner_name)
 }
 
 
-function isAbsenteeOwner($property_location, $owner_location)
+function isAbsenteeOwner($prop_location, $owner_location)
 {
 	$absentee_owner = FALSE;
 
@@ -202,7 +237,8 @@ function isAbsenteeOwner($property_location, $owner_location)
 		$prop_loc_asArray = explode(" ", $prop_location);
 		$owner_loc_asArray = explode(" ", $owner_location);
 		$testSimilarity = array_intersect($prop_loc_asArray, $owner_loc_asArray);
-		$absentee_owner = count($testSimilarity) < 2; // must have at least 2 identical parts
+
+		$absentee_owner = ((count($prop_loc_asArray) - 1) > count($testSimilarity)); // must have at least n-1 identical parts
 	}
 
 	return $absentee_owner;
@@ -214,7 +250,7 @@ function livesInState($property_state, $owner_state, $absentee_owner)
 	$lives_in_state = TRUE;
 
 	if ($absentee_owner) {
-		if ($owner_state)
+		if (!empty($owner_state))
 			$lives_in_state = ($owner_state == $property_state);
 	}
 
@@ -238,10 +274,10 @@ function listData(array $data)
 	}
 }
 
-function getTaxesAsText($taxes)
+function getTaxesAsText_NJ($last_yr_taxes)
 {
 
-	$taxes = (float) preg_replace("/([^0-9\\.]+)/i", "", $taxes);
+	$taxes = (float) preg_replace("/([^0-9\\.]+)/i", "", $last_yr_taxes);
 	$taxes_as_text = NULL;
 
 	if (!empty($taxes)) {
@@ -256,22 +292,53 @@ function getTaxesAsText($taxes)
 	return $taxes_as_text;
 }
 
+function getTaxesAsText_TN(int $assess_value, float $tax_rate)
+{
+	$taxes_as_text = NULL;
+
+	// ASSESS VALUE REPRESENTS MARKET VALUE x ASSESSMENT PERCENTAGE
+	// MULTIPLY ASSESS VALUE x MUNICIP'S TAX RATE (per $100)
+
+	if (!empty($assess_value)) {
+		$taxes = $assess_value * $tax_rate;
+		$taxes_as_text = "<r>
+			    <e><a>" . $taxes . "</a><b>0</b></e>
+		    	 </r>";
+	}
+	return $taxes_as_text;
+}
+
+function getTaxesAsText_GA(int $assess_value, float $tax_rate)
+{
+	$taxes_as_text = NULL;
+
+	// MULTIPLY ASSESS VALUE x MUNICIP'S TAX RATE (per $100)
+
+	if (!empty($assess_value)) {
+		$taxes = $assess_value * $tax_rate;
+		$taxes_as_text = "<r>
+			    <e><a>" . $taxes . "</a><b>1</b></e>
+		    	 </r>";
+	}
+	return $taxes_as_text;
+}
+
+function getTaxesAsText_NY(int $county_town_taxes, int $school_taxes)
+{
+	$taxes_as_text = "<r>
+			    <e><a>" . $county_town_taxes . "</a><b>0</b></e>
+			    <e><a>" . $school_taxes . "</a><b>0</b></e>
+		    	 </r>";
+
+	return $taxes_as_text;
+}
+
 function getElementByPath($dom, $className, $is_path = false)
 {
 
 	$xpath = new DOMXpath($dom);
-	$query = $is_path ? $className : '//*[contains(concat(" ", normalize-space(@class), " "), " ' . $className . ' ")]';
+	$query = $is_path ? $className : '//*[@class="' . $className . '"]';
 	$results = $xpath->query($query);
-
-
-	// echo "Length: " . $results?->length . "<br/>";
-
-	// if ($results->length > 0) {
-	// 	foreach ($results as $child) {
-	// 		echo $res = $child?->nodeValue . "<br/>";
-	// 	}
-	// }
-
 
 	return $results?->length == 1 ? $results->item(0) : $results;
 }
@@ -317,7 +384,13 @@ function openFile(string $path): array
 	return $array;
 }
 
-function removeWhitespace($str)
+function removeAllWhitespace($str)
+{
+	// -- REMOVES ALL WHITESPACE OF ANY KIND --
+	return preg_replace('~\x{00a0}~', '', preg_replace('/\s+/', '', $str));
+}
+
+function removeExcessWhitespace($str)
 {
 
 	// -- REMOVES EXCESS WHITESPACE while preserving single spaces between words --
@@ -331,7 +404,7 @@ function keepOnlyDesired($str)
 	// Uses removeWhitespace to remove any leading or trailing whitespace
 	// then removes any non-desired characters but preserves inner spacing
 	// i.e. remove any non-alphanumeric char, underscore or whitespace (ex. tab/space/line break)
-	return preg_replace('/([^\w\s!@#$%^&*()`~\-+=,\.\/\?<>\\|:]+)/', "", removeWhitespace($str));
+	return preg_replace('/([^\w\s!@#$%^&*()`~\-+=,\.\/\?<>\\|:]+)/', "", removeExcessWhitespace($str));
 }
 
 

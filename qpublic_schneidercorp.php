@@ -16,7 +16,7 @@
 
 
 
-    for ($i = 0; $i < 3; $i++) { //count($array)
+    for ($i = 0; $i < 1; $i++) { //count($array)
 
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
@@ -92,22 +92,20 @@
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
 
-        $bldg_desc = $propInfo["Bldg desc:"] ?? "";
-        $bldg_descrip = parseNJBldgDescrip($bldg_desc);
-        if (!empty($bldg_desc) && empty($bldg_descrip))
-            $bldg_descrip = $bldg_desc;
+        $bldg_desc = "";
 
         $prop_class = $propInfo["Class"] ?? "";
         $prop_type = $propInfo["Style"] ?? "";
 
-        $beds = $propInfo["Number Of Bedrooms"] ?? "";
-        $baths = $propInfo["Number Of Full Bathrooms"] ?? "";
-        $half_baths = $propInfo["Number Of Half Bathrooms"] ?? "";
+        $beds = $propInfo["Number Of Bedrooms"] ?? NULL;
+        $baths = $propInfo["Number Of Full Bathrooms"] ?? NULL;
+        $half_baths = $propInfo["Number Of Half Bathrooms"] ?? NULL;
         $exterior_walls = $propInfo['Exterior Walls'] ?? '';
-        $date_bought = $saleHist[0]['Sale Date'] ?? "";
+        $date_bought = $saleHist[0]['Sale Date'] ?? NULL;
         $current_value = $taxAssessInfo['Current Value'] ?? NULL;
+        $current_value = (int) filter_var($current_value, FILTER_SANITIZE_NUMBER_INT);
 
-        $taxes_as_text = getTaxesAsText($current_value);
+        $taxes_as_text = getTaxesAsText_GA($current_value, 0);
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
@@ -137,7 +135,7 @@
             'propLocation'        =>    $prop_loc,
             'city'            =>    $city,
             'zip'            =>    $zip_code,
-            'buildingDescrip'    =>    $bldg_descrip,
+            'buildingDescrip'    =>    $bldg_descrip ?? "",
             'numBeds'        =>    $beds,
             'numBaths'        =>    $baths,
             'lastRecordedOwner'    =>    $owner_name,
@@ -199,6 +197,8 @@
     function parseOwnerTh($th)
     {
         $data = [];
+        if (!$th || !$th instanceof DOMElement) return $data;
+
         $spans = $th->getElementsByTagName('span');
         $spans_count = count($spans);
         $keys = ['Owner name', 'Owner Address', 'City State Zip'];
@@ -214,7 +214,7 @@
     function parseAttributesTable($table, $removeFirstRow = false, $is_key_th = true, $key_i = 0, $val_i = 0)
     {
         $data_map = [];
-        if (!$table instanceof DOMElement) return $data_map;
+        if (!$table || !$table instanceof DOMElement) return $data_map;
 
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows);
@@ -241,6 +241,9 @@
 
     function parseTableData($table, $useFirstRow_asHeader = true, $ignore_first_row = true)
     {
+        $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
+
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows);
 
@@ -254,7 +257,6 @@
             }
         }
 
-        $data_map = [];
         $head_count = count($header_map);
 
         for ($i = ++$startIndex; $i < $rows_count; $i++) { // go thru the table starting at row #2

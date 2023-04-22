@@ -4,8 +4,8 @@
 <body>
 
     <?php
-    include 'web-crawler.php';
-    include 'tax-codes.php';
+    require_once 'web-crawler.php';
+    require_once 'tax-codes.php';
 
     /******** SETTINGS *********/
     $state = 'GA';
@@ -17,7 +17,7 @@
 
 
 
-    for ($i = 0; $i < 1; $i++) { //count($array)
+    for ($i = 0; $i < 5; $i++) { //count($array)
 
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
@@ -55,6 +55,7 @@
         /**************** CREATE THE TAX ASSESSMENT URL *******************/
         $url = "gwinnettassessor.manatron.com/IWantTo/PropertyGISSearch/PropertyDetail.aspx?";
 
+        $parcel_id = str_replace(' ', '%20', $parcel_id);
         $options = "p=$parcel_id&a=$alternate_id";
         $tax_link = $url . $options;
 
@@ -85,39 +86,45 @@
         $city_state_zip = $propInfo["city_state"] ?? "";
 
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
-        @[$city, $owner_state, $zip_code] = preg_split('/\s+/', trim($city_state_zip), 3);
+        // @[$city, $owner_state, $zip_code] = preg_split('/\s+/', , 3);
+
+        $arr = preg_split('/\s+/', trim($city_state_zip));
+        $arr_count = count($arr);
+        $zip_code = array_pop($arr) ?? "";
+        $owner_state = array_pop($arr) ?? "";
+        $city = join(' ', $arr);
+
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
 
-        $bldg_desc = $propInfo["Bldg desc:"] ?? "";
-        $bldg_descrip = parseNJBldgDescrip($bldg_desc);
-        if (!empty($bldg_desc) && empty($bldg_descrip))
-            $bldg_descrip = $bldg_desc;
-
         $total_appr = $taxAssessInfo['Total Appr'] ?? 0;
-        $total_assd = $taxAssessInfo["Total Assd"] ?? "";
-        $taxes_as_text = getTaxesAsText($total_appr);
-        $date_bought = $saleHist[0]['Date'] ?? "";
+        $appraised_value = (int) filter_var($total_appr, FILTER_SANITIZE_NUMBER_INT);
+        $total_assd = $taxAssessInfo["Total Assd"] ?? 0;
+        $assess_value = (int) filter_var($total_assd, FILTER_SANITIZE_NUMBER_INT);
+        $taxes_as_text = getTaxesAsText_GA($appraised_value, 0.553);
+        $date_bought = $saleHist[0]['Date'] ?? NULL;
 
 
         $prop_class = $propInfo["Property Class"] ?? "";
-        $prop_type = ($propInfo["Stories"] ?? "") . ' ' . ($taxAssessInfo["Type"] ?? "");
+        $bldg_descrip = (isset($propInfo["Stories"]) ? $propInfo["Stories"] . "-story" : "") . ' ' . ($taxAssessInfo["Type"] ?? "");
 
-        $prop_use = $taxAssessInfo["Occupancy"] ?? "";
-        $beds = $propInfo["Bedrooms"] ?? "";
-        $baths = $propInfo["Bathrooms"] ?? "";
-        $half_bath = $propInfo["Bathrooms (Half)"] ?? "";
+        $prop_type = $taxAssessInfo["Occupancy"] ?? NULL;
+        $beds = intval($propInfo["Bedrooms"] ?? NULL);
+        $baths = intval($propInfo["Bathrooms"] ?? NULL);
+        $half_baths = 0;
+        if (isset($propInfo["Bathrooms (Half)"]))
+            $half_baths = intval($propInfo["Bathrooms (Half)"] ?? NULL);
+        $total_baths = $baths + $half_baths;
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
-        foreach (array_reverse($saleHist)
+        foreach ($saleHist
             as
             [
-                'Date' => $date, 'Sale Price' => $price, 'Deed' => $dt, 'Book' => $b, 'Page' => $p
+                'Date' => $date, 'Sale Price' => $price, 'Deed' => $deed, 'Type' => $type, 'Grantee' => $buyer
             ]) {
 
-            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><d>" . $dt . "</d><b>" . $b . "</b><p>" . $p . "</p><m>" . $sale_descrip . "</m></e>";
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $buyer . "</b><m>" . $deed . "-" . $type . "</m></e>";
 
             if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
                 $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
@@ -126,24 +133,24 @@
 
 
         $structure = [
-            'certNo'        =>    $adv_num,
+            'certNo'        =>    intval($adv_num),
             'auctionID'        =>    NULL,
             'parcelNo'        =>    $parcelNo,
-            'alternateID'        =>    $propInfo['Alternate ID'] ?? NULL,
+            'alternateID'        =>    $alternate_id,
             'chargeType'        =>    $charge_descrip,
             'faceAmnt'        =>    $face_amount,
             'status'        => ($status ? '1' : '0'),
-            'assessedValue'        =>    $total_assd ?? '',
-            'appraisedValue'    =>    $total_appr,
+            'assessedValue'        =>    $assess_value,
+            'appraisedValue'    =>    $appraised_value,
             'propClass'        =>    $prop_class,
             'propType'        =>    $prop_type,
             'propLocation'        =>    $prop_loc,
             'city'            =>    $city,
             'zip'            =>    $zip_code ?? NULL,
             'buildingDescrip'    =>    $bldg_descrip,
-            'numBeds'        =>    $beds ?? NULL,
-            'numBaths'        =>    $baths ?? NULL,
-            'lastRecordedOwner'    =>    $owner_name,
+            'numBeds'        =>    $beds,
+            'numBaths'        =>    $total_baths,
+            'lastRecordedOwner'    =>    removeExcessWhitespace($owner_name),
             'lastRecordedOwnerType'    =>    $owner_type,
             'lastRecordedDateOfSale' =>    date('Y-m-d', strtotime($date_bought)),
             'absenteeOwner'        => ($absentee_owner ? '1' : '0'),
@@ -154,7 +161,8 @@
             'taxJurisdictionID'    =>    NULL
         ];
 
-        listData($structure);
+        // listData($structure);
+        var_dump($structure);
     }
 
 
@@ -207,19 +215,24 @@
 
     function parseOwnerTd($td)
     {
+        $data = [];
+        if (!$td || !$td instanceof DOMElement) return $data;
+
         $arr = explode('<br>', innerHTML($td), 4);
 
-        $data = [];
         $count = count($arr);
         // $arr = explode("\n", $owner_td->nod, 3);
         $data["owner_name"] = ($count > 3) ? $arr[0] . ' ' . $arr[1] : $arr[0];
-        $data['owner_street'] = $arr[2];
-        $data['city_state'] = $arr[3];
+        $data['owner_street'] = ($count > 3) ? $arr[2] : $arr[1];
+        $data['city_state'] = ($count > 3) ? $arr[3] : $arr[2];
         return $data;
     }
 
     function parseTableData($table, $useFirstRow_asHeader = true)
     {
+        $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
+
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows); // count only once
 
@@ -231,7 +244,6 @@
             }
         }
 
-        $data_map = [];
 
         for ($i = 1; $i < $rows_count; $i++) { // go thru the table starting at row #2
             $td_elements = $rows[$i]->getElementsByTagName('td');
@@ -245,7 +257,12 @@
             for ($n = 0; $n < $num_td_elements; $n++) {
                 // add each <td> to the array with the corresponding key based on the header
                 $col = $header_map[$n] ?? ""; // in case of undefined index error
-                $row_data[$col] = trim($td_elements[$n]->textContent);
+                $node = $td_elements[$n];
+                $val = trim($node->textContent);
+                $a_children = $node->getElementsByTagName('a');
+                $anchor_count = $a_children->count();
+                if ($anchor_count > 0) $val = trim($a_children[0]?->getAttribute('title') ?? $a_children[0]?->nodeValue);
+                $row_data[$col] = $val;
             }
 
             $data_map[] = $row_data;
@@ -255,10 +272,12 @@
 
     function parseAttributesTable($table, $removeFirstRow = false, $is_key_th = true, $key_i = 0, $val_i = 0)
     { // $index of td that contains the key
+        $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
+
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows);
 
-        $data_map = [];
 
         $start = $removeFirstRow ? 1 : 0;
 
@@ -283,10 +302,12 @@
 
     function parseValueTable($table, $removeFirstRow = true)
     {
+        $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
+
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows);
 
-        $data_map = [];
 
         $start = $removeFirstRow ? 1 : 0;
 

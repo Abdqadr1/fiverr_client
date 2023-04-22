@@ -4,13 +4,11 @@
 <body>
 
     <?php
-    include 'web-crawler.php';
-    include 'tax-codes.php';
+    require_once 'web-crawler.php';
+    require_once 'tax-codes.php';
 
     /******** SETTINGS *********/
-    $city = 'Absecon';
     $state = 'NJ';
-    $district = "0101";
     /***************************/
 
     $array = openFile("./TEST FILES/ocean county_nj_TEST FILE.csv");
@@ -19,9 +17,10 @@
     $header = array_shift($array); // remove the first element from the array
     //$header_map = array_map( 'keepOnlyDesired', $header );
 
+    // TESTING!! echo removeWhitespace($array[0][3]);
 
 
-    for ($i = 0; $i < 1; $i++) { //count($array)
+    for ($i = 0; $i < 5; $i++) { //count($array)
 
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
@@ -73,7 +72,7 @@
         @[$lotNumber, $sub_lot] = explode(".", $lot, 2);
         $lot_asArray = explode(".", $lot, 2);
 
-        $options = "nDistrict=$district&szBlockNum=$block&szLotNum=$lotNumber&szBlockStuff=$sub_block&szLotStuff=$sub_lot&szQual=$qual";
+        $options = "nDistrict=$alternate_id&szBlockNum=$block&szLotNum=$lotNumber&szBlockSuff=$sub_block&szLotSuff=$sub_lot&szQual=$qual";
         $tax_link = $url . $options;
 
         /******************** TEST BELOW *************************/
@@ -106,28 +105,33 @@
         $city_state = $propInfo["City/State:"] ?? "";
 
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
-        @[$city, $owner_state, $zip_code] = preg_split('/\s+/', $city_state, 3);
+        $arr = preg_split('/\s+/', $city_state);
+        $arr_count = count($arr);
+        $zip_code = array_pop($arr) ?? "";
+        $owner_state = array_pop($arr) ?? "";
+        $city = join(' ', $arr);
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
 
         $bldg_desc = $propInfo["Bldg desc:"] ?? "";
-        $bldg_descrip = parseNJBldgDescrip($bldg_desc);
+        $bldg_descrip = parseBldgDescrip_NJ($bldg_desc);
         if (!empty($bldg_desc) && empty($bldg_descrip))
             $bldg_descrip = $bldg_desc;
 
         $last_year_taxes = $propInfo['Last yr taxes:'] ?? "";
-        $net_value = $propInfo["Net value:"] ?? "";
+        $assess_value = $propInfo["Net value:"] ?? "";
 
-        $taxes_as_text = getTaxesAsText($last_year_taxes);
-        $date_bought = $propInfo['Deed date:'] ?? "";
+        $taxes_as_text = getTaxesAsText_NJ($last_year_taxes);
+        $date_bought = $propInfo['Deed date:'] ?? NULL;
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
 
-        foreach (array_reverse($saleHist) as ['Deed date:' => $date, 'Sales price:' => $price, 'Book/page:' => $page]) {
+        foreach (array_reverse($saleHist) as ['Deed date:' => $date, 'Sales price:' => $price]) {
 
-            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $page . "</b><m>" . $sale_descrip . "</m></e>";
+            $price_asInt = (int) filter_var($price, FILTER_SANITIZE_NUMBER_INT);
+            $sale_descrip = ($price_asInt < 100 ? "Non-Arms Length" : "-");
+            $entry = "<e><d>" . $date . "</d><p>$" . $price . "</p><b>" . "N/A" . "</b><m>" . $sale_descrip . "</m></e>";
             if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
                 $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
         }
@@ -137,8 +141,8 @@
 
         $_qual = $propInfo['Qual:'] !== "n/a" ? $propInfo['Qual:'] : "";
         $_1 = ($propInfo['Block / Lot:'] ?? "") . "/" . $_qual;
-        $beds = $taxAssessInfo["# bedrooms:"] ?? "";
-        $baths = $taxAssessInfo["# bathrooms:"] ?? "";
+        $beds = $taxAssessInfo["# bedrooms:"] ?? NULL;
+        $baths = $taxAssessInfo["# bathrooms:"] ?? NULL;
         $p_class = $propInfo["Prop class:"] ?? "";
 
         [$prop_class, $prop_type] = getPropTypeFromClass($p_class);
@@ -146,15 +150,15 @@
 
 
         $structure = [
-            'certNo'        =>    $adv_num,
+            'certNo'        =>    intval($adv_num),
             'auctionID'        =>    NULL,
             'parcelNo'        =>    $parcelNo,
             'alternateID'        =>    NULL,
             'chargeType'        =>    $charge_descrip,
             'faceAmnt'        =>    $face_amount,
             'status'        => ($status ? '1' : '0'),
-            'assessedValue'        =>    $last_year_taxes ?? '',
-            'appraisedValue'    =>    $net_value,
+            'assessedValue'        =>    (int) filter_var($assess_value, FILTER_SANITIZE_NUMBER_INT),
+            'appraisedValue'    =>    NULL,
             'propClass'        =>    $prop_class,
             'propType'        =>    $prop_type,
             'propLocation'        =>    $prop_loc,
@@ -173,7 +177,9 @@
             'propertyTaxes'        =>    $taxes_as_text,
             'taxJurisdictionID'    =>    NULL
         ];
-        listData($structure);
+
+        // listData($structure);
+        var_dump($structure);
     }
 
 
@@ -220,11 +226,13 @@
 
     function parseTableData($table, $useFirstRowAsKey = true)
     {
+        $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
+
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows);
 
         $header_map = [];
-        $data_map = [];
 
         $startIndex = $useFirstRowAsKey ? 2 : 0;
 
@@ -243,7 +251,7 @@
 
                 for ($n = 0; $n < $num_td_elements; $n++) {
                     $col = $header_map[$n] ?? "";
-                    $row_data[$col] =  trim($td_elements[$n]?->textContent);
+                    $row_data[$col] =  trim($td_elements[$n]->textContent);
                 }
 
                 $data_map[] = $row_data;
@@ -260,8 +268,8 @@
                     continue;
 
                 for ($n = 0; $n < $num_td_elements; $n += 2) {
-                    $key = trim($td_elements[$n]?->textContent);
-                    $value = trim($td_elements[$n + 1]?->textContent);
+                    $key = trim($td_elements[$n]->textContent);
+                    $value = trim($td_elements[$n + 1]->textContent);
 
                     if (!$key) continue;
 
@@ -275,27 +283,30 @@
 
     function parseSaleHistoryTable($table)
     {
+        $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
+
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows);
 
-        $data_map = [];
         $row_data = [];
         for ($i = 1; $i < $rows_count; $i++) {
-            $val = trim($rows[$i]?->nodeValue);
-            if (empty($val)) {
+            $val = preg_replace('/\s+/', '', $rows[$i]?->nodeValue);
+            $td_elements = $rows[$i]->getElementsByTagName('td');
+            $num_td_elements = $td_elements->count();
+
+            if ($num_td_elements == 1) {
                 $data_map[] = $row_data;
                 $row_data = [];
                 continue;
             }
 
-            $td_elements = $rows[$i]->getElementsByTagName('td');
-            $num_td_elements = $td_elements->count();
             if ($num_td_elements % 2 !== 0)
                 continue;
 
             for ($n = 0; $n < $num_td_elements; $n += 2) {
-                $key = trim($td_elements[$n]?->textContent);
-                $value = trim($td_elements[$n + 1]?->textContent);
+                $key = trim($td_elements[$n]->textContent);
+                $value = trim($td_elements[$n + 1]->textContent);
 
                 if (!$key) continue;
 

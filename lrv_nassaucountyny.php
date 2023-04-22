@@ -4,8 +4,8 @@
 <body>
 
     <?php
-    include 'web-crawler.php';
-    include 'tax-codes.php';
+    require_once 'web-crawler.php';
+    require_once 'tax-codes.php';
 
     /******** SETTINGS *********/
     $state = 'NY';
@@ -16,7 +16,7 @@
     $header = array_shift($array);
 
 
-    for ($i = 0; $i < 1; $i++) { //count($array)
+    for ($i = 0; $i < 5; $i++) { //count($array)
 
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
@@ -98,35 +98,36 @@
         $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
         $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
-        $taxes_as_text = getTaxesAsText($taxAssessInfo['Fair Market Values'] ?? "");
+        $taxes_as_text = getTaxesAsText_NY(0, 0);
         $date_bought = $saleHist[0]['Date of Sale'] ?? "";
         $ass_value = $taxAssessInfo["Final Assessed/Tentative Assessed Value"] ?? "";
+        $appr_value = $taxAssessInfo["Fair Market Values"] ?? "";
+        $assess_value = (int) filter_var($ass_value, FILTER_SANITIZE_NUMBER_INT);
+        $appraised_value = (int) filter_var($appr_value, FILTER_SANITIZE_NUMBER_INT);
 
-        $beds = $propInfo["Number of Bedrooms"] ?? "";
-        $baths = $propInfo["Full Bathrooms"] ?? "";
-        $half_baths = $propInfo["Half Bathrooms"] ?? "";
+        $beds = $baths = $half_baths = 0;
+        if (isset($propInfo["Number of Bedrooms"]))
+            $beds = intval($propInfo["Number of Bedrooms"]);
+        if (isset($propInfo["Full Bathrooms"]))
+            $baths = intval($propInfo["Full Bathrooms"]);
+        if (isset($propInfo["Half Bathrooms"]))
+            $half_baths = intval($propInfo["Half Bathrooms"]);
+        $total_baths = $baths + $half_baths;
 
-        $land_category = $propInfo["Land Category"] ?? "";
-        $land_title = $propInfo["Land Title"] ?? "";
-        $prop_class = ($propInfo["Story Height"] ?? "") . ' ' . ($propInfo["Style"] ?? "");
+        $prop_class = $propInfo["Land Category"] ?? "";
+        $prop_type = $propInfo["Land Title"] ?? "";
 
-        $bldg_desc = $propInfo["Bldg desc:"] ?? "";
-        $bldg_descrip = parseNJBldgDescrip($bldg_desc);
-        if (!empty($bldg_desc) && empty($bldg_descrip))
-            $bldg_descrip = $bldg_desc;
-
-        $prop_type = $propInfo["Property Type"] ?? "";
+        $bldg_descrip = (isset($propInfo["Story Height"]) ? $propInfo["Story Height"] . "-story" : "") . ' ' . ($propInfo["Style"] ?? "");
 
         // Generate a string of sale entries in XML format
         $sale_hist_data = "";
         foreach (array_reverse($saleHist)
             as
             [
-                'Date of Sale' => $date, 'Sale Price' => $price, 'Book' => $db, 'Page' => $dp
+                'Date of Sale' => $date, 'Sale Price' => $price, 'Condition of Transfer' => $msg
             ]) {
 
-            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><db>" . $db . "</db><dp>" . $dp . "</dp><m>" . $sale_descrip . "</m></e>";
+            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><m>" . $msg . "</m></e>";
 
             if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
                 $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
@@ -136,17 +137,17 @@
 
 
         $structure = [
-            'certNo'        =>    $adv_num,
+            'certNo'        =>    intval($adv_num),
             'auctionID'        =>    NULL,
             'parcelNo'        =>    $parcel_id,
             'alternateID'        =>    $alternate_id,
             'chargeType'        =>    $charge_descrip,
             'faceAmnt'        =>    $face_amount,
             'status'        => ($status ? '1' : '0'),
-            'assessedValue'        =>    $ass_value ?? '',
-            'appraisedValue'    =>    $appraisedValue ?? NULL,
+            'assessedValue'        =>    $assess_value,
+            'appraisedValue'    =>    $appraised_value,
             'propClass'        =>    $prop_class,
-            'propType'        =>    $land_category,
+            'propType'        =>    $prop_type,
             'propLocation'        =>    $prop_loc,
             'city'            =>    $city,
             'zip'            =>    $zip_code ?? NULL,
@@ -163,73 +164,77 @@
             'propertyTaxes'        =>    $taxes_as_text,
             'taxJurisdictionID'    =>    NULL
         ];
+
         listData($structure);
+        // var_dump($structure);
     }
 
 
     function parsePage($target)
     {
-        $page = _http($target);
-        $headers = $page['headers'];
-        $http_status_code = $headers['status_info']['status_code'];
-
-        if ($http_status_code >= 400)
-            return FALSE;
-
-
-        $doc = new DOMDocument('1.0', 'utf-8');
-        // don't propagate DOM errors to PHP interpreter
-        libxml_use_internal_errors(true);
-        // converts all special characters to utf-8
-        $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
-        $doc->loadHTML($content);
-
-        $address_div = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[1]/div[2]/section[1]/div[1]/div", true);
-        $block_div_1 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[1]/div[2]/section[2]/div[1]", true);
-        $block_div_2 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[1]/div[2]/section[2]/div[2]", true);
-        $tax_info_table = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[1]/div/table", true);
-        $tab_content_div = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[1]/div/div", true);
-        $tables = $tab_content_div?->getElementsByTagName('table');
-        $latest_desc_table = $tables[0];
-        $recent_sales_table = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[5]/div/table", true);
-        $inventory_table_1 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[2]/div[2]/table", true);
-        $inventory_table_2 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[2]/div[3]/table", true);
-
-
-        $address = explode(':', $address_div->nodeValue, 2)[1] ?? '';
-        @[$street_add, $city_zip] = explode('.', $address, 2);
-
-        $block_1_data = parseBlockData($block_div_1);
-        $block_2_data = parseBlockData($block_div_2);
-        $desc_data = parseDescTable($latest_desc_table);
-        $recent_sales_data = parseTableData($recent_sales_table);
-        $tax_info_data = parseAttributesTable($tax_info_table, false, false, 0, 1);
-        $inventory_1_data = parseAttributesTable($inventory_table_1, false, true, 0, 0);
         try {
-            $inventory_2_data = parseAttributesTable($inventory_table_2, false, true, 0, 0);
-        } catch (\Throwable $th) {
-            $inventory_2_data = [];
-        }
+            $page = _http($target);
+            $headers = $page['headers'];
+            $http_status_code = $headers['status_info']['status_code'];
 
-        return [
-            'Property Info'    =>     array_merge(
-                $block_1_data,
-                $block_2_data,
-                $desc_data,
-                $inventory_1_data,
-                $inventory_2_data,
-                ['Location' => $street_add, 'city_zip' => $city_zip]
-            ),
-            'Sale Info'       =>     $recent_sales_data,
-            'Tax Assess Info' => $tax_info_data,
-        ];
+            if ($http_status_code >= 400)
+                return FALSE;
+
+
+            $doc = new DOMDocument('1.0', 'utf-8');
+            // don't propagate DOM errors to PHP interpreter
+            libxml_use_internal_errors(true);
+            // converts all special characters to utf-8
+            $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
+            $doc->loadHTML($content);
+
+            $address_div = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[1]/div[2]/section[1]/div[1]/div", true);
+            $block_div_1 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[1]/div[2]/section[2]/div[1]", true);
+            $block_div_2 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[1]/div[2]/section[2]/div[2]", true);
+            $tax_info_table = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[1]/div/table", true);
+            $tab_content_div = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[1]/div/div", true);
+            $tables = $tab_content_div->getElementsByTagName('table');
+            $latest_desc_table = $tables[0];
+            $recent_sales_table = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[5]/div/table", true);
+            $inventory_table_1 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[2]/div[2]/table", true);
+            $inventory_table_2 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[2]/div[3]/table", true);
+
+            $address = explode(':', $address_div->nodeValue, 2)[1] ?? '';
+            @[$street_add, $city_zip] = explode('.', $address, 2);
+
+            $block_1_data = parseBlockData($block_div_1);
+            $block_2_data = parseBlockData($block_div_2);
+            $desc_data = parseDescTable($latest_desc_table);
+            $recent_sales_data = parseTableData($recent_sales_table);
+            $tax_info_data = parseAttributesTable($tax_info_table, false, false, 0, 1);
+            $inventory_1_data = parseAttributesTable($inventory_table_1, false, true, 0, 0);
+            $inventory_2_data = parseAttributesTable($inventory_table_2, false, true, 0, 0);
+
+
+            return [
+                'Property Info'    =>     array_merge(
+                    $block_1_data,
+                    $block_2_data,
+                    $desc_data,
+                    $inventory_1_data,
+                    $inventory_2_data,
+                    ['Location' => $street_add, 'city_zip' => $city_zip]
+                ),
+                'Sale Info'       =>     $recent_sales_data,
+                'Tax Assess Info' => $tax_info_data,
+            ];
+        } catch (Exception | Error $x) {
+            return false;
+        }
     }
     function parseDescTable($table)
     {
+        $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
+
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows);
 
-        $data_map = [];
 
         for ($i = 0; $i < $rows_count; $i++) { // go thru the table starting at row #2
             $tds = $rows[$i]->getElementsByTagName('td');
@@ -252,14 +257,16 @@
 
     function parseBlockData($div)
     {
+        $data = [];
+        if (!$div || !$div instanceof DOMElement) return $data;
+
         $divs = $div->getElementsByTagName('div');
         $count = count($divs);
-        $data = [];
 
         if ($count < 1) return $data;
 
         for ($i = 0; $i < $count; $i++) {
-            $text = $divs[$i]?->nodeValue;
+            $text = $divs[$i]->nodeValue;
             if (!str_contains($text, ':')) continue;
 
             [$key, $val] = explode(':', $text, 2);
@@ -272,6 +279,7 @@
     function parseAttributesTable($table, $removeFirstRow = false, $is_key_th = true, $key_i = 0, $val_i = 0)
     {
         $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
 
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows);
@@ -297,6 +305,9 @@
 
     function parseTableData($table, $useFirstRow_asHeader = true)
     {
+        $data_map = [];
+        if (!$table || !$table instanceof DOMElement) return $data_map;
+
         $rows = $table->getElementsByTagName('tr');
         $rows_count = count($rows); // count only once
 
@@ -308,7 +319,6 @@
             }
         }
 
-        $data_map = [];
 
         for ($i = 1; $i < $rows_count; $i++) { // go thru the table starting at row #2
             $td_elements = $rows[$i]->getElementsByTagName('td');

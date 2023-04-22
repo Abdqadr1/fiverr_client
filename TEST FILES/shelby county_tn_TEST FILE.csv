@@ -1,3 +1,16 @@
 ADV Num,Parcel ID,Alternate ID,Charge Type,Face Amount,Status,Address
-1,001084 00008,,,12123.43,Active,184 Keel Memphis
-2,001084 00009,,,2121.45,Unavailable,626 Sixth Memphis
+1,00107900000160,,,12123.43,Active,184 Keel Memphis
+2,00108600000160,,,2121.45,Unavailable,626 Sixth Memphis
+3,00109200000260,,,646.5,Active,488 Fifth Memphis
+4,00110500000070,,,5342.23,Unavailable,663 McDavitt Memphis
+5,0011230000006C,,,777.11,Unavailable,595 Exchange Memphis
+6,0050230000006C,,,2442.4,Active,0 Vance Memphis
+7,00502300000120,,,211.76,Active,363 Hernando Memphis
+8,00502300000080,,,867.45,Active,301 Vance Memphis
+9,D0241A0E000800,,,121.32,Unavailable,4316 Old Forest
+10,D0242000004700,,,42.12,Active,0 Hacks Cross
+11,D0242E0B000540,,,31314.42,Active,4400 Hughes Meadow
+12,D0258000001200,,,113.12,Active,0 Quinn
+13,G0219000002070,,,42.23,Active,0 Neshoba Germantown
+17,M0115H0F000110,,,23.14,Active,7906 C Millington
+18,M0115I0I000120,,,423.77,Active,4641 Bill Knight Millington
