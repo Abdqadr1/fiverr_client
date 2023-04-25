@@ -11,7 +11,7 @@
     $state = 'TN';
     /***************************/
 
-    $array = openFile("./TEST FILES//montgomery county_tn_TEST FILE.csv");
+    $array = openFile("./TEST FILES/montgomery county_tn_TEST FILE.csv");
     $header = array_shift($array);
 
 

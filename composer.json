@@ -3,7 +3,7 @@
     "description": "web scraper",
     "type": "project",
     "require": {
-        "facebook/webdriver": "^1.1"
+        "php-webdriver/webdriver": "^1.5"
     },
     "license": "apache",
     "autoload": {
