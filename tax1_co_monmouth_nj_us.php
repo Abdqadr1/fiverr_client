@@ -1,7 +1,4 @@
-<!DOCTYPE html>
-<html>
 
-<body>
 
     <?php
     require_once 'web-crawler.php';
@@ -13,60 +10,7 @@
     $district = "0101";
     /***************************/
 
-
-    $open = fopen("./absecon_2022_TEST FILE.csv", "r") // open the file for reading only
-        or exit("Unable to open file");
-    $array = [];
-    if ($open !== FALSE) {
-
-        while (($data = fgetcsv($open, 1000, ",")) !== FALSE) {
-            $array[] = $data;
-        }
-    } else
-        exit("Problem occured opening file");
-
-    fclose($open);
-
-    // To display a segment of the array data
-    //var_dump( $array[1] ); exit;
-
-
-    function removeWhitespace($str)
-    {
-
-        // -- REMOVES EXCESS WHITESPACE while preserving single spaces between words --
-        // Matches whitespace of any kind incl. multiple whitespace chars between words
-        // and returns it in a capturing group, then replaces it with the empty string ""
-        return preg_replace('/(^\s+|\s+$|\s+(?=\s))/', "", $str);
-    }
-
-    function keepOnlyDesired($str)
-    {
-        // Uses removeWhitespace to remove any leading or trailing whitespace
-        // then removes any non-desired characters but preserves inner spacing
-        // i.e. remove any non-alphanumeric char, underscore or whitespace (ex. tab/space/line break)
-        return preg_replace('/([^\w\s!@#$%^&*()`~\-+=,\.\/\?<>\\|:]+)/', "", removeWhitespace($str));
-    }
-
-
-    if (!function_exists('str_contains')) {
-
-        // Polyfill for PHP 4 - PHP 7, safe to utilize with PHP 8
-
-        function str_contains(string $haystack, string $needle)
-        {
-            // stripos is case-insensitive
-            return empty($needle) || stripos($haystack, $needle) !== false;
-        }
-    }
-
-
-    $header = array_shift($array); // remove the first element from the array
-    //$header_map = array_map( 'keepOnlyDesired', $header );
-
-
-
-    for ($i = 0; $i < 1; $i++) { //count($array)
+    for ($i = 0; $i < count($array); $i++) { //count($array)
 
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
@@ -108,7 +52,7 @@
         $parcel_id = preg_replace("/\s/", "", $parcel_id); // get rid of all whitespace
 
         // @  <=>  suppress undefined index errors
-        [$block, $lot_qual] = explode("-", $parcel_id, 2);
+        @[$block, $lot_qual] = explode("-", $parcel_id, 2);
         @[$lot, $qual] = explode("--", $lot_qual, 2);
         $qual ??= "";
 
@@ -165,12 +109,12 @@
         $lives_in_state = livesInState($state, $ownerState, $absentee_owner);
 
         $bldg_desc = $propInfo['Bldg Desc:'] ?? "";
-        $bldg_descrip = parseNJBldgDescrip($bldg_desc);
+        $bldg_descrip = parseBldgDescrip_NJ($bldg_desc);
         if (!empty($bldg_desc) && empty($bldg_descrip))
             $bldg_descrip = $bldg_desc;
 
         $taxes = $propInfo['Taxes:'] ?? "";
-        $taxes_as_text = getTaxesAsText($taxes);
+        $taxes_as_text = getTaxesAsText_NJ($taxes);
 
         $date_bought = $propInfo['Sale Date:'] ?? "";
 
@@ -191,45 +135,7 @@
         $ass_value = count($taxAssessInfo) > 0 ? (int) $taxAssessInfo[0]['Assessed'] : 0;
 
         $prop_class = $propInfo['Class:'] ?? '';
-        $prop_type = '';
-
-        switch (trim($prop_class)) {
-            case '1':
-                $prop_class = "1 - Vacant Land";
-                $prop_type = "Land";
-                break;
-            case '2':
-                $prop_class = "2 - Residential";
-                $prop_type = "Residential";
-                break;
-            case '3A':
-                $prop_class = "3A - Farm Property (regular)";
-                $prop_type = "Land";
-                break;
-            case '3B':
-                $prop_class = "3B - Farm Property (qualified)";
-                $prop_type = "Land";
-                break;
-            case  '4A':
-                $prop_class = "4A - Commercial Property";
-                $prop_type = "Commercial";
-                break;
-            case '4B':
-                $prop_class = "4B - Industrial";
-                $prop_type = "Commercial";
-                break;
-            case '4C':
-                $prop_class = "4C - Apartment Building";
-                $prop_type = "Commercial";
-                break;
-            case '15F':
-                $prop_class = "15F - Tax Exempt";
-                $prop_type = "Other";
-                break;
-            default:
-                $prop_class = "Unknown";
-                $prop_type = "Other";
-        }
+        [$prop_class, $prop_type] = getPropTypeFromClass($prop_class);
 
         $structure = [
             'certNo'        =>    $adv_num,
@@ -261,62 +167,7 @@
         ];
 
         var_dump($structure);
-
-        /*
-    // UPLOAD TO DATABASE
-    $stmt = mysqli_prepare($con, "INSERT INTO `tax_lien` VALUES (?, ?, ?, ?)");
-    mysqli_stmt_bind_param($stmt, 'sssd', ...$structure);
-
-    mysqli_stmt_execute($stmt);
-    printf("%d row inserted.\n", mysqli_stmt_affected_rows($stmt));
-*/
     }
-
-
-    /**	<<=================== TAX ASSESSMENT PAGE SETUP =========================>>
-
-<Table 1>
-   <Row 1>	Block: 	--	Prop Loc: --	Owner: 	     --	   Square Ft:   --
-   <Row 2>	Lot: 	--	District: --	Street:      --    Year Built:  --
-   <Row 3>	Qual: 	--	Class:    --	City State:  --	   Style:       --
-
-	<Row 4>	------------------ Additional Information ------------------------
-
-   <Row 5>	( ): 	--	( ):      --	( ): 	    --		( ):    --
-   <Row 6>	( ): 	--	( ):      --	Land Desc:  --		( ):    --
-   <Row 7>	( ): 	--	( ):      --	Bldg Desc:  --		( ):    --
-   <Row 8>	( ): 	--	( ):      --	( ): 	    --		( ):    --
-   <Row 9>	( ): 	--	( ):      --	( ): 	    --		Taxes:  --
-
-	<Row 10> -------------------- Sale Information ---------------------------
-
-   <Row 11>	Sale Date:  --	 	Book:  [--  Page: --]		Price:  --
-
-
-<Table 2>
-   <Row 1>	Sr1a	   Date	      Book	Page	 Price 	  NU#	Ratio	Grantee
-   <Row 2>     [Link]       --	       --	 --	   --     --	  -- 	   --
-     ...       [Link] 	    --	       --	 --	   --     --	  -- 	   --
-     ...       [Link] 	    --	       --	 --	   --     --	  -- 	   --
-     ...       [Link] 	    --	       --	 --	   --     --	  -- 	   --
-   <Row n>     [Link] 	    --	       --	 --	   --     --	  -- 	   --
-
-
-<Table 3>
-	<Row 1>	--------------------- TAX-LIST-HISTORY ------------------------
-
-   <Row 2>	Year   Property Location    Land/Imp/Tot    Exemption  	Assessed   Property Class
-   <Row 3>     [Link]         --	         --	 	--	   --            --
-     ...       [Link]         --	         --	 	--	   --            --
-     ...       [Link]         --	         --	 	--	   --            --
-   <Row n>     [Link]         --	         --	 	--	   --            --
-
-     ** Year goes backwards all the way to 2015 when URL += "&hist=1"
-
-
-	<<========================================================================>>
-
-     **/
 
 
     function parsePage($target)
@@ -324,7 +175,6 @@
         $page = _http($target);
         $headers = $page['headers'];
         $http_status_code = $headers['status_info']['status_code'];
-        //var_dump($headers);
 
         if ($http_status_code != 200)
             return FALSE;
@@ -337,9 +187,6 @@
         $doc->loadHTML($content);
 
         [$table1, $table2, $table3] = $doc->getElementsByTagName('table');
-
-
-        /******** Table 1 -- Get Property Info *********/
 
         $trTags_1 = $table1->getElementsByTagName('tr');
         // Remove rows 4 & 10 (which contain headings)
@@ -385,12 +232,6 @@
             'Sale Info'       =>     $data_2,
             'Tax Assess Info'  =>    $data_3
         ];
-
-        /******************** END OF PARSING - TEST BELOW *************************/
-        //var_dump($data_1);
-        //var_dump($data_2);
-        //var_dump($data_3);
-        /**************************************************************************/
     }
 
     function parseTableData($table, $useFirstRow_asHeader = true, $header = null)
@@ -440,6 +281,3 @@
     }
 */
     ?>
-</body>
-
-</html>

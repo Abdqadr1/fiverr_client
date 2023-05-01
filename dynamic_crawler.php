@@ -4,7 +4,6 @@ require_once "vendor/autoload.php";
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy;
-use Facebook\WebDriver\WebDriverCheckboxes;
 use Facebook\WebDriver\WebDriverExpectedCondition;
 
 function _dynamicCrawler($link, $timeout = 60, $containsPath, $buttonId = null)
@@ -73,7 +72,7 @@ function dataHubCrawler($link, $timeout = 60, $containsPath, $town = "", $block 
 
         //click town button to show list
         $driver->findElement(WebDriverBy::xpath("/html/body/div[1]/div[1]/div[2]/div/a"))->click();
-        $driver->findElement(WebDriverBy::xpath('//input[@id="' . $town . '"]'))->click();
+        $driver->findElement(WebDriverBy::xpath('//input[@value="' . ucwords($town) . '"]'))->click();
 
         //fill the form
         $driver->findElement(WebDriverBy::id("blockid"))->sendKeys($block);

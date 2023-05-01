@@ -1,7 +1,4 @@
-<!DOCTYPE html>
-<html>
 
-<body>
 
     <?php
     require_once 'web-crawler.php';
@@ -11,16 +8,10 @@
     $state = 'NJ';
     /***************************/
 
-    $array = openFile("./TEST FILES/ocean county_nj_TEST FILE.csv");
 
-
-    $header = array_shift($array); // remove the first element from the array
-    //$header_map = array_map( 'keepOnlyDesired', $header );
-
-    // TESTING!! echo removeWhitespace($array[0][3]);
-
-
-    for ($i = 0; $i < 5; $i++) { //count($array)
+    $last_index = isset($_SESSION['last_index']) ? (int) $_SESSION['last_index'] + 1 : 0;
+    for ($i = $last_index; $i < $array_count; $i++) { //count(array)
+        $err_message = "";
 
         // Remove excess whitespace first with 'keepOnlyDesired' function
         // then remove anything that is not a letter or whitespace (the funny chars)
@@ -48,10 +39,6 @@
         } else
             $charge_descrip = parseChargeTypeDescrip($charge_type);
 
-        /******************** TEST BELOW *************************/
-        //echo $charge_type ." | ". $charge_descrip ."<br>";
-        /*********************************************************/
-
 
 
         /*************** PARSE THE BLOCK, LOT AND QUAL ******************/
@@ -75,18 +62,13 @@
         $options = "nDistrict=$alternate_id&szBlockNum=$block&szLotNum=$lotNumber&szBlockSuff=$sub_block&szLotSuff=$sub_lot&szQual=$qual";
         $tax_link = $url . $options;
 
-        /******************** TEST BELOW *************************/
-        echo "<a href='http://" . $tax_link . "'>" . $tax_link . "</a><br>";
-        /*********************************************************/
-
-
-
 
         // GO TO THE LINK AND DOWNLOAD THE PAGE
 
         $parsedPage = parsePage($tax_link);
         if (!$parsedPage) {
-            echo "Page failed to Load for lienNo: " . $adv_num . "<br/>";
+            // echo "Page failed to Load for lienNo: " . $adv_num . "<br/>";
+            saveDataToDB_sendProgress($conn, $err_message, $i, $tax_link, false);
             continue;
         }
 
@@ -178,8 +160,7 @@
             'taxJurisdictionID'    =>    NULL
         ];
 
-        // listData($structure);
-        var_dump($structure);
+        saveDataToDB_sendProgress($conn, $structure, $i, $tax_link);
     }
 
 
@@ -220,6 +201,7 @@
                 'Tax Assess Info'  =>    $detailsInfo
             ];
         } catch (Exception | Error $x) {
+            $GLOBALS['err_message'] = $x->getMessage() . " Line: " . $x->getLine();
             return false;
         }
     }
@@ -244,7 +226,6 @@
             for ($i = $startIndex; $i < $rows_count; $i++) {
                 $td_elements = $rows[$i]->getElementsByTagName('td');
                 $num_td_elements = $td_elements->count();
-                // echo $num_td_elements;
                 $row_data = [];
 
                 if ($num_td_elements !== count($header_map)) continue;
@@ -260,7 +241,6 @@
             for ($i = 0; $i < $rows_count; $i++) { // go thru the table starting at row #2
                 $td_elements = $rows[$i]->getElementsByTagName('td');
                 $num_td_elements = $td_elements->count();
-                // echo $num_td_elements;
                 $row_data = [];
 
                 // Eliminate those rows that do not have the proper structure (i.e. same # of cols)
@@ -326,6 +306,3 @@
     }
 */
     ?>
-</body>
-
-</html>

@@ -104,9 +104,6 @@
         $total_appraised_value = (int) filter_var($total_appraised_value, FILTER_SANITIZE_NUMBER_INT);
         $taxes_as_text = getTaxesAsText_NJ($total_appraised_value);
 
-        $beds = $propInfo["Number Of Bedrooms"] ?? NULL;
-        $baths = $propInfo["Number Of Full Bathrooms"] ?? NULL;
-        $half_baths = $propInfo["Number Of Half Bathrooms"] ?? NULL;
         $date_bought = $saleHist[0]['Date'] ?? NULL;
 
         $land_description = $propInfo["Land Description:"] ?? "";
@@ -143,8 +140,8 @@
             'city'            =>    $owner_city,
             'zip'            =>    $owner_zip,
             'buildingDescrip'    =>    $land_description,
-            'numBeds'        =>    $beds,
-            'numBaths'        =>    $baths,
+            'numBeds'        =>    NULL,
+            'numBaths'        =>    NULL,
             'lastRecordedOwner'    =>    $owner_name,
             'lastRecordedOwnerType'    =>    $owner_type,
             'lastRecordedDateOfSale' =>    date('Y-m-d', strtotime($date_bought)),
