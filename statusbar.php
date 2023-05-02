@@ -14,7 +14,11 @@
 
 <body class="body row mx-0 justify-content-center align-items-center">
     <div class="col-12 col-sm-10 col-md-7 rounded py-5 px-4 border">
-        <h5 class='mb-3'>Retrieving Property info...</h5>
+        <h5 class='mb-3'>
+            <div id="spinner" class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>Retrieving Property info...
+        </h5>
         <div class='d-flex justify-content-end mb-3'>
             <button id="cancel-btn" class='btn btn-danger'>Cancel</button>
         </div>
@@ -39,7 +43,7 @@
         </div>
 
         <div class='d-flex justify-content-end my-3'>
-            <button id="continue-btn" disabled="true" class="btn btn-outline-secondary mt-3">Continue &gt;</button>
+            <a href="javascript:continuePage()" id="continue-btn" class="btn btn-outline-secondary mt-3">Continue &gt;</a>
         </div>
 
         <iframe id="progress-frame"></iframe>

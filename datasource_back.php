@@ -13,9 +13,8 @@ function clean_data($txt)
 function checkCSVFile($file)
 {
     $csvAsArray = array_map('str_getcsv', $file);
-    array_shift($csvAsArray);
 
-    if (count($csvAsArray) < 2) {
+    if (count($csvAsArray) < 3) {
         echo ("<script>alert('Sorry, your file has less than 2 rows')</script>");
         return false;
     }
@@ -46,13 +45,14 @@ $state = $county = $municipality = $selected = "";
 
 if ($_SERVER['REQUEST_METHOD'] === "POST") {
     if (
-        isset($_POST['state']) && !empty(isset($_POST['state'])) &&
-        isset($_POST['county']) && !empty(isset($_POST['county'])) &&
-        isset($_POST['municipality']) && !empty(isset($_POST['municipality'])) &&
-        isset($_FILES['csv']) && !empty(isset($_FILES['csv'])) &&
-        isset($_POST['selected']) && !empty(isset($_POST['selected']))
+        isset($_POST['state']) && !empty($_POST['state']) &&
+        isset($_POST['county']) && !empty($_POST['county']) &&
+        isset($_POST['municipality']) && !empty($_POST['municipality']) &&
+        isset($_FILES['csv']) && !empty($_FILES['csv']) &&
+        isset($_POST['selected']) && !empty($_POST['selected'])
     ) {
         $state = clean_data($_POST['state']);
+        $state = ucwords($state);
         $county = clean_data($_POST['county']);
         $municipality = clean_data($_POST['municipality']);
         $selected = clean_data($_POST['selected']);
@@ -71,12 +71,17 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         } else if ($csv["size"] > 5000) {
             echo ("<script>alert('Sorry, your file larger than 5KB')</script>");
         } else if ($csvArray = checkCSVFile(file($temp_name))) {
+            $headers = array_shift($csvArray);
             $_SESSION["state"] = $state;
             $_SESSION["county"] = $county;
             $_SESSION["municipality"] = $municipality;
             $_SESSION["selected"] = $selected;
             $_SESSION["array"] = $csvArray;
+            $_SESSION["headers"] = $headers;
             $_SESSION["site"] = $site;
+            // initialize success and error rows
+            $_SESSION['error_rows'] = [];
+            $_SESSION['success_rows'] = 0;
             header("location: statusbar.php");
         }
     } else {

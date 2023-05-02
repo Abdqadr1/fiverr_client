@@ -12,222 +12,257 @@
     /***************************/
 
 
-    $array = openFile('./TEST FILES/broome county_ny_TEST FILE.csv');
-    $header = array_shift($array);
+    // $array = openFile('./TEST FILES/broome county_ny_TEST FILE.csv');
+    // $header = array_shift($array);
 
-    for ($i = 1; $i < 2; $i++) { //count($array)
+    for ($i = $last_index ?? 0; $i < $array_count; $i++) {
+        $err_message = "";
 
-        // Remove excess whitespace first with 'keepOnlyDesired' function
-        // then remove anything that is not a letter or whitespace (the funny chars)
-        $row = array_map('keepOnlyDesired', $array[$i]);
-        [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
-
-        // remove non-numeric characters and cast to float
-        $face_amount = (float) preg_replace("/([^0-9\\.]+)/i", "", $face_amount);
-        $status = ($status == 'Active') ? 1 : 0;
+        try {
 
 
-        /************** CHARGE TYPE DESCRIPTION *****************/
-        if (empty($charge_type)) {
-            $charge_descrip = "Property Taxes";
-        } elseif (strlen($charge_type) > 1) {
-            $array_ofChars = str_split($charge_type);
-            $reconstructed_str = "";
-            do {
-                $reconstructed_str .= array_shift($array_ofChars) . ", ";
-            } while (count($array_ofChars) > 1);
-            $reconstructed_str .= $array_ofChars[0];
+            // Remove excess whitespace first with 'keepOnlyDesired' function
+            // then remove anything that is not a letter or whitespace (the funny chars)
+            $row = array_map('keepOnlyDesired', $array[$i]);
+            [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
+            //For each column over 6, test if the header:
+            if ($header_count && $header_count > 6) {
+                for ($h = 6; $h < $header_count; $h++) {
+                    $title = $header[$h];
+                    switch (ucwords($title)) {
+                        case "Address":
+                            $row_address = $row[$h];
+                            break;
+                        case "Owner Name":
+                            $row_owner_name = $row[$h];
+                            break;
+                        case "Owner Address":
+                            $row_owner_address = $row[$h];
+                            break;
+                        case "Owner State":
+                            $row_owner_state = $row[$h];
+                            break;
+                        case "Zip":
+                            $row_zip = $row[$h];
+                            break;
+                        case "City":
+                            $row_city = $row[$h];
+                            break;
+                    }
+                }
+            }
 
-            $charge_descrip = parseChargeTypeDescrip($reconstructed_str);
-        } else
-            $charge_descrip = parseChargeTypeDescrip($charge_type);
-
-        /******************** TEST BELOW *************************/
-        //echo $charge_type ." | ". $charge_descrip ."<br>";
-        /*********************************************************/
-
-
-
-        /*************** PARSE THE BLOCK, LOT AND QUAL ******************/
-        $parcel_id = preg_replace("/\s/", "", $parcel_id);
-
-        // @  <=>  suppress undefined index errors
-        @[$sections, $block, $lots, $suffix] = explode("-", $parcel_id, 4);
-        $suffix ??= '';
-        [$section, $sub_section] = explode('.', $sections, 2);
-        @[$lot, $sub_lot] = explode('.', $lots, 2);
-        $sub_lot ??= '';
-
-        $section = str_pad($section, 3, '0', STR_PAD_LEFT);
-        $sub_section = str_pad($sub_section, 3, '0', STR_PAD_LEFT);
-
-        $block = str_pad($block, 4, '0', STR_PAD_LEFT);
-
-        $lot = str_pad($lot, 3, '0', STR_PAD_LEFT);
-        $sub_lot = str_pad($sub_lot, 3, '0', STR_PAD_LEFT);
-
-        $suffix = str_pad($suffix, 4, '0', STR_PAD_LEFT);
-
-        /**************** CREATE THE TAX ASSESSMENT URL *******************/
-        $url = "imo.co.broome.ny.us/report.aspx?";
-
-        $key = "$section$sub_section$block$lot$sub_lot$suffix";
-
-        $options = "file=muni0302/T000027/030200160031000302600000000001.JPG&swiscode=$alternate_id&printkey=$key&sitetype=res&siteNum=1";
-        $tax_link = $url . $options;
-
-        /******************** TEST BELOW *************************/
-        echo "<a href='http://" . $tax_link . "'>" . $tax_link . "</a><br>";
+            // remove non-numeric characters and cast to float
+            $face_amount = (float) preg_replace("/([^0-9\\.]+)/i", "", $face_amount);
+            $status = ($status == 'Active') ? 1 : 0;
 
 
-        // GO TO THE LINK AND DOWNLOAD THE PAGE
+            /************** CHARGE TYPE DESCRIPTION *****************/
+            if (empty($charge_type)) {
+                $charge_descrip = "Property Taxes";
+            } elseif (strlen($charge_type) > 1) {
+                $array_ofChars = str_split($charge_type);
+                $reconstructed_str = "";
+                do {
+                    $reconstructed_str .= array_shift($array_ofChars) . ", ";
+                } while (count($array_ofChars) > 1);
+                $reconstructed_str .= $array_ofChars[0];
 
-        $parsedPage = parsePage($tax_link);
-        if (!$parsedPage) {
-            echo "Page failed to Load for lienNo: " . $adv_num . "<br/>";
-            continue;
+                $charge_descrip = parseChargeTypeDescrip($reconstructed_str);
+            } else
+                $charge_descrip = parseChargeTypeDescrip($charge_type);
+
+            /******************** TEST BELOW *************************/
+            //echo $charge_type ." | ". $charge_descrip ."<br>";
+            /*********************************************************/
+
+
+
+            /*************** PARSE THE BLOCK, LOT AND QUAL ******************/
+            $parcel_id = preg_replace("/\s/", "", $parcel_id);
+
+            // @  <=>  suppress undefined index errors
+            @[$sections, $block, $lots, $suffix] = explode("-", $parcel_id, 4);
+            $suffix ??= '';
+            [$section, $sub_section] = explode('.', $sections, 2);
+            @[$lot, $sub_lot] = explode('.', $lots, 2);
+            $sub_lot ??= '';
+
+            $section = str_pad($section, 3, '0', STR_PAD_LEFT);
+            $sub_section = str_pad($sub_section, 3, '0', STR_PAD_LEFT);
+
+            $block = str_pad($block, 4, '0', STR_PAD_LEFT);
+
+            $lot = str_pad($lot, 3, '0', STR_PAD_LEFT);
+            $sub_lot = str_pad($sub_lot, 3, '0', STR_PAD_LEFT);
+
+            $suffix = str_pad($suffix, 4, '0', STR_PAD_LEFT);
+
+            /**************** CREATE THE TAX ASSESSMENT URL *******************/
+            $url = "imo.co.broome.ny.us/report.aspx?";
+
+            $key = "$section$sub_section$block$lot$sub_lot$suffix";
+
+            $options = "file=muni0302/T000027/030200160031000302600000000001.JPG&swiscode=$alternate_id&printkey=$key&sitetype=res&siteNum=1";
+            $tax_link = $url . $options;
+
+            /******************** TEST BELOW *************************/
+            // echo "<a href='http://" . $tax_link . "'>" . $tax_link . "</a><br>";
+
+
+            // GO TO THE LINK AND DOWNLOAD THE PAGE
+
+            $parsedPage = parsePage($tax_link);
+            if (!$parsedPage || is_empty($parsedPage)) {
+                // echo "Page failed to Load for lienNo: " . $adv_num . "<br/>";
+                $err_message = empty($err_message) ? "No data found on the website" : $err_message;
+                saveDataToDB_sendProgress($conn, $err_message, $adv_num, $i, $tax_link, false);
+                continue;
+            }
+
+            [
+                'Property Info' => $propInfo,
+                'Sale Info' => $saleHist,
+                'Tax Assess Info' => $taxAssessInfo,
+                'Owner Info' => $ownerInfo
+            ] = $parsedPage;
+
+
+            $owner_loc = $row_owner_address ?? $ownerInfo[0]["owner_street"] ?? "";
+            $owner_name = $ownerInfo[0]['owner_name'] ?? "";
+            $owner_type = determineOwnerType($owner_name);
+            for ($o = 1; $o < count($ownerInfo); $o++) {
+                $name = $ownerInfo[$o]['owner_name'] ?? "";
+                if (!empty($name)) $owner_name .= ', ' . $name;
+            }
+            $owner_name = $row_owner_name ?? $owner_name;
+
+            $prop_loc = $row_address ??  $propInfo["prop_loc"] ?? "";
+            $city_state_zip = $ownerInfo[0]["city_state_zip"] ?? "";
+            @[, $owner_state,] = explode(" ", $city_state_zip, 3);
+            $owner_state = $row_owner_state ?? $owner_state;
+            $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
+            $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
+
+            $property_class = $propInfo['Property Class:'] ?? '';
+            [, $prop_class] = explode(' - ', $property_class, 2);
+            $stories = ($propInfo['Number of Stories:'] ?? "");
+            $building_style = ($arr['Building Style:'] ?? "");
+            $prop_type =  $stories . ' ' . $building_style;
+
+            $total_assessment = $propInfo["Total Assessment:"] ?? 0;
+            $total_assessment = (int) filter_var($total_assessment, FILTER_SANITIZE_NUMBER_INT);
+            $full_market_value = $propInfo['Full Market Value:'] ?? 0;
+            $full_market_value = (int) filter_var($full_market_value, FILTER_SANITIZE_NUMBER_INT);
+            $taxes_as_text = getTaxesAsText_NY($total_assessment, 0);
+
+            $beds = $propInfo["Bedrooms:"] ?? NULL;
+            $baths = $propInfo["Bathrooms (Full - Half):"] ?? NULL;
+
+            $date_bought = $saleHist[0]['Sale Date'] ?? NULL;
+
+            $bldg_descrip = "";
+            $tax_map_id = $propInfo['Tax Map ID #:'] ?? NULL;
+
+            // Generate a string of sale entries in XML format
+            $sale_hist_data = "";
+
+            /** Iterate backwards thru the array, only keeping those rows which fit within the 500-char limit **/
+            foreach (array_reverse($saleHist) as ['Sale Date' => $date, 'Price' => $price, 'Deed Book and Page' => $buyer]) {
+
+                $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
+                $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $buyer . "</b><m>" . $sale_descrip . "</m></e>";
+                if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
+                    $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
+            }
+            $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
+
+
+            $structure = [
+                'certNo'        =>    $adv_num,
+                'auctionID'        =>    NULL,
+                'parcelNo'        =>    $tax_map_id,
+                'alternateID'        =>    $alternate_id,
+                'chargeType'        =>    $charge_descrip,
+                'faceAmnt'        =>    $face_amount,
+                'status'        => ($status ? '1' : '0'),
+                'assessedValue'        =>    $total_assessment,
+                'appraisedValue'    =>    $full_market_value,
+                'propClass'        =>    $prop_class,
+                'propType'        =>    $prop_type,
+                'propLocation'        =>    $prop_loc,
+                'city'            =>    $row_city ?? $city ?? NULL,
+                'zip'            =>    $row_zip ?? $zip_code ?? NULL,
+                'buildingDescrip'    =>    $bldg_descrip,
+                'numBeds'        =>    $beds,
+                'numBaths'        =>    $baths,
+                'lastRecordedOwner'    =>    $owner_name,
+                'lastRecordedOwnerType'    =>    $owner_type,
+                'lastRecordedDateOfSale' =>    date('Y-m-d', strtotime($date_bought)),
+                'absenteeOwner'        => ($absentee_owner ? '1' : '0'),
+                'livesInState'        => ($lives_in_state ? '1' : '0'),
+                'saleHistory'        =>    $sale_hist_data,
+                'priorDelinqHistory'    =>    NULL,
+                'propertyTaxes'        =>    $taxes_as_text,
+                'taxJurisdictionID'    =>    NULL
+            ];
+
+            // listData($structure);
+            saveDataToDB_sendProgress($conn, $structure, $adv_num,  $i, $tax_link);
+        } catch (Throwable $x) {
+            $err_message = $x->getMessage() . " Line: " . $x->getLine();
+            saveDataToDB_sendProgress($conn, $err_message, $adv_num, $i, $tax_link, false);
         }
-
-        [
-            'Property Info' => $propInfo,
-            'Sale Info' => $saleHist,
-            'Tax Assess Info' => $taxAssessInfo,
-            'Owner Info' => $ownerInfo
-        ] = $parsedPage;
-
-
-        $owner_loc = $ownerInfo[0]["owner_street"] ?? "";
-        $owner_name = $ownerInfo[0]['owner_name'] ?? "";
-        $owner_type = determineOwnerType($owner_name);
-        for ($o = 1; $o < count($ownerInfo); $o++) {
-            $name = $ownerInfo[$o]['owner_name'] ?? "";
-            if (!empty($name)) $owner_name .= ', ' . $name;
-        }
-
-        $prop_loc = $propInfo["prop_loc"] ?? "";
-        $city_state_zip = $ownerInfo[0]["city_state_zip"] ?? "";
-        @[, $owner_state,] = explode(" ", $city_state_zip, 3);
-        $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
-        $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
-
-        $property_class = $propInfo['Property Class:'] ?? '';
-        [, $prop_class] = explode(' - ', $property_class, 2);
-        $stories = ($propInfo['Number of Stories:'] ?? "");
-        $building_style = ($arr['Building Style:'] ?? "");
-        $prop_type =  $stories . ' ' . $building_style;
-
-        $total_assessment = $propInfo["Total Assessment:"] ?? 0;
-        $total_assessment = (int) filter_var($total_assessment, FILTER_SANITIZE_NUMBER_INT);
-        $full_market_value = $propInfo['Full Market Value:'] ?? 0;
-        $full_market_value = (int) filter_var($full_market_value, FILTER_SANITIZE_NUMBER_INT);
-        $taxes_as_text = getTaxesAsText_NY($total_assessment, 0);
-
-        $beds = $propInfo["Bedrooms:"] ?? NULL;
-        $baths = $propInfo["Bathrooms (Full - Half):"] ?? NULL;
-
-        $date_bought = $saleHist[0]['Sale Date'] ?? NULL;
-
-        $bldg_descrip = "";
-        $tax_map_id = $propInfo['Tax Map ID #:'] ?? NULL;
-
-        // Generate a string of sale entries in XML format
-        $sale_hist_data = "";
-
-        /** Iterate backwards thru the array, only keeping those rows which fit within the 500-char limit **/
-        foreach (array_reverse($saleHist) as ['Sale Date' => $date, 'Price' => $price, 'Deed Book and Page' => $buyer]) {
-
-            $sale_descrip = (intval($price) < 100 ? "Non-Arms Length" : "-");
-            $entry = "<e><d>" . $date . "</d><p>" . $price . "</p><b>" . $buyer . "</b><m>" . $sale_descrip . "</m></e>";
-            if (strlen($entry) <= 500 - 7 - strlen($sale_hist_data)) // 7 == strlen("<r></r>")
-                $sale_hist_data = $entry . $sale_hist_data; // place the entry at the beginning of the str
-        }
-        $sale_hist_data = "<r>" . $sale_hist_data . "</r>";
-
-
-        $structure = [
-            'certNo'        =>    $adv_num,
-            'auctionID'        =>    NULL,
-            'parcelNo'        =>    $tax_map_id,
-            'alternateID'        =>    $alternate_id,
-            'chargeType'        =>    $charge_descrip,
-            'faceAmnt'        =>    $face_amount,
-            'status'        => ($status ? '1' : '0'),
-            'assessedValue'        =>    $total_assessment,
-            'appraisedValue'    =>    $full_market_value,
-            'propClass'        =>    $prop_class,
-            'propType'        =>    $prop_type,
-            'propLocation'        =>    $prop_loc,
-            'city'            =>    $city ?? NULL,
-            'zip'            =>    $zip_code ?? NULL,
-            'buildingDescrip'    =>    $bldg_descrip,
-            'numBeds'        =>    $beds,
-            'numBaths'        =>    $baths,
-            'lastRecordedOwner'    =>    $owner_name,
-            'lastRecordedOwnerType'    =>    $owner_type,
-            'lastRecordedDateOfSale' =>    date('Y-m-d', strtotime($date_bought)),
-            'absenteeOwner'        => ($absentee_owner ? '1' : '0'),
-            'livesInState'        => ($lives_in_state ? '1' : '0'),
-            'saleHistory'        =>    $sale_hist_data,
-            'priorDelinqHistory'    =>    NULL,
-            'propertyTaxes'        =>    $taxes_as_text,
-            'taxJurisdictionID'    =>    NULL
-        ];
-
-        listData($structure);
     }
 
 
 
     function parsePage($target)
     {
-        try {
-            $require_element_path = "/html/body/form/div[3]/div[2]/table";
-            $page = _dynamicCrawler($target, 10, $require_element_path, "btnPublicAccess");
+        $require_element_path = "/html/body/form/div[3]/div[2]/table";
+        $page = _dynamicCrawler($target, 10, $require_element_path, "btnPublicAccess");
 
-            if (!$page) return FALSE;
-
-
-            $doc = new DOMDocument('1.0', 'utf-8');
-            // don't propagate DOM errors to PHP interpreter
-            libxml_use_internal_errors(true);
-            // converts all special characters to utf-8
-            $content = mb_convert_encoding($page, 'HTML-ENTITIES', 'UTF-8');
-            $doc->loadHTML($content);
-
-            $prop_title_div  = $doc->getElementById('lblReportTitle');
-            $lblTotalAssessment  = $doc->getElementById('lblTotalAssessment');
-            $lblFullMarketValue  = $doc->getElementById('lblFullMarketValue');
-
-            $info_table = getElementByPath($doc, $require_element_path, true);
-            $area_info_table = getElementByPath($doc, "/html/body/form/div[3]/div[3]/table", true);
-            $structure_info_table = $doc->getElementById('table6');
-            $sales_table = $doc->getElementById('tblSales');
-            $owner_div = $doc->getElementById('pnlOwne');
-            $taxes_table = $doc->getElementById('tblTax');
+        if (!$page) return FALSE;
 
 
-            $info_data = parseAttributesTable($info_table, true, true, 0, 0);
-            $area_data = parseAttributesTable($area_info_table, false, true, 0, 0);
-            $structure_data = parseAttributesTable($structure_info_table, false, true, 0, 0);
-            $sales_data = parseTableData($sales_table);
-            $taxes_data = parseTableData($taxes_table);
-            $owner_data = parseOwnerDiv($owner_div);
+        $doc = new DOMDocument('1.0', 'utf-8');
+        // don't propagate DOM errors to PHP interpreter
+        libxml_use_internal_errors(true);
+        // converts all special characters to utf-8
+        $content = mb_convert_encoding($page, 'HTML-ENTITIES', 'UTF-8');
+        $doc->loadHTML($content);
 
-            [, $loc_str] = explode(':', $prop_title_div?->nodeValue, 2);
-            [$loc,] = explode(',', trim($loc_str), 2);
-            $info_data['prop_loc'] = $loc;
-            parseValueSpan($lblTotalAssessment, $info_data, "Total Assessment:");
-            parseValueSpan($lblFullMarketValue, $info_data, "Full Market Value:");
+        $prop_title_div  = $doc->getElementById('lblReportTitle');
+        $lblTotalAssessment  = $doc->getElementById('lblTotalAssessment');
+        $lblFullMarketValue  = $doc->getElementById('lblFullMarketValue');
 
-            return [
-                'Property Info'    =>     array_merge($info_data, $area_data, $structure_data),
-                'Sale Info'       =>     $sales_data,
-                'Tax Assess Info'  =>    $taxes_data,
-                'Owner Info' => $owner_data
-            ];
-        } catch (Exception | Error $x) {
-            return false;
-        }
+        $info_table = getElementByPath($doc, $require_element_path, true);
+        $area_info_table = getElementByPath($doc, "/html/body/form/div[3]/div[3]/table", true);
+        $structure_info_table = $doc->getElementById('table6');
+        $sales_table = $doc->getElementById('tblSales');
+        $owner_div = $doc->getElementById('pnlOwne');
+        $taxes_table = $doc->getElementById('tblTax');
+
+
+        $info_data = parseAttributesTable($info_table, true, true, 0, 0);
+        $area_data = parseAttributesTable($area_info_table, false, true, 0, 0);
+        $structure_data = parseAttributesTable($structure_info_table, false, true, 0, 0);
+        $sales_data = parseTableData($sales_table);
+        $taxes_data = parseTableData($taxes_table);
+        $owner_data = parseOwnerDiv($owner_div);
+
+        [, $loc_str] = explode(':', $prop_title_div?->nodeValue, 2);
+        [$loc,] = explode(',', trim($loc_str), 2);
+        $info_data['prop_loc'] = $loc;
+        parseValueSpan($lblTotalAssessment, $info_data, "Total Assessment:");
+        parseValueSpan($lblFullMarketValue, $info_data, "Full Market Value:");
+
+        return [
+            'Property Info'    =>     array_merge($info_data, $area_data, $structure_data),
+            'Sale Info'       =>     $sales_data,
+            'Tax Assess Info'  =>    $taxes_data,
+            'Owner Info' => $owner_data
+        ];
     }
 
     function parseValueSpan($div, &$map, $name)
@@ -252,9 +287,9 @@
         $start = $removeFirstRow ? 1 : 0;
 
         for ($i = $start; $i < $rows_count; $i++) { // go thru the table starting at row #2
-            $tds = $rows[$i]->getElementsByTagName('td');
+            $tds = $rows[$i]?->getElementsByTagName('td');
             $tds_count = count($tds);
-            $ths = $rows[$i]->getElementsByTagName('th');
+            $ths = $rows[$i]?->getElementsByTagName('th');
             $td = $tds[$val_i];
 
 
@@ -287,13 +322,13 @@
         $header_map = [];
         if ($useFirstRow_asHeader) {
             /*** First row determines the column values ***/
-            foreach ($rows[0]->getElementsByTagName('th') as $col) { // get child elements
+            foreach ($rows[0]?->getElementsByTagName('th') as $col) { // get child elements
                 $header_map[] = trim($col->textContent);
             }
         }
 
         for ($i = 1; $i < $rows_count; $i++) { // go thru the table starting at row #2
-            $td_elements = $rows[$i]->getElementsByTagName('td');
+            $td_elements = $rows[$i]?->getElementsByTagName('td');
             $num_td_elements = $td_elements->count();
             $row_data = [];
 

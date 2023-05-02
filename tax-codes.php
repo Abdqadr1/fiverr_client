@@ -418,3 +418,11 @@ if (!function_exists('str_contains')) {
 		return empty($needle) || stripos($haystack, $needle) !== false;
 	}
 }
+
+function is_empty($array_map)
+{
+	foreach ($array_map as $key => $value) {
+		if (!empty($value)) return false;
+	}
+	return true;
+}

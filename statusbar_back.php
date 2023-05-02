@@ -16,16 +16,42 @@ function sendData($message)
     flush();
 
     if (connection_aborted()) {
+        error_log("User aborted process!");
         exit;
     }
 }
 
-function saveDataToDB_sendProgress(mysqli $conn, $data, $index, $url, $is_successful = true)
+function generateReport($file, $row)
+{
+    try {
+        $log_foldername = __DIR__ . "/logs";
+        if (!file_exists($log_foldername)) {
+            // create directory/folder uploads.
+            mkdir($log_foldername, 0777, true);
+        }
+        $log_file_data = $log_foldername . '/log_' . $file . '_' . date('d-M-Y') . '.log';
+        $log_data = "";
+        $time = $row['time'] ?? '';
+        $url = $row['url'] ?? '';
+        $message = $row['message'] ?? '';
+        $row_num = $row['row_num'] ?? '';
+        $msg = "[$time] [row: $row_num, url: $url] [message: $message]";
+        $log_data .= $msg . PHP_EOL;
+        // if you don't add `FILE_APPEND`, the file will be erased each time you add a log
+        file_put_contents($log_file_data, $log_data, FILE_APPEND);
+    } catch (Throwable $t) {
+        error_log("Error when generating report");
+    }
+}
+
+function saveDataToDB_sendProgress(mysqli $conn, $data, $certNo,  $index, $url, $is_successful = true)
 {
     global $success_rows, $error_rows, $array_count;
+    $_SESSION['last_index'] = $index;
+    $time = date("Y-m-d h:i:sa");
+    $row = [];
 
     if ($is_successful) {
-        $_SESSION['last_index'] = $index;
         //insert into table
         unset($data['auctionID']);
         $keys = array_keys($data);
@@ -39,6 +65,7 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $index, $url, $is_succes
         $insert_sql = "INSERT INTO tax_certificate (" . $keys_str . ") VALUES (" . $values_str . ")";
 
         if ($conn->query($insert_sql)) {
+            $row = ['url' => $url, "message" => "parsed successfully", 'row_num' => $certNo, "index" => $index, "time" => $time];
             $success_rows += 1;
             $_SESSION['success_rows'] = $success_rows;
             $script = "<script>";
@@ -47,7 +74,8 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $index, $url, $is_succes
             sendData($script);
         } else {
             $msg = $conn?->error ?? "Unknown error occur when inserting data into database";
-            array_push($error_rows, ['url' => $url, "message" => $msg, 'row_num' => $index]);
+            $row = ['url' => $url, "message" => $msg, 'row_num' => $certNo, "index" => $index, "time" => $time];
+            array_push($error_rows, $row);
             $_SESSION['error_rows'] = $error_rows;
 
             $script = "<script>";
@@ -56,7 +84,8 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $index, $url, $is_succes
             sendData($script);
         }
     } else {
-        array_push($error_rows, ['url' => $url, "message" => $data, 'row_num' => $index]);
+        $row = ['url' => $url, "message" => $data, 'row_num' => $certNo, "index" => $index, "time" => $time];
+        array_push($error_rows, $row);
         $_SESSION['error_rows'] = $error_rows;
 
         $script = "<script>";
@@ -64,6 +93,7 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $index, $url, $is_succes
         $script .= "</script>";
         sendData($script);
     }
+    generateReport($GLOBALS['file'], $row);
 }
 
 if (
@@ -98,33 +128,46 @@ if (
     $db_name = explode('.', $file, 2)[0];
     $db_name = str_replace('.', '_', $db_name);
 
-    $sql = "DROP DATABASE IF EXISTS " . $db_name;
-    $sql .= "; CREATE DATABASE " . $db_name;
-    $sql .= ";";
+    if (!(isset($_SESSION['try_again']) && $_SESSION['try_again'] === true)) {
+        $sql = "DROP DATABASE IF EXISTS " . $db_name;
+        $sql .= "; CREATE DATABASE " . $db_name;
+        $sql .= ";";
 
-    if ($conn->multi_query($sql)) {
-        while ($conn->next_result()); // needed after running multi_query
+        if ($conn->multi_query($sql)) {
+            while ($conn->next_result()); // needed after running multi_query
+            $conn->select_db($db_name);
+        }
+
+        $drop_create_table_sql = "DROP TABLE IF EXISTS tax_certificate;";
+        $drop_create_table_sql .= "CREATE TABLE tax_certificate (
+        certNo INT(5), parcelNo TEXT, alternateID TEXT,
+        chargeType TEXT, faceAmnt FLOAT(10,2), status BOOLEAN,
+        assessedValue INT(8), appraisedValue INT(8), propClass TEXT,
+        propType TEXT, propLocation TEXT, city TEXT, zip TEXT,
+        buildingDescrip TEXT, numBeds INT(2), numBaths INT(2),
+        lastRecordedOwner TEXT, lastRecordedOwnerType TEXT,
+        lastRecordedDateOfSale DATE, absenteeOwner BOOLEAN,
+        livesInState BOOLEAN, saleHistory TEXT, priorDelinqHistory TEXT,
+        propertyTaxes TEXT, taxJurisdictionID INT(8));";
+
+        if (!$conn->multi_query($drop_create_table_sql)) {
+            exit("Unable to create tax_certificate table: " . $conn->error);
+        }
+    } else {
         $conn->select_db($db_name);
     }
 
-    $drop_create_table_sql = "DROP TABLE IF EXISTS tax_certificate;";
-    $drop_create_table_sql .= "CREATE TABLE tax_certificate (
-certNo INT(5), parcelNo TEXT, alternateID TEXT,
-chargeType TEXT, faceAmnt FLOAT(10,2), status BOOLEAN,
-assessedValue INT(8), appraisedValue INT(8), propClass TEXT,
-propType TEXT, propLocation TEXT, city TEXT, zip TEXT,
-buildingDescrip TEXT, numBeds INT(2), numBaths INT(2),
-lastRecordedOwner TEXT, lastRecordedOwnerType TEXT,
-lastRecordedDateOfSale DATE, absenteeOwner BOOLEAN,
-livesInState BOOLEAN, saleHistory TEXT, priorDelinqHistory TEXT,
-propertyTaxes TEXT, taxJurisdictionID INT(8));";
 
-    if (!$conn->multi_query($drop_create_table_sql)) {
-        exit("Unable to create tax_certificate table: " . $conn->error);
-    }
     while ($conn->next_result()); // needed after running multi_query
+    // last index processed
+    $last_index = isset($_SESSION['last_index']) ? (int) $_SESSION['last_index'] + 1 : 0;
+
+    $header = (array) $_SESSION['headers'];
+    $header_count = count($header);
     include_once($file);
 } else {
-    exit("Invalid data!");
+    $script = "<script>";
+    $script .= "parent.serverError('Incomplete data in the server!')";
+    $script .= "</script>";
+    exit($script);
 }
-session_destroy();

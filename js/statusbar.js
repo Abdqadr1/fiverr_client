@@ -6,25 +6,30 @@ const errorRows = document.getElementById("error-rows");
 const iframe = document.getElementById('progress-frame');
 const feedback = document.getElementById("feedback");
 
+const spinner = document.getElementById("spinner");
+
 const cancelBtn = document.getElementById("cancel-btn");
 const continueBtn = document.getElementById("continue-btn");
 let source;
 
 cancelBtn.addEventListener('click', e => {
     if (confirm('Are you sure you want to do this?')) {
-        if (source instanceof EventSource) {
-            source.close();
             iframe.src = "";
-            location.href = "datasource.php";
-        }
+            window.location = "datasource.php";
     }
 });
 
 
+
 window.process_progress = 0;
+function continuePage() {
+    if (process_progress >= 100) {
+        window.location = "failedpage.php";
+    }
+}
 
 function setProgress(success, errorArray, all) {
-    console.log(success, errorArray, all);
+    // console.log(success, errorArray, all);
     const errors = JSON.parse(errorArray);
     const failed = errors.length;
     let progress = (success + failed) * (100 / all);
@@ -45,7 +50,12 @@ function setProgress(success, errorArray, all) {
         feedback.innerHTML += el;
     }
 
-    continueBtn.disabled = (progress < 100);
+    if (progress >= 100) spinner?.remove();
+}
+
+function serverError(message) {
+    spinner.remove();
+    alert(message);
 }
 
 window.onload = function (e) {
