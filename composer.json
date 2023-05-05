@@ -3,7 +3,8 @@
     "description": "web scraper",
     "type": "project",
     "require": {
-        "php-webdriver/webdriver": "^1.5"
+        "php-webdriver/webdriver": "^1.5",
+        "phpoffice/phpspreadsheet": "^1.28"
     },
     "license": "apache",
     "autoload": {

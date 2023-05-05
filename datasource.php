@@ -28,22 +28,26 @@ require_once('./datasource_back.php');
         <div class="row mb-3">
             <label for="states" class="col-sm-2 col-form-label">State</label>
             <div class="col-sm-10">
-                <input value="<?php echo $state ?>" name="state" class="form-control" id="state" required />
-                <!-- <select value="<?php echo $state ?>" name="state" class="form-select" id="state" required>
-                    <option value="1">One</option>
-                </select> -->
+                <select value="<?php echo $state ?>" name="state" class="form-select" id="state" required>
+                    <option value="" hidden>Select state</option>
+                    <option value="NEW JERSEY">NEW JERSEY</option>
+                    <option value="NEW YORK">NEW YORK</option>
+                    <option value="TENNESSEE">TENNESSEE</option>
+                </select>
             </div>
         </div>
         <div class="row mb-3">
             <label for="country" class="col-sm-2 col-form-label">County</label>
             <div class="col-sm-10">
-                <input value="<?php echo $county ?>" name="county" class="form-control" id="country" required />
+                <select value="<?php echo $county ?>" name="county" class="form-select" id="county" required>
+                </select>
             </div>
         </div>
         <div class="row mb-3">
             <label for="municipality" class="col-sm-2 col-form-label">Municipality</label>
             <div class="col-sm-10">
-                <input value="<?php echo $municipality ?>" name="municipality" class="form-control" id="municipality" required />
+                <select value="<?php echo $municipality ?>" name="municipality" class="form-select" id="municipality" required>
+                </select>
             </div>
         </div>
         <hr />

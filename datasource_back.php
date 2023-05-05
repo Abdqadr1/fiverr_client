@@ -1,7 +1,6 @@
 <?php
 session_start();
 session_unset();
-require_once("./states_data.php");
 
 function clean_data($txt)
 {
@@ -31,12 +30,24 @@ function checkCSVFile($file)
     return $csvAsArray;
 }
 
-function findSite($arr, $county)
+function findSite($state, $county, $municipality)
 {
-    foreach ($arr as $site) {
-        if (in_array(strtolower($county), array_map('strtolower', $site["counties"]))) {
-            return $site;
-        }
+    // create mysqli connection
+    $server_name = "localhost";
+    $username = "root";
+    $password = "";
+    $db_name = "states_data";
+    $conn = new mysqli($server_name, $username, $password, $db_name);
+    $sql = "
+    SELECT c.name as county_name, m.name as municipality_name, c.prop_info_site, c.jurisdiction_id as county_juri, m.jurisdiction_id as municipality_juri 
+    FROM `counties` as c INNER JOIN municipalities as m 
+    where c.state='$state' AND c.id='$county' AND m.county_id=c.id AND m.id='$municipality';";
+    if (!$conn) {
+        exit("Connection failed: " . $conn->connect_error);
+    }
+    $result = $conn->query($sql);
+    if ($result?->num_rows > 0) {
+        return $result->fetch_assoc();
     }
     return false;
 }
@@ -62,10 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         $temp_name = $csv["tmp_name"];
         $site = "";
 
-        if (!isset($states[$state])) {
-            $error_message = "State is not recognized!";
-        } else if (!$site = findSite($states[$state], $county)) {
-            $error_message = "County does not exist in state";
+        if (!$site = findSite($state, $county, $municipality)) {
+            $error_message = "State, County, and Municipality combination does not exist in database";
         } else if ($extension !== "csv") {
             echo ("<script>alert('File is not csv format')</script>");
         } else if ($csv["size"] > 5000) {

@@ -24,7 +24,6 @@ if (
     $array = (array) $_SESSION['array'];
     $count_array = count($array);
     $site = $_SESSION['site'];
-    $file = $site['file'];
 } else {
     header('location: datasource.php');
 }

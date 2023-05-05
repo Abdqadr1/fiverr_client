@@ -7,6 +7,17 @@ ini_set('max_execution_time', 0);
 ignore_user_abort(true);
 ob_start();
 
+function getParserFile($id)
+{
+    $arr = [
+        "tax1_co_monmouth_nj_us.php", "tax_datahub.php", "tax_co_ocean_nj_us.php",
+        "assessment_cot_tn_gov.php", "padctn_org.php", "property_spatialest.php", "assessormelvinburgess.php",
+        "qpublic_schneidercorp.php", "gwinnettassessor_manatron.php",
+        "imate.php", "maps_chautauqua.php", "gis_dutchessny.php", "prosgar.php", "lrv_nassaucountyny.php"
+    ];
+    return $arr[$id - 1];
+}
+
 function sendData($message)
 {
     echo $message;
@@ -17,6 +28,7 @@ function sendData($message)
 
     if (connection_aborted()) {
         error_log("User aborted process!");
+        $GLOBALS['conn']?->close();
         exit;
     }
 }
@@ -113,15 +125,15 @@ if (
     $site = $_SESSION['site'];
     $array_count = count($array);
 
-    $file = $site['file'];
+    $file = getParserFile($site['prop_info_site']);
     if (!file_exists($file)) exit("$file does not exist!");
 
     $server_name = "localhost";
     $username = "root";
-    $p = "";
+    $password = "";
 
     // Create connection
-    $conn = new mysqli($server_name, $username, $p);
+    $conn = new mysqli($server_name, $username, $password);
     if (!$conn) {
         exit("Connection failed: " . $conn->connect_error);
     }
@@ -138,8 +150,7 @@ if (
             $conn->select_db($db_name);
         }
 
-        $drop_create_table_sql = "DROP TABLE IF EXISTS tax_certificate;";
-        $drop_create_table_sql .= "CREATE TABLE tax_certificate (
+        $drop_create_table_sql = "CREATE TABLE tax_certificate (
         certNo INT(5), parcelNo TEXT, alternateID TEXT,
         chargeType TEXT, faceAmnt FLOAT(10,2), status BOOLEAN,
         assessedValue INT(8), appraisedValue INT(8), propClass TEXT,
@@ -150,7 +161,7 @@ if (
         livesInState BOOLEAN, saleHistory TEXT, priorDelinqHistory TEXT,
         propertyTaxes TEXT, taxJurisdictionID INT(8));";
 
-        if (!$conn->multi_query($drop_create_table_sql)) {
+        if (!$conn->query($drop_create_table_sql)) {
             exit("Unable to create tax_certificate table: " . $conn->error);
         }
     } else {
@@ -165,6 +176,7 @@ if (
     $header = (array) $_SESSION['headers'];
     $header_count = count($header);
     include_once($file);
+    $conn?->close();
 } else {
     $script = "<script>";
     $script .= "parent.serverError('Incomplete data in the server!')";
