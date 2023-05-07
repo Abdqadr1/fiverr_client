@@ -120,9 +120,7 @@ if (
     $county = $_SESSION['county'];
     $municipality = $_SESSION['municipality'];
     $selected = $_SESSION['selected'];
-    $array = (array) $_SESSION['array'];
     $site = $_SESSION['site'];
-    $array_count = count($array);
 
     $file = getParserFile($site['prop_info_site']);
     if (!file_exists($file)) exit("$file does not exist!");
@@ -158,7 +156,7 @@ if (
         lastRecordedOwner TEXT, lastRecordedOwnerType TEXT,
         lastRecordedDateOfSale DATE, absenteeOwner BOOLEAN,
         livesInState BOOLEAN, saleHistory TEXT, priorDelinqHistory TEXT,
-        propertyTaxes TEXT, taxJurisdictionID INT(8) , PRIMARY KEY (`parcelNo`));";
+        propertyTaxes TEXT, taxJurisdictionID INT(8), PRIMARY KEY (`parcelNo`));";
 
         if (!$conn->query($drop_create_table_sql)) {
             exit("Unable to create tax_certificate table: " . $conn->error);
@@ -172,6 +170,8 @@ if (
     // last index processed
     $last_index = isset($_SESSION['last_index']) ? (int) $_SESSION['last_index'] + 1 : 0;
 
+    $array = (array) $_SESSION['array'];
+    $array_count = count($array);
     $header = (array) $_SESSION['headers'];
     $header_count = count($header);
     include_once($file);

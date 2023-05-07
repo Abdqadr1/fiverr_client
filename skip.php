@@ -14,9 +14,18 @@ function testAllKey($arr, $post_keys)
     foreach ($arr as $key) {
         $k = strtolower(trim($key));
         $k = preg_replace('/\s+/', '_', $k);
+        $k = preg_replace('/[^a-zA-Z0-9_ ]+/', '', $k);
+        // $exist = false;
+        // foreach ($post_keys as $value) {
+        //     // echo var_dump($k) . "\n";
+        //     if ($k == $value) {
+        //         $exist = true;
+        //         break;
+        //     }
+        // }
         if (!in_array($k, $post_keys)) {
             http_response_code(403);
-            exit(var_dump($post_keys) . " Incomplete data send: No $k");
+            exit("Incomplete data send: No $k");
         }
     }
     return true;
@@ -57,17 +66,23 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                 }
                 //filter array
                 $filter = [];
-                foreach ($error_rows as $err) {
-                    $r_num = (int) $err['index'];
-                    if ($array[$r_num]) array_push($filter, $array[$r_num]);
+                foreach ($_POST as $key => $value) {
+                    if (!is_array($value)) continue;
+                    $count = count($value);
+                    for ($i = 0; $i < $count; $i++) {
+                        $filter[$i] = $filter[$i] ?? [];
+                        array_push($filter[$i], $value[$i]);
+                    }
                 }
+
+                // http_response_code(403);
+                // exit(print_r($filter));
 
                 $_SESSION['array'] = $filter;
                 $_SESSION['last_index'] = -1;
                 $_SESSION['success_rows'] = 0;
                 $_SESSION['error_rows'] = [];
                 $_SESSION['try_again'] = true;
-                header('location: statusbar.php');
             } else {
                 http_response_code(403);
                 exit('Invalid data!');

@@ -16,19 +16,24 @@ tryAgainForm.addEventListener('submit', e => {
             const value = td.textContent ?? "";
             if (!name) continue;
             name = name.replace('\ufeff', '');
+            name = name.replace(/[^a-zA-Z0-9_ ]+/gi, '');
+            name = name.replace(/\s+/g, '_');
             formData.append(`${name}[]`, value);
         }
         
     }
-    console.log(formData);
     fetch("skip.php", {
         method: "POST",
         body: formData,
     })
-        .then(res => res.text())
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP status: ${res.status} ${res.statusText}`);
+            }
+            return res.text();
+        })
         .then((r) => {
-            console.log(r);
-            //window.location = "statusbar.php"
+            window.location = "statusbar.php"
         })
         .catch(err => { console.log(err) });
 })
