@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === "GET") {
 
         if ($which == "state") {
             // return counties
-            $sql = "select id, name, prop_info_site from `counties` where state='$value'";
+            $sql = "select name,jurisdiction_id, prop_info_site from `counties` where state='$value'";
             $result = $conn->query($sql);
             $arr = [];
             if ($result?->num_rows > 0) {
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === "GET") {
             echo json_encode($arr);
         } else if ($which == "county") {
             // return municipalities
-            $sql = "select id, name, jurisdiction_id from `municipalities` where county_id='$value'";
+            $sql = "select name, jurisdiction_id from `municipalities` where county_jurisdiction_id='$value'";
             $result = $conn->query($sql);
             $arr = [];
             if ($result?->num_rows > 0) {

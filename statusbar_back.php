@@ -61,7 +61,6 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $certNo,  $index, $url, 
     global $success_rows, $error_rows, $array_count;
     $_SESSION['last_index'] = $index;
     $time = date("Y-m-d h:i:sa");
-    $row = [];
 
     if ($is_successful) {
         //insert into table
@@ -77,7 +76,6 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $certNo,  $index, $url, 
         $insert_sql = "INSERT INTO tax_certificate (" . $keys_str . ") VALUES (" . $values_str . ")";
 
         if ($conn->query($insert_sql)) {
-            $row = ['url' => $url, "message" => "parsed successfully", 'row_num' => $certNo, "index" => $index, "time" => $time];
             $success_rows += 1;
             $_SESSION['success_rows'] = $success_rows;
             $script = "<script>";
@@ -94,6 +92,7 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $certNo,  $index, $url, 
             $script .= "parent.setProgress($success_rows, `" . json_encode($error_rows) . "` , $array_count)";
             $script .= "</script>";
             sendData($script);
+            generateReport($GLOBALS['file'], $row);
         }
     } else {
         $row = ['url' => $url, "message" => $data, 'row_num' => $certNo, "index" => $index, "time" => $time];
@@ -104,8 +103,8 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $certNo,  $index, $url, 
         $script .= "parent.setProgress($success_rows, `" . json_encode($error_rows) . "` , $array_count)";
         $script .= "</script>";
         sendData($script);
+        generateReport($GLOBALS['file'], $row);
     }
-    generateReport($GLOBALS['file'], $row);
 }
 
 if (
@@ -151,7 +150,7 @@ if (
         }
 
         $drop_create_table_sql = "CREATE TABLE tax_certificate (
-        certNo INT(5), parcelNo TEXT, alternateID TEXT,
+        certNo INT(5), parcelNo VARCHAR(20), alternateID TEXT,
         chargeType TEXT, faceAmnt FLOAT(10,2), status BOOLEAN,
         assessedValue INT(8), appraisedValue INT(8), propClass TEXT,
         propType TEXT, propLocation TEXT, city TEXT, zip TEXT,
@@ -159,7 +158,7 @@ if (
         lastRecordedOwner TEXT, lastRecordedOwnerType TEXT,
         lastRecordedDateOfSale DATE, absenteeOwner BOOLEAN,
         livesInState BOOLEAN, saleHistory TEXT, priorDelinqHistory TEXT,
-        propertyTaxes TEXT, taxJurisdictionID INT(8));";
+        propertyTaxes TEXT, taxJurisdictionID INT(8) , PRIMARY KEY (`parcelNo`));";
 
         if (!$conn->query($drop_create_table_sql)) {
             exit("Unable to create tax_certificate table: " . $conn->error);

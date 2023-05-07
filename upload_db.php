@@ -28,12 +28,12 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         }
         // create counties and municipalities table
         $create_table_sql = "
-            CREATE TABLE `counties` ( `id` INT(20) NULL AUTO_INCREMENT , `name` VARCHAR (255) NOT NULL , `jurisdiction_id` VARCHAR(50) NOT NULL ,
-             `prop_info_site` MEDIUMINT NOT NULL ,`state` VARCHAR(50), PRIMARY KEY (`id`), UNIQUE `jurisdiction_unique` (`jurisdiction_id`)); 
+            CREATE TABLE `counties` ( `name` VARCHAR (255) NOT NULL , `jurisdiction_id` VARCHAR(50) NOT NULL ,
+             `prop_info_site` MEDIUMINT NOT NULL ,`state` VARCHAR(50), PRIMARY KEY (`jurisdiction_id`)); 
             ";
         $create_table_sql .= "
-           CREATE TABLE `municipalities` ( `id` INT NOT NULL AUTO_INCREMENT , `name` VARCHAR (255) NOT NULL , `jurisdiction_id` VARCHAR(50) NOT NULL , 
-           `county_id` INT NOT NULL , PRIMARY KEY (`id`), UNIQUE `jurisdiction_unique` (`jurisdiction_id`));";
+           CREATE TABLE `municipalities` ( `name` VARCHAR (255) NOT NULL , `jurisdiction_id` VARCHAR(50) NOT NULL , 
+           `county_jurisdiction_id` INT NOT NULL , PRIMARY KEY (`jurisdiction_id`));";
 
         if ($conn->multi_query($create_table_sql)) {
             while ($conn->next_result()); // needed after running multi_query
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
             for ($i = 1; $i < count($sheets); $i++) {
                 $sheet = $sheets[$i];
                 $state_name = $sheetNames[$i];
-                $last_county_id = null;
+                $last_inserted_county_jurisdiction_id = null;
                 foreach ($sheet->getRowIterator(2, null) as $row) {
 
                     $cellIterator = $row->getCellIterator();
@@ -65,13 +65,13 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                         $county_sql = "INSERT INTO `counties` (`name`, `jurisdiction_id`, `prop_info_site`, `state`) 
                     VALUES ('$county', '$jurisdiction_id', '$prop_info_site', '$state_name');";
                         if ($conn->query($county_sql)) {
-                            $last_county_id = $conn->insert_id;
+                            $last_inserted_county_jurisdiction_id = $jurisdiction_id;
                         } else {
                             echo "Error inserting county $county" . $conn->error . "<br/><br/>";
                         }
                     } else if (!empty($municipality)) {
-                        $municipality_sql = "INSERT INTO `municipalities` (`name`, `jurisdiction_id`, `county_id`) 
-                    VALUES ('$municipality', '$jurisdiction_id', '$last_county_id');";
+                        $municipality_sql = "INSERT INTO `municipalities` (`name`, `jurisdiction_id`, `county_jurisdiction_id`) 
+                    VALUES ('$municipality', '$jurisdiction_id', '$last_inserted_county_jurisdiction_id');";
                         if (!$conn->query($municipality_sql)) {
                             echo "Error inserting municipality $municipality" . $conn->error . "<br/><br/>";
                         }

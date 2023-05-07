@@ -246,6 +246,7 @@
         $header_map = [];
 
         $startIndex = $useFirstRowAsKey ? 2 : 0;
+        if ($rows_count <= $startIndex) return $data_map;
 
         if ($useFirstRowAsKey) {
             /*** First row determines the column values ***/

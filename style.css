@@ -42,8 +42,8 @@ hr {
 }
 
 .feedback-failed {
-    height: 150px;
-    max-height: 400px;
+    height: 200px;
+    max-height: 500px;
 }
 
 iframe{
@@ -51,4 +51,11 @@ iframe{
     min-height: 30px;
     max-height: 30px;
     overflow: auto;
+}
+
+.table td{
+    width: auto !important;
+}
+.table tr{
+    width: auto !important;
 }

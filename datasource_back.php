@@ -38,13 +38,14 @@ function findSite($state, $county, $municipality)
     $password = "";
     $db_name = "states_data";
     $conn = new mysqli($server_name, $username, $password, $db_name);
-    $sql = "
-    SELECT c.name as county_name, m.name as municipality_name, c.prop_info_site, c.jurisdiction_id as county_juri, m.jurisdiction_id as municipality_juri 
-    FROM `counties` as c INNER JOIN municipalities as m 
-    where c.state='$state' AND c.id='$county' AND m.county_id=c.id AND m.id='$municipality';";
     if (!$conn) {
         exit("Connection failed: " . $conn->connect_error);
     }
+
+    $sql = "
+    SELECT c.name as county_name, m.name as municipality_name, c.prop_info_site, c.jurisdiction_id as county_juri, m.jurisdiction_id as municipality_juri 
+    FROM `counties` as c INNER JOIN municipalities as m 
+    where c.state='$state' AND c.jurisdiction_id='$county' AND m.county_jurisdiction_id=c.jurisdiction_id AND m.jurisdiction_id='$municipality';";
     $result = $conn->query($sql);
     if ($result?->num_rows > 0) {
         return $result->fetch_assoc();
