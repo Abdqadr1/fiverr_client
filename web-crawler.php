@@ -55,8 +55,8 @@
 
 
 		$error = false;
-		if (curl_errno($handle))
-			$error = curl_error($handle);
+		$error_no = curl_errno($handle);
+		$error = $error_no > 0 ? curl_error($handle) : false;
 
 		//Close cURL handle
 		curl_close($handle);
@@ -74,8 +74,9 @@
 				$header_array['http_code'] = $line;
 				$status_info = explode(" ", $line);
 				@[$status_protocol, $status_code, $status_msg] = $status_info;
-				if ($error)
-					$status_msg = $error;
+
+				if ($error) $status_msg = $error;
+
 				$header_array['status_info'] = array(
 					"status_protocol" => $status_protocol,
 					"status_code" 	  => $status_code,
@@ -86,7 +87,6 @@
 				$header_array[$key] = $value;
 			}
 		}
-		// echo $body;
 		//Form Return Structure
 		$ret = array("headers" => $header_array, "body" => $body);
 		return $ret;

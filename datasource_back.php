@@ -1,100 +1,155 @@
 <?php
+require_once 'sql.php';
 session_start();
 session_unset();
 
-function clean_data($txt)
-{
-    $txt = trim($txt);
-    $txt = htmlspecialchars($txt);
-    return $txt;
-}
+//connect to database
+connect();
 
-function checkCSVFile($file)
+$file_size_limit = 5000;  // 5 kiloBytes
+
+function checkCSVFile(array $file): array
 {
     $csvAsArray = array_map('str_getcsv', $file);
+    $numRows = count($csvAsArray);
 
-    if (count($csvAsArray) < 3) {
-        echo ("<script>alert('Sorry, your file has less than 2 rows')</script>");
-        return false;
+    // Ensure file contains at least 2 rows
+    if ($numRows < 2) {
+        throw new InvalidArgumentException('Sorry, your file has less than 2 rows');
     }
 
-    $filtered_array = array_filter($csvAsArray, function ($arr) {
-        return count($arr) < 6;
-    });
+    $header = array_shift($csvAsArray); //remove the first row (header row) from the array and return it
+    $numColumns = count($header);
 
-    if (!empty($filtered_array)) {
-        echo ("<script>alert('Sorry, your file has some rows with less than 6 columns')</script>");
-        return false;
+    // Ensure file contains at least 6 columns
+    if ($numColumns < 6) {
+        throw new InvalidArgumentException('Sorry, your file has less than 6 columns');
+    } else {
+
+        $extra_header = [];
+        $new_header = [
+            'adv_num',
+            'parcel_id',
+            'alternate_id',
+            'charge_type',
+            'face_amount',
+            'status'
+        ];
+
+        for ($h = 6; $h < $numColumns; $h++) {
+            //  <<==== Acceptable Column name code goes here  ====>>
+            $column_name = $header[$h];
+            switch (strtolower(trim($column_name))) {
+                case 'address':
+                    $new_header[] = 'prop_location';
+                    $extra_header['prop_location'] = $h;
+                    break;
+                case "owner name":
+                    $new_header[] = 'last_recorded_owner';
+                    $extra_header['last_recorded_owner'] = $h;
+                    break;
+                case "owner address":
+                    $new_header[] = 'last_recorded_owner_address';
+                    $extra_header['last_recorded_owner_address'] = $h;
+                    break;
+                case "owner state":
+                    $new_header[] = 'last_recorded_owner_state';
+                    $extra_header['last_recorded_owner_state'] = $h;
+                    break;
+                case "zip":
+                    $new_header[] = 'zip';
+                    $extra_header['zip'] = $h;
+                    break;
+                case "city":
+                    $new_header[] = 'city';
+                    $extra_header['city'] = $h;
+                    break;
+                default:
+                    //  <<==== Default case - throw an Error! ====>>
+                    throw new InvalidArgumentException('Column "' . $column_name . '" is not an acceptable column name');
+            }
+        }
     }
 
+    $_SESSION['extra_header'] = $extra_header;
+    array_unshift($csvAsArray, $new_header);
     return $csvAsArray;
 }
 
-function findSite($state, $county, $municipality)
-{
-    // create mysqli connection
-    $server_name = "localhost";
-    $username = "root";
-    $password = "";
-    $db_name = "states_data";
-    $conn = new mysqli($server_name, $username, $password, $db_name);
-    if (!$conn) {
-        exit("Connection failed: " . $conn->connect_error);
-    }
 
-    $sql = "
-    SELECT c.name as county_name, m.name as municipality_name, c.prop_info_site, c.jurisdiction_id as county_juri, m.jurisdiction_id as municipality_juri 
-    FROM `counties` as c INNER JOIN municipalities as m 
-    where c.state='$state' AND c.jurisdiction_id='$county' AND m.county_jurisdiction_id=c.jurisdiction_id AND m.jurisdiction_id='$municipality';";
-    $result = $conn->query($sql);
-    if ($result?->num_rows > 0) {
-        return $result->fetch_assoc();
-    }
-    return false;
-}
 
-$state = $county = $municipality = $selected = "";
+$state_juris_id = $county_juris_id = $municip_juris_id = $db_name = "";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-if ($_SERVER['REQUEST_METHOD'] === "POST") {
     if (
-        isset($_POST['state']) && !empty($_POST['state']) &&
-        isset($_POST['county']) && !empty($_POST['county']) &&
-        isset($_POST['municipality']) && !empty($_POST['municipality']) &&
-        isset($_FILES['csv']) && !empty($_FILES['csv']) &&
-        isset($_POST['selected']) && !empty($_POST['selected'])
-    ) {
-        $state = clean_data($_POST['state']);
-        $state = ucwords($state);
-        $county = clean_data($_POST['county']);
-        $municipality = clean_data($_POST['municipality']);
-        $selected = clean_data($_POST['selected']);
-        $csv = $_FILES['csv'];
-        $file_name = $csv["name"];
-        $extension = pathinfo($file_name, PATHINFO_EXTENSION);
-        $temp_name = $csv["tmp_name"];
-        $site = "";
 
-        if (!$site = findSite($state, $county, $municipality)) {
-            $error_message = "State, County, and Municipality combination does not exist in database";
-        } else if ($extension !== "csv") {
-            echo ("<script>alert('File is not csv format')</script>");
-        } else if ($csv["size"] > 5000) {
-            echo ("<script>alert('Sorry, your file larger than 5KB')</script>");
-        } else if ($csvArray = checkCSVFile(file($temp_name))) {
-            $headers = array_shift($csvArray);
-            $_SESSION["state"] = $state;
-            $_SESSION["county"] = $county;
-            $_SESSION["municipality"] = $municipality;
-            $_SESSION["selected"] = $selected;
-            $_SESSION["array"] = $csvArray;
-            $_SESSION["headers"] = $headers;
-            $_SESSION["site"] = $site;
-            // initialize success and error rows
-            $_SESSION['error_rows'] = [];
-            $_SESSION['success_rows'] = 0;
-            header("location: statusbar.php");
+        isset($_POST['state'])    &&  !empty($_POST['state'])    &&
+        isset($_POST['county'])   &&  !empty($_POST['county'])   &&
+        isset($_FILES['csv'])     &&  !empty($_FILES['csv'])     &&
+        isset($_POST['selected']) &&  !empty($_POST['selected'])
+
+    ) {
+
+        $state_juris_id     = clean_data($_POST['state']);
+        $county_juris_id    = clean_data($_POST['county']);
+        $db_name            = clean_data($_POST['selected']);
+
+        if (isset($_POST['municipality']))
+            $municip_juris_id = clean_data($_POST['municipality']);
+
+        $csv       = $_FILES['csv'];
+        $file_name = $csv['name'];
+        $extension = pathinfo($file_name, PATHINFO_EXTENSION);
+        $temp_name = $csv['tmp_name'];
+
+        if ($extension !== 'csv') {
+            $error_message = "File format is not .csv";
+            return;
+        } else if ($csv['size'] > $file_size_limit) {
+            $error_message = "Sorry, your file size is larger than " . $file_size_limit . " bytes";
+            return;
         }
+
+        try {
+            $csvArray = checkCSVFile(file($temp_name));
+        } catch (Exception $e) {
+            $error_message = $e->getMessage();
+            return;
+        }
+
+        $query = "SELECT prop_info_site, is_auction_jurisdiction from `counties` WHERE jurisdiction_id=?";
+        $stmt  = mysqli_prepare($conn, $query);
+
+        mysqli_stmt_bind_param($stmt, 's', $county_juris_id);
+        mysqli_stmt_execute($stmt);
+        mysqli_stmt_bind_result($stmt, $propInfoSite, $isAuctionJurisdiction);
+        mysqli_stmt_fetch($stmt);
+
+        // Coerce query result to boolean
+        // If the county is an Auction Jurisdiction, save its jurisdiction_id in the SESSION var
+        // Otherwise save the municipality's jurisdiction_id in the SESSION var
+
+        if (!!$isAuctionJurisdiction) {
+            $_SESSION['juris_id'] = $county_juris_id;
+        } else {
+            if (empty($municip_juris_id)) {
+                $error_message = "Please select an Auction Jurisdiction";
+                return;
+            }
+            $_SESSION['juris_id'] = $municip_juris_id;
+        }
+
+        $headers = array_shift($csvArray);
+        $_SESSION['prop_info_site'] = $propInfoSite;
+        $_SESSION['db_name'] = $conn->escape_string($db_name);
+        $_SESSION["headers"] = $headers;
+        $_SESSION['array'] = $csvArray;
+        // initialize success and error rows
+        $_SESSION['error_rows'] = [];
+        $_SESSION['success_rows'] = 0;
+        header("location: statusbar.php");
     } else {
-        $error_message = "All fields are required.";
+        $error_message = "All fields are required";
+        return;
     }
 }

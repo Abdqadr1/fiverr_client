@@ -1,7 +1,10 @@
 <?php
+require_once('sql.php');
+
 session_start();
 $error_rows = isset($_SESSION['error_rows']) ? $_SESSION['error_rows'] : [];
 $success_rows = isset($_SESSION['success_rows']) ? $_SESSION['success_rows'] : 0;
+
 
 ini_set('max_execution_time', 0);
 ignore_user_abort(true);
@@ -20,6 +23,7 @@ function getParserFile($id)
 
 function sendData($message)
 {
+    global $conn, $db_name;
     echo $message;
     if (ob_get_level() > 0) {
         ob_flush();
@@ -28,33 +32,12 @@ function sendData($message)
 
     if (connection_aborted()) {
         error_log("User aborted process!");
-        $GLOBALS['conn']?->close();
+        $conn->query("DROP DATABASE IF EXISTS " . $db_name);
+        $conn->close();
         exit;
     }
 }
 
-function generateReport($file, $row)
-{
-    try {
-        $log_foldername = __DIR__ . "/logs";
-        if (!file_exists($log_foldername)) {
-            // create directory/folder uploads.
-            mkdir($log_foldername, 0777, true);
-        }
-        $log_file_data = $log_foldername . '/log_' . $file . '_' . date('d-M-Y') . '.log';
-        $log_data = "";
-        $time = $row['time'] ?? '';
-        $url = $row['url'] ?? '';
-        $message = $row['message'] ?? '';
-        $row_num = $row['row_num'] ?? '';
-        $msg = "[$time] [row: $row_num, url: $url] [message: $message]";
-        $log_data .= $msg . PHP_EOL;
-        // if you don't add `FILE_APPEND`, the file will be erased each time you add a log
-        file_put_contents($log_file_data, $log_data, FILE_APPEND);
-    } catch (Throwable $t) {
-        error_log("Error when generating report");
-    }
-}
 
 function saveDataToDB_sendProgress(mysqli $conn, $data, $certNo,  $index, $url, $is_successful = true)
 {
@@ -92,7 +75,6 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $certNo,  $index, $url, 
             $script .= "parent.setProgress($success_rows, `" . json_encode($error_rows) . "` , $array_count)";
             $script .= "</script>";
             sendData($script);
-            generateReport($GLOBALS['file'], $row);
         }
     } else {
         $row = ['url' => $url, "message" => $data, 'row_num' => $certNo, "index" => $index, "time" => $time];
@@ -103,78 +85,97 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $certNo,  $index, $url, 
         $script .= "parent.setProgress($success_rows, `" . json_encode($error_rows) . "` , $array_count)";
         $script .= "</script>";
         sendData($script);
-        generateReport($GLOBALS['file'], $row);
     }
 }
 
 if (
-    isset($_SESSION["state"]) &&
-    isset($_SESSION["county"]) &&
-    isset($_SESSION['municipality']) &&
+    isset($_SESSION["juris_id"]) &&
+    isset($_SESSION['db_name']) &&
     isset($_SESSION['array']) &&
-    isset($_SESSION['site']) &&
-    isset($_SESSION['selected'])
+    isset($_SESSION['headers']) &&
+    isset($_SESSION['extra_header']) &&
+    isset($_SESSION["error_rows"]) &&
+    isset($_SESSION["success_rows"]) &&
+    isset($_SESSION['prop_info_site'])
 ) {
 
-    $state_full = $_SESSION['state'];
-    $county = $_SESSION['county'];
-    $municipality = $_SESSION['municipality'];
-    $selected = $_SESSION['selected'];
-    $site = $_SESSION['site'];
+    $juris_id = $_SESSION['juris_id'];
+    $array = $_SESSION['array'];
+    $header = $_SESSION['headers'];
+    $extra_header = $_SESSION['extra_header'];
+    $db_name = $_SESSION['db_name'];
+    $prop_info_site = $_SESSION['prop_info_site'];
 
-    $file = getParserFile($site['prop_info_site']);
+    $file = getParserFile($prop_info_site);
     if (!file_exists($file)) exit("$file does not exist!");
 
-    $server_name = "localhost";
-    $username = "root";
-    $password = "";
 
-    // Create connection
-    $conn = new mysqli($server_name, $username, $password);
-    if (!$conn) {
-        exit("Connection failed: " . $conn->connect_error);
-    }
-    $db_name = explode('.', $file, 2)[0];
-    $db_name = str_replace('.', '_', $db_name);
+    //mysqli connection without the database
+    connect(false);
 
     if (!(isset($_SESSION['try_again']) && $_SESSION['try_again'] === true)) {
-        $sql = "DROP DATABASE IF EXISTS " . $db_name;
-        $sql .= "; CREATE DATABASE " . $db_name;
-        $sql .= ";";
-
-        if ($conn->multi_query($sql)) {
-            while ($conn->next_result()); // needed after running multi_query
-            $conn->select_db($db_name);
+        // drop database if it exists and recreate it
+        $drop_db_sql = "DROP DATABASE IF EXISTS " . $db_name;
+        $conn->query($drop_db_sql);
+        $create_db_sql = "CREATE DATABASE " . $db_name;
+        if (!$conn->query($create_db_sql)) {
+            exit("Unable to create database $db_name");
         }
 
-        $drop_create_table_sql = "CREATE TABLE tax_certificate (
-        certNo INT(5), parcelNo VARCHAR(20), alternateID TEXT,
-        chargeType TEXT, faceAmnt FLOAT(10,2), status BOOLEAN,
-        assessedValue INT(8), appraisedValue INT(8), propClass TEXT,
-        propType TEXT, propLocation TEXT, city TEXT, zip TEXT,
-        buildingDescrip TEXT, numBeds INT(2), numBaths INT(2),
-        lastRecordedOwner TEXT, lastRecordedOwnerType TEXT,
-        lastRecordedDateOfSale DATE, absenteeOwner BOOLEAN,
-        livesInState BOOLEAN, saleHistory TEXT, priorDelinqHistory TEXT,
-        propertyTaxes TEXT, taxJurisdictionID INT(8), PRIMARY KEY (`parcelNo`));";
+        // connect to the database
+        $conn->select_db($db_name);
 
-        if (!$conn->query($drop_create_table_sql)) {
-            exit("Unable to create tax_certificate table: " . $conn->error);
+        $create_table_sql = "CREATE TABLE IF NOT EXISTS `tax_certificate` (
+  `certNo` int(5) UNSIGNED ZEROFILL NOT NULL,
+  `parcelNo` varchar(25) NOT NULL,
+  `alternateID` varchar(25) DEFAULT NULL,
+  `chargeType` set('Property Taxes','Water','Sewer','PILOT','Utility','Sp Assmnt','Misc','Boarding Up','Demolition','QFARM','Bill Board','Cell Tower') DEFAULT NULL,
+  `faceAmnt` float(8,2) UNSIGNED NOT NULL,
+  `status` tinyint(1) NOT NULL,
+  `assessedValue` int(8) UNSIGNED DEFAULT NULL,
+  `appraisedValue` int(8) UNSIGNED DEFAULT NULL,
+  `propClass` enum('Residential','Land','Commercial','Industrial','Other') DEFAULT NULL,
+  `propType` varchar(50) DEFAULT NULL,
+  `propLocation` varchar(50) DEFAULT NULL,
+  `city` varchar(30) DEFAULT NULL,
+  `zip` varchar(10) DEFAULT NULL,
+  `buildingDescrip` varchar(50) DEFAULT NULL,
+  `numBeds` int(2) UNSIGNED DEFAULT NULL,
+  `numBaths` int(2) UNSIGNED DEFAULT NULL,
+  `lastRecordedOwner` varchar(50) DEFAULT NULL,
+  `lastRecordedOwnerType` enum('Individual(s)','Estate','LLC/LP/Inc','Corp Entity','Unknown') NOT NULL,
+  `lastRecordedDateOfSale` date DEFAULT NULL,
+  `absenteeOwner` tinyint(1) DEFAULT NULL,
+  `livesInState` tinyint(1) DEFAULT NULL,
+  `saleHistory` text,
+  `priorDelinqHistory` text,
+  `propertyTaxes` text,
+  `taxJurisdictionID` int(8) UNSIGNED ZEROFILL DEFAULT NULL,
+  PRIMARY KEY (`certNo`),
+  UNIQUE KEY `parcelNo` (`parcelNo`),
+  KEY `taxJurisdictionID` (`taxJurisdictionID`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;";
+
+        if (!$conn->query($create_table_sql)) {
+            exit("Unable to create tax_certificate table");
         }
     } else {
+        // connect to already created database and continue with the edited rows
         $conn->select_db($db_name);
     }
+    $array_count = count($array);
+    $header_count = count($header);
 
+    $err_message = "";
 
-    while ($conn->next_result()); // needed after running multi_query
+    include_once($file);
+
     // last index processed
     $last_index = isset($_SESSION['last_index']) ? (int) $_SESSION['last_index'] + 1 : 0;
+    for ($i = $last_index ?? 0; $i < $array_count; $i++) {
+        parsedRow($conn, $i, $array[$i], $header, $extra_header, "saveDataToDB_sendProgress");
+    }
 
-    $array = (array) $_SESSION['array'];
-    $array_count = count($array);
-    $header = (array) $_SESSION['headers'];
-    $header_count = count($header);
-    include_once($file);
     $conn?->close();
 } else {
     $script = "<script>";

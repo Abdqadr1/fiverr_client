@@ -8,40 +8,23 @@
     $state = 'NJ';
     /***************************/
 
-    for ($i = $last_index ?? 0; $i < $array_count; $i++) { //count(array)
-        $err_message = "";
+    function parsedRow(mysqli $conn, $index, $row, $headers, $extra_header, $saveDataToDB)
+    {
+        global $err_message;
         try {
 
             // Remove excess whitespace first with 'keepOnlyDesired' function
             // then remove anything that is not a letter or whitespace (the funny chars)
-            $row = array_map('keepOnlyDesired', $array[$i]);
+            $row = array_map('keepOnlyDesired', $row);
             [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
-            //For each column over 6, test if the header:
-            if ($header_count && $header_count > 6) {
-                for ($h = 6; $h < $header_count; $h++) {
-                    $title = $header[$h];
-                    switch (ucwords($title)) {
-                        case "Address":
-                            $row_address = $row[$h];
-                            break;
-                        case "Owner Name":
-                            $row_owner_name = $row[$h];
-                            break;
-                        case "Owner Address":
-                            $row_owner_address = $row[$h];
-                            break;
-                        case "Owner State":
-                            $row_owner_state = $row[$h];
-                            break;
-                        case "Zip":
-                            $row_zip = $row[$h];
-                            break;
-                        case "City":
-                            $row_city = $row[$h];
-                            break;
-                    }
-                }
-            }
+
+            // for extra headers
+            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_owner_name = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_owner_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_owner_state = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_zip = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_city = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
 
 
             // remove non-numeric characters and cast to float
@@ -56,7 +39,7 @@
                 $array_ofChars = str_split($charge_type);
                 $reconstructed_str = "";
                 do {
-                    $reconstructed_str .= array_shift($array_ofChars) . ", ";
+                    $reconstructed_str .= array_shift($array_ofChars) . ",";
                 } while (count($array_ofChars) > 1);
                 $reconstructed_str .= $array_ofChars[0];
 
@@ -99,8 +82,7 @@
             if (!$parsedPage || is_empty($parsedPage)) {
                 // echo "Page failed to Load for lienNo: " . $adv_num . "<br/>";
                 $err_message = empty($err_message) ? "No data found on the website" : $err_message;
-                saveDataToDB_sendProgress($conn, $err_message, $adv_num, $i, $tax_link, false);
-                continue;
+                return $saveDataToDB($conn, $err_message, $adv_num, $index, $tax_link, false);
             }
 
             [
@@ -191,24 +173,27 @@
                 'taxJurisdictionID'    =>    NULL
             ];
 
-            saveDataToDB_sendProgress($conn, $structure, $adv_num,  $i, $tax_link);
+            return $saveDataToDB($conn, $structure, $adv_num,  $index, $tax_link);
         } catch (Throwable $x) {
             $err_message = $x->getMessage() . " Line: " . $x->getLine();
-            saveDataToDB_sendProgress($conn, $err_message, $adv_num, $i, $tax_link, false);
+            return $saveDataToDB($conn, $err_message, $adv_num, $index, $tax_link, false);
         }
     }
 
-
-
     function parsePage($target)
     {
+        global $err_message;
         $page = _http($target);
         $headers = $page['headers'];
         $http_status_code = $headers['status_info']['status_code'];
         //var_dump($headers);
 
-        if ($http_status_code >= 400)
+        // echo var_dump($page) . "<br/>";
+
+        if (!isset($http_status_code) || $http_status_code >= 400) {
+            $err_message = $headers['status_info']['status_message'];
             return FALSE;
+        }
 
 
         $doc = new DOMDocument('1.0', 'utf-8');

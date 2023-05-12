@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
         }
 
         // drop database if already exists and create
-        $db_name = "states_data";
+        $db_name = "taxlien_2";
         $sql = "DROP DATABASE IF EXISTS " . $db_name;
         $sql .= "; CREATE DATABASE " . $db_name;
         $sql .= ";";

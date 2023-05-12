@@ -2,12 +2,14 @@
 session_start();
 
 if (
-    isset($_SESSION['state']) && !empty($_SESSION['state']) &&
-    isset($_SESSION['county']) && !empty($_SESSION['county']) &&
-    isset($_SESSION['municipality']) && !empty($_SESSION['municipality']) &&
-    isset($_SESSION['selected']) && !empty($_SESSION['selected']) &&
-    isset($_SESSION['array']) && !empty($_SESSION['array']) &&
-    isset($_SESSION['error_rows']) && isset($_SESSION['success_rows'])
+    isset($_SESSION["juris_id"]) &&
+    isset($_SESSION['db_name']) &&
+    isset($_SESSION['array']) &&
+    isset($_SESSION['headers']) &&
+    isset($_SESSION['extra_header']) &&
+    isset($_SESSION["error_rows"]) &&
+    isset($_SESSION["success_rows"]) &&
+    isset($_SESSION['prop_info_site'])
 ) {
     $error_rows = $_SESSION['error_rows'];
     if (empty($error_rows)) {

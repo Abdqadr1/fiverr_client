@@ -14,7 +14,7 @@ stateInput.addEventListener("change", async e => {
     countyInput.value = '';
     countyInput.innerHTML = `<option value="" hidden>Select county</option>`;
     data.forEach(c => {
-        countyInput.innerHTML += `<option value="${c.jurisdiction_id}">${c.name}</option>`;
+        countyInput.innerHTML += `<option value="${c.id}">${c.name}</option>`;
     });
 });
 
@@ -25,7 +25,7 @@ countyInput.addEventListener("change", async e => {
     municipalityInput.value = "";
     municipalityInput.innerHTML = `<option value="" hidden>Select municipality</option>`;
     data.forEach(c => {
-        municipalityInput.innerHTML += `<option value="${c.jurisdiction_id}">${c.name}</option>`;
+        municipalityInput.innerHTML += `<option value="${c.id}">${c.name}</option>`;
     });
 });
 
