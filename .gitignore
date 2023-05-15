@@ -3,4 +3,4 @@ drivers/
 logs/
 vendor/
 phantomjs-2.1.1-windows/
-crawler.*
+crawler*.*

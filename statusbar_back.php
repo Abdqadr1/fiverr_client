@@ -1,5 +1,4 @@
-<?php
-require_once('sql.php');
+<?php require_once('sql.php');
 
 session_start();
 $error_rows = isset($_SESSION['error_rows']) ? $_SESSION['error_rows'] : [];
@@ -7,6 +6,10 @@ $success_rows = isset($_SESSION['success_rows']) ? $_SESSION['success_rows'] : 0
 
 
 ini_set('max_execution_time', 0);
+register_shutdown_function("shutdownHandler");
+// set_error_handler("custom_global_error_handler");
+
+ini_set('display_errors', 0);
 ignore_user_abort(true);
 ob_start();
 
@@ -21,9 +24,10 @@ function getParserFile($id)
     return $arr[$id - 1];
 }
 
-function sendData($message)
+function sendData($message, $shouldRefresh = false)
 {
     global $conn, $db_name;
+
     echo $message;
     if (ob_get_level() > 0) {
         ob_flush();
@@ -31,6 +35,7 @@ function sendData($message)
     flush();
 
     if (connection_aborted()) {
+        echo "user aborted process";
         error_log("User aborted process!");
         $conn->query("DROP DATABASE IF EXISTS " . $db_name);
         $conn->close();
@@ -41,9 +46,14 @@ function sendData($message)
 
 function saveDataToDB_sendProgress(mysqli $conn, $data, $certNo,  $index, $url, $is_successful = true)
 {
+    // set time limit 
+    ini_set('max_execution_time', 0);
+
     global $success_rows, $error_rows, $array_count;
     $_SESSION['last_index'] = $index;
     $time = date("Y-m-d h:i:sa");
+    $script = "";
+    $is_limit_exceeded = false;
 
     if ($is_successful) {
         //insert into table
@@ -64,7 +74,6 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $certNo,  $index, $url, 
             $script = "<script>";
             $script .= "parent.setProgress($success_rows, `" . json_encode($error_rows) . "` , $array_count)";
             $script .= "</script>";
-            sendData($script);
         } else {
             $msg = $conn?->error ?? "Unknown error occur when inserting data into database";
             $row = ['url' => $url, "message" => $msg, 'row_num' => $certNo, "index" => $index, "time" => $time];
@@ -74,7 +83,6 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $certNo,  $index, $url, 
             $script = "<script>";
             $script .= "parent.setProgress($success_rows, `" . json_encode($error_rows) . "` , $array_count)";
             $script .= "</script>";
-            sendData($script);
         }
     } else {
         $row = ['url' => $url, "message" => $data, 'row_num' => $certNo, "index" => $index, "time" => $time];
@@ -84,8 +92,9 @@ function saveDataToDB_sendProgress(mysqli $conn, $data, $certNo,  $index, $url, 
         $script = "<script>";
         $script .= "parent.setProgress($success_rows, `" . json_encode($error_rows) . "` , $array_count)";
         $script .= "</script>";
-        sendData($script);
+        $is_limit_exceeded = str_starts_with($data, "Time limit exceeded");
     }
+    sendData($script, $is_limit_exceeded);
 }
 
 if (
@@ -126,35 +135,35 @@ if (
         $conn->select_db($db_name);
 
         $create_table_sql = "CREATE TABLE IF NOT EXISTS `tax_certificate` (
-  `certNo` int(5) UNSIGNED ZEROFILL NOT NULL,
-  `parcelNo` varchar(25) NOT NULL,
-  `alternateID` varchar(25) DEFAULT NULL,
-  `chargeType` set('Property Taxes','Water','Sewer','PILOT','Utility','Sp Assmnt','Misc','Boarding Up','Demolition','QFARM','Bill Board','Cell Tower') DEFAULT NULL,
-  `faceAmnt` float(8,2) UNSIGNED NOT NULL,
-  `status` tinyint(1) NOT NULL,
-  `assessedValue` int(8) UNSIGNED DEFAULT NULL,
-  `appraisedValue` int(8) UNSIGNED DEFAULT NULL,
-  `propClass` enum('Residential','Land','Commercial','Industrial','Other') DEFAULT NULL,
-  `propType` varchar(50) DEFAULT NULL,
-  `propLocation` varchar(50) DEFAULT NULL,
-  `city` varchar(30) DEFAULT NULL,
-  `zip` varchar(10) DEFAULT NULL,
-  `buildingDescrip` varchar(50) DEFAULT NULL,
-  `numBeds` int(2) UNSIGNED DEFAULT NULL,
-  `numBaths` int(2) UNSIGNED DEFAULT NULL,
-  `lastRecordedOwner` varchar(50) DEFAULT NULL,
-  `lastRecordedOwnerType` enum('Individual(s)','Estate','LLC/LP/Inc','Corp Entity','Unknown') NOT NULL,
-  `lastRecordedDateOfSale` date DEFAULT NULL,
-  `absenteeOwner` tinyint(1) DEFAULT NULL,
-  `livesInState` tinyint(1) DEFAULT NULL,
-  `saleHistory` text,
-  `priorDelinqHistory` text,
-  `propertyTaxes` text,
-  `taxJurisdictionID` int(8) UNSIGNED ZEROFILL DEFAULT NULL,
-  PRIMARY KEY (`certNo`),
-  UNIQUE KEY `parcelNo` (`parcelNo`),
-  KEY `taxJurisdictionID` (`taxJurisdictionID`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;";
+                `certNo` int(5) UNSIGNED ZEROFILL NOT NULL,
+                `parcelNo` varchar(25) NOT NULL,
+                `alternateID` varchar(25) DEFAULT NULL,
+                `chargeType` set('Property Taxes','Water','Sewer','PILOT','Utility','Sp Assmnt','Misc','Boarding Up','Demolition','QFARM','Bill Board','Cell Tower') DEFAULT NULL,
+                `faceAmnt` float(8,2) UNSIGNED NOT NULL,
+                `status` tinyint(1) NOT NULL,
+                `assessedValue` int(8) UNSIGNED DEFAULT NULL,
+                `appraisedValue` int(8) UNSIGNED DEFAULT NULL,
+                `propClass` enum('Residential','Land','Commercial','Industrial','Other') DEFAULT NULL,
+                `propType` varchar(50) DEFAULT NULL,
+                `propLocation` varchar(50) DEFAULT NULL,
+                `city` varchar(30) DEFAULT NULL,
+                `zip` varchar(10) DEFAULT NULL,
+                `buildingDescrip` varchar(50) DEFAULT NULL,
+                `numBeds` int(2) UNSIGNED DEFAULT NULL,
+                `numBaths` int(2) UNSIGNED DEFAULT NULL,
+                `lastRecordedOwner` varchar(50) DEFAULT NULL,
+                `lastRecordedOwnerType` enum('Individual(s)','Estate','LLC/LP/Inc','Corp Entity','Unknown') NOT NULL,
+                `lastRecordedDateOfSale` date DEFAULT NULL,
+                `absenteeOwner` tinyint(1) DEFAULT NULL,
+                `livesInState` tinyint(1) DEFAULT NULL,
+                `saleHistory` text,
+                `priorDelinqHistory` text,
+                `propertyTaxes` text,
+                `taxJurisdictionID` int(8) UNSIGNED ZEROFILL DEFAULT NULL,
+                PRIMARY KEY (`certNo`),
+                UNIQUE KEY `parcelNo` (`parcelNo`),
+                KEY `taxJurisdictionID` (`taxJurisdictionID`)
+                ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;";
 
         if (!$conn->query($create_table_sql)) {
             exit("Unable to create tax_certificate table");
@@ -164,7 +173,6 @@ if (
         $conn->select_db($db_name);
     }
     $array_count = count($array);
-    $header_count = count($header);
 
     $err_message = "";
 
@@ -173,7 +181,7 @@ if (
     // last index processed
     $last_index = isset($_SESSION['last_index']) ? (int) $_SESSION['last_index'] + 1 : 0;
     for ($i = $last_index ?? 0; $i < $array_count; $i++) {
-        parsedRow($conn, $i, $array[$i], $header, $extra_header, "saveDataToDB_sendProgress");
+        parseRow($conn, $i, $array[$i], $header, $extra_header, "saveDataToDB_sendProgress");
     }
 
     $conn?->close();

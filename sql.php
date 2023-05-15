@@ -8,9 +8,9 @@ function custom_global_exception_handler($exception)
 	error_log($exception->getMessage(), 0);
 }
 
-function custom_global_error_handler($error_level, $error_message)
+function custom_global_error_handler($error_level, $error_message, $errfile, $errline)
 {
-	echo "<b>Error:</b> [" . $error_level . "] " . $error_message . "<br>";
+	echo "<b>Error:</b> [" . $error_level . "] " . $error_message . " File: $errfile at $errline<br>";
 	echo "Ending Script";
 	die();
 }
@@ -141,4 +141,22 @@ function getMunicipalitiesInCounty(int $countyJurisCode): ?array
 	}
 
 	return NULL;
+}
+
+function shutdownHandler()
+{
+	// echo "shutdown handler <br/>";
+	global $conn, $adv_num, $tax_link, $array, $array_count, $extra_header, $header;
+	$index = ($_SESSION['last_index'] ?? -1) + 1;
+	if (!is_null($last_error = error_get_last())) {
+		if (strpos($last_error['message'], 'Maximum execution time') > -1) {
+
+			// record the last
+			saveDataToDB_sendProgress($conn, "Time limit exceeded", $adv_num, $index, $tax_link, false);
+
+			//refresh page
+			$_SESSION['try_again'] = true;
+			exit("<script>window.location.reload();</script>");
+		}
+	}
 }

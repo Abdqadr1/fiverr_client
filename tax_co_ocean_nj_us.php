@@ -4,13 +4,13 @@
     require_once 'web-crawler.php';
     require_once 'tax-codes.php';
 
-    /******** SETTINGS *********/
-    $state = 'NJ';
-    /***************************/
 
-    function parsedRow(mysqli $conn, $index, $row, $headers, $extra_header, $saveDataToDB)
+    function parseRow(mysqli $conn, $index, $row, $headers, $extra_header, $saveDataToDB)
     {
-        global $err_message;
+        /******** SETTINGS *********/
+        $state = 'NJ';
+        /***************************/
+        global $err_message, $adv_num, $tax_link;
         try {
 
             // Remove excess whitespace first with 'keepOnlyDesired' function
@@ -52,20 +52,24 @@
             /*************** PARSE THE BLOCK, LOT AND QUAL ******************/
             $parcel_id = preg_replace("/\s/", "", $parcel_id); // get rid of all whitespace
 
-            // @  <=>  suppress undefined index errors
-            [$block, $lot_qual] = explode("-", $parcel_id, 2);
-            @[$lot, $qual] = explode("--", $lot_qual, 2);
-            $qual ??= "";
+            $block_lot = explode("-", $parcel_id, 2);
+            $block = $block_lot[0] ?? "";
+            $lot_qual = $block_lot[1] ?? "";
+            $lot_qual = explode("--", $lot_qual, 2);
+            $lot = $lot_qual[0] ?? "";
+            $qual = $lot_qual[1] ?? "";
 
             $parcelNo = $block . "-" . $lot . "--" . $qual;
 
             /**************** CREATE THE TAX ASSESSMENT URL *******************/
             $url = "tax.co.ocean.nj.us/frmTaxBoardTaxListDetail?";
 
-            @[$block, $sub_block] = explode(".", $block, 2);
-            $sub_block ??= "";
-            @[$lotNumber, $sub_lot] = explode(".", $lot, 2);
+            $blockAsArray = explode(".", $block, 2);
+            $block = $blockAsArray[0] ?? "";
+            $sub_block = $blockAsArray[1] ?? "";
             $lot_asArray = explode(".", $lot, 2);
+            $lotNumber = $lot_asArray[0] ?? "";
+            $sub_lot = $lot_asArray[1] ?? "";
 
             $options = "nDistrict=$alternate_id&szBlockNum=$block&szLotNum=$lotNumber&szBlockSuff=$sub_block&szLotSuff=$sub_lot&szQual=$qual";
             $tax_link = $url . $options;
@@ -75,6 +79,8 @@
             // echo "<a href='http://" . $tax_link . "'>" . $tax_link . "</a><br>";
             /*********************************************************/
 
+            // set time limit 
+            ini_set('max_execution_time', 3);
 
             // GO TO THE LINK AND DOWNLOAD THE PAGE
 
@@ -170,7 +176,7 @@
                 'saleHistory'        =>    $sale_hist_data,
                 'priorDelinqHistory'    =>    NULL,
                 'propertyTaxes'        =>    $taxes_as_text,
-                'taxJurisdictionID'    =>    NULL
+                'taxJurisdictionID'    =>    $juris_id ?? NULL
             ];
 
             return $saveDataToDB($conn, $structure, $adv_num,  $index, $tax_link);

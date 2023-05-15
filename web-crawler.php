@@ -73,7 +73,9 @@
 			if ($i === 0) {
 				$header_array['http_code'] = $line;
 				$status_info = explode(" ", $line);
-				@[$status_protocol, $status_code, $status_msg] = $status_info;
+				$status_protocol = $status_info[0] ?? null;
+				$status_code = $status_info[1] ?? null;
+				$status_msg = $status_info[2] ?? null;
 
 				if ($error) $status_msg = $error;
 

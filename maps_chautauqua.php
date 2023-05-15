@@ -8,54 +8,35 @@
     require_once './dynamic_crawler.php';
     require_once 'tax-codes.php';
 
-    /******** SETTINGS *********/
-    $state = 'NY';
-    /***************************/
 
 
     // $array = openFile('./TEST FILES/chautauqua county_ny_TEST FILE.csv');
     // $header = array_shift($array); // remove the first element from the array
 
 
-
-    for ($i = $last_index ?? 0; $i < $array_count; $i++) {
-        $err_message = "";
-
+    function parseRow(mysqli $conn, $index, $row, $headers, $extra_header, $saveDataToDB)
+    {
+        /******** SETTINGS *********/
+        $state = 'NY';
+        /***************************/
+        global $err_message, $adv_num, $tax_link;
         try {
-
 
             // Remove excess whitespace first with 'keepOnlyDesired' function
             // then remove anything that is not a letter or whitespace (the funny chars)
-            $row = array_map('keepOnlyDesired', $array[$i]);
+            $row = array_map('keepOnlyDesired', $row);
 
 
             [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
-            //For each column over 6, test if the header:
-            if ($header_count && $header_count > 6) {
-                for ($h = 6; $h < $header_count; $h++) {
-                    $title = $header[$h];
-                    switch (ucwords($title)) {
-                        case "Address":
-                            $row_address = $row[$h];
-                            break;
-                        case "Owner Name":
-                            $row_owner_name = $row[$h];
-                            break;
-                        case "Owner Address":
-                            $row_owner_address = $row[$h];
-                            break;
-                        case "Owner State":
-                            $row_owner_state = $row[$h];
-                            break;
-                        case "Zip":
-                            $row_zip = $row[$h];
-                            break;
-                        case "City":
-                            $row_city = $row[$h];
-                            break;
-                    }
-                }
-            }
+
+            // for extra headers
+            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_owner_name = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_owner_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_owner_state = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_zip = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_city = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+
 
             $face_amount = (float) preg_replace("/([^0-9\\.]+)/i", "", $face_amount);
             $status = ($status == 'Active') ? 1 : 0;
@@ -85,10 +66,12 @@
             /*************** PARSE THE BLOCK, LOT AND QUAL ******************/
             $parcel_id = preg_replace("/\s/", "", $parcel_id); // get rid of all whitespace
 
-            // @  <=>  suppress undefined index errors
             [$block, $lot_qual] = explode("-", $parcel_id, 2);
-            @[$lot, $qual] = explode("--", $lot_qual, 2);
-            $qual ??= "";
+            [$block, $lot_qual] = explode("-", $parcel_id, 2);
+
+            $lot_qual_array = explode("--", $lot_qual, 2);
+            $lot  = $lot_qual_array[0] ?? "";
+            $qual  = $lot_qual_array[1] ?? "";
 
             $parcelNo = $block . "-" . $lot . "-" . $qual;
 
@@ -110,16 +93,17 @@
             // echo "<a href='http://" . $tax_link . "'>" . $tax_link . "</a><br>";
             /*********************************************************/
 
+            // set time limit 
+            ini_set('max_execution_time', 3);
+
 
             // GO TO THE LINK AND DOWNLOAD THE PAGE
-
             $parsedTaxPage = parseTaxPage($tax_link);
             $parsedPage = parsePage($link);
             if (!$parsedPage || !$parsedTaxPage  || is_empty($parsedPage)  || is_empty($parsedTaxPage)) {
                 // echo "Page failed to Load for lienNo: " . $adv_num . "<br/>";
                 $err_message = empty($err_message) ? "No data found on the website" : $err_message;
-                saveDataToDB_sendProgress($conn, $err_message, $adv_num, $i, $tax_link, false);
-                continue;
+                return $saveDataToDB($conn, $err_message, $adv_num, $index, $tax_link, false);
             }
 
             [
@@ -140,7 +124,10 @@
             $city_state = $propInfo["Mailing City, State"] ?? "";
 
             $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
-            @[$owner_city, $owner_state] = preg_split('/\s+/', $city_state, 2);
+            $city_state_array = preg_split('/\s+/', $city_state, 2);
+            $owner_city = $city_state_array[0] ?? "";
+            $owner_state = $city_state_array[1] ?? "";
+
             $owner_state = $row_owner_state ?? $owner_state;
             $owner_city = str_replace(',', '', $owner_city);
             $zip_code = $propInfo['Mailing ZIP Code'] ?? "";
@@ -211,12 +198,14 @@
             ];
 
             // var_dump($structure);
-            saveDataToDB_sendProgress($conn, $structure, $adv_num,  $i, $tax_link);
+            return $saveDataToDB($conn, $structure, $adv_num,  $index, $tax_link);
         } catch (Throwable $x) {
             $err_message = $x->getMessage() . " Line: " . $x->getLine();
-            saveDataToDB_sendProgress($conn, $err_message, $adv_num, $i, $tax_link, false);
+            return $saveDataToDB($conn, $err_message, $adv_num, $index, $tax_link, false);
         }
     }
+
+
 
 
     function parseTaxPage($target)

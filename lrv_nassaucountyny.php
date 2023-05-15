@@ -7,52 +7,34 @@
     require_once 'web-crawler.php';
     require_once 'tax-codes.php';
 
-    /******** SETTINGS *********/
-    $state = 'NY';
-    /***************************/
-
 
     // $array = openFile('./TEST FILES/nassau county_ny_TEST FILE.csv');
     // $header = array_shift($array);
 
+    function parseRow(mysqli $conn, $index, $row, $headers, $extra_header, $saveDataToDB)
+    {
+        /******** SETTINGS *********/
+        $state = 'NY';
+        /***************************/
 
-    for ($i = $last_index ?? 0; $i < $array_count; $i++) {
-        $err_message = "";
+        global $err_message, $adv_num, $tax_link;
 
         try {
 
             // Remove excess whitespace first with 'keepOnlyDesired' function
             // then remove anything that is not a letter or whitespace (the funny chars)
-            $row = array_map('keepOnlyDesired', $array[$i]);
-
-
+            $row = array_map('keepOnlyDesired', $row);
             [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
-            //For each column over 6, test if the header:
-            if ($header_count && $header_count > 6) {
-                for ($h = 6; $h < $header_count; $h++) {
-                    $title = $header[$h];
-                    switch (ucwords($title)) {
-                        case "Address":
-                            $row_address = $row[$h];
-                            break;
-                        case "Owner Name":
-                            $row_owner_name = $row[$h];
-                            break;
-                        case "Owner Address":
-                            $row_owner_address = $row[$h];
-                            break;
-                        case "Owner State":
-                            $row_owner_state = $row[$h];
-                            break;
-                        case "Zip":
-                            $row_zip = $row[$h];
-                            break;
-                        case "City":
-                            $row_city = $row[$h];
-                            break;
-                    }
-                }
-            }
+
+
+            // for extra headers
+            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_owner_name = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_owner_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_owner_state = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_zip = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_city = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+
 
 
             $face_amount = (float) preg_replace("/([^0-9\\.]+)/i", "", $face_amount);
@@ -83,7 +65,6 @@
             /*************** PARSE THE BLOCK, LOT AND QUAL ******************/
             $parcel_id = preg_replace("/\s/", "", $parcel_id); // get rid of all whitespace
 
-            // @  <=>  suppress undefined index errors
             [$section, $block, $lot, $suffix, $condo, $unit] = explode('-', $parcel_id, 6);
             $section = str_pad($section, 2, '0', STR_PAD_LEFT);
             $block = is_numeric($section) ? str_pad($block, 3, '0', STR_PAD_LEFT) : '++' . $block;
@@ -102,14 +83,15 @@
             // echo "<a href='http://" . $link . "'>" . $link . "</a><br>";
             /*********************************************************/
 
-            // GO TO THE LINK AND DOWNLOAD THE PAGE
+            // set time limit 
+            ini_set('max_execution_time', 3);
 
+            // GO TO THE LINK AND DOWNLOAD THE PAGE
             $parsedPage = parsePage($link);
             if (!$parsedPage || is_empty($parsedPage)) {
                 // echo "Page failed to Load for lienNo: " . $adv_num . "<br/>";
                 $err_message = empty($err_message) ? "No data found on the website" : $err_message;
-                saveDataToDB_sendProgress($conn, $err_message, $adv_num, $i, $tax_link, false);
-                continue;
+                return $saveDataToDB($conn, $err_message, $adv_num, $index, $tax_link, false);
             }
 
             [
@@ -199,12 +181,13 @@
             ];
 
             // var_dump($structure);
-            saveDataToDB_sendProgress($conn, $structure, $adv_num,  $i, $tax_link);
+            return $saveDataToDB($conn, $structure, $adv_num,  $index, $tax_link);
         } catch (Throwable $x) {
             $err_message = $x->getMessage() . " Line: " . $x->getLine();
-            saveDataToDB_sendProgress($conn, $err_message, $adv_num, $i, $tax_link, false);
+            return $saveDataToDB($conn, $err_message, $adv_num, $index, $tax_link, false);
         }
     }
+
 
 
     function parsePage($target)
@@ -236,7 +219,9 @@
         $inventory_table_2 = getElementByPath($doc, "/html/body/div[2]/div/div[4]/div[2]/section/div/div/div[4]/div/div[2]/div[3]/table", true);
 
         $address = explode(':', $address_div->nodeValue, 2)[1] ?? '';
-        @[$street_add, $city_zip] = explode('.', $address, 2);
+        $address_array = explode('.', $address, 2);
+        $street_add = $address_array[0] ?? "";
+        $city_zip = $address_array[1] ?? "";
 
         $block_1_data = parseBlockData($block_div_1);
         $block_2_data = parseBlockData($block_div_2);
