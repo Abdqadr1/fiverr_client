@@ -17,7 +17,7 @@
         /******** SETTINGS *********/
         $state = 'GA';
         /***************************/
-        global $err_message, $adv_num, $tax_link;
+        global $err_message, $adv_num, $tax_link, $juris_id;
         try {
 
             // Remove excess whitespace first with 'keepOnlyDesired' function
@@ -25,13 +25,14 @@
             $row = array_map('keepOnlyDesired', $row);
             [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
 
+
             // for extra headers
-            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_name = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_state = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_zip = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_city = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : null;
+            $row_owner_name = isset($extra_header["last_recorded_owner"]) ? $row[$extra_header["last_recorded_owner"]] : null;
+            $row_owner_address = isset($extra_header["last_recorded_owner_address"]) ? $row[$extra_header["last_recorded_owner_address"]] : null;
+            $row_owner_state = isset($extra_header["last_recorded_owner_state"]) ? $row[$extra_header["last_recorded_owner_state"]] : null;
+            $row_zip = isset($extra_header["zip"]) ? $row[$extra_header["zip"]] : null;
+            $row_city = isset($extra_header["city"]) ? $row[$extra_header["city"]] : null;
 
 
 
@@ -102,9 +103,9 @@
             $city_state_zip = $propInfo["City State Zip"] ?? "";
 
             $city_state_zip_array = explode(" ", $city_state_zip, 3);
-            $city = $city_state_zip_array[0] ?? "";
+            $city = $row_city ?? $city_state_zip_array[0] ?? "";
             $owner_state = $city_state_zip_array[1] ?? "";
-            $zip_code = $city_state_zip_array[2] ?? "";
+            $zip_code = $row_zip ?? $city_state_zip_array[2] ?? "";
 
             $owner_state = $row_owner_state ?? $owner_state;
             $city = str_replace(',', '', $city);
@@ -152,8 +153,8 @@
                 'propClass'        =>    $prop_class,
                 'propType'        =>    $prop_type,
                 'propLocation'        =>    $prop_loc,
-                'city'            =>    $row_city ?? $city,
-                'zip'            =>    $row_zip ?? $zip_code,
+                'city'            =>    $city,
+                'zip'            =>    $zip_code,
                 'buildingDescrip'    =>    $bldg_descrip ?? "",
                 'numBeds'        =>    $beds,
                 'numBaths'        =>    $baths,
@@ -165,7 +166,7 @@
                 'saleHistory'        =>    $sale_hist_data,
                 'priorDelinqHistory'    =>    NULL,
                 'propertyTaxes'        =>    $taxes_as_text,
-                'taxJurisdictionID'    =>    NULL
+                'taxJurisdictionID'    =>    $juris_id
             ];
 
             // listData($structure);

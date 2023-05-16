@@ -15,10 +15,10 @@
 
     function parseRow(mysqli $conn, $index, $row, $headers, $extra_header, $saveDataToDB)
     {
-    /******** SETTINGS *********/
-    $state = 'NY';
-    /***************************/
-        global $err_message, $adv_num, $tax_link;
+        /******** SETTINGS *********/
+        $state = 'NY';
+        /***************************/
+        global $err_message, $adv_num, $tax_link, $juris_id;
 
         try {
 
@@ -28,13 +28,14 @@
 
             [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
 
+
             // for extra headers
-            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_name = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_state = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_zip = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_city = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : null;
+            $row_owner_name = isset($extra_header["last_recorded_owner"]) ? $row[$extra_header["last_recorded_owner"]] : null;
+            $row_owner_address = isset($extra_header["last_recorded_owner_address"]) ? $row[$extra_header["last_recorded_owner_address"]] : null;
+            $row_owner_state = isset($extra_header["last_recorded_owner_state"]) ? $row[$extra_header["last_recorded_owner_state"]] : null;
+            $row_zip = isset($extra_header["zip"]) ? $row[$extra_header["zip"]] : null;
+            $row_city = isset($extra_header["city"]) ? $row[$extra_header["city"]] : null;
 
 
             // remove non-numeric characters and cast to float
@@ -85,7 +86,7 @@
             /*********************************************************/
 
             // set time limit 
-            ini_set('max_execution_time', 3);
+            ini_set('max_execution_time', 10);
 
             // GO TO THE LINK AND DOWNLOAD THE PAGE
             $parsedPage = parsePage($tax_link);
@@ -102,10 +103,10 @@
             ] = $parsedPage;
 
             $parcel_number = $propInfo['Parcel Number'] ?? '';
-            $prop_loc = $row_address ?? $propInfo["Parcel Address"] ?? "";
+            $prop_loc = $row_address ?? ($propInfo["Parcel Address"] ?? "");
             $municipality = $propInfo["Municipality"] ?? "";
 
-            $owner_name = $row_owner_name ?? $propInfo['Owner Name'] ?? "";
+            $owner_name = $row_owner_name ?? ($propInfo['Owner Name'] ?? "");
             $owner_type = determineOwnerType($owner_name);
             $primary_address = $propInfo['Primary Owner Mailing Address'] ?? "";
             [$owner_loc, $city, $state_zip] = explode(',', $primary_address, 3);
@@ -169,7 +170,7 @@
                 'propType'        =>    $prop_type,
                 'propLocation'        =>    $prop_loc,
                 'city'            =>    $row_city ?? $municipality,
-                'zip'            =>    $row_zip ?? NULL,
+                'zip'            =>    $row_zip,
                 'buildingDescrip'    =>    $bldg_descrip,
                 'numBeds'        =>    $beds ?? NULL,
                 'numBaths'        =>    $baths ?? NULL,
@@ -181,7 +182,7 @@
                 'saleHistory'        =>    $sale_hist_data,
                 'priorDelinqHistory'    =>    NULL,
                 'propertyTaxes'        =>    $taxes_as_text,
-                'taxJurisdictionID'    =>    NULL
+                'taxJurisdictionID'    =>    $juris_id
             ];
 
             // var_dump($structure);
@@ -196,7 +197,7 @@
     function parsePage($target)
     {
         $requires_path_contain = '//*[@id="pid-parcelnum"]';
-        $page = _dynamicCrawler($target, 20, $requires_path_contain);
+        $page = _dynamicCrawler($target, 7, $requires_path_contain);
 
         if (!$page) return FALSE;
 

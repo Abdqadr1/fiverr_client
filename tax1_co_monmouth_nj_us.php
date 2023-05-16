@@ -13,24 +13,22 @@
         $state = 'NJ';
         $district = "0101";
         /***************************/
-        global $err_message, $adv_num, $tax_link;
+        global $err_message, $adv_num, $tax_link, $juris_id;
         try {
 
             // Remove excess whitespace first with 'keepOnlyDesired' function
             // then remove anything that is not a letter or whitespace (the funny chars)
             $row = array_map('keepOnlyDesired', $row);
-
-
             [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
 
 
             // for extra headers
-            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_name = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_state = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_zip = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_city = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : null;
+            $row_owner_name = isset($extra_header["last_recorded_owner"]) ? $row[$extra_header["last_recorded_owner"]] : null;
+            $row_owner_address = isset($extra_header["last_recorded_owner_address"]) ? $row[$extra_header["last_recorded_owner_address"]] : null;
+            $row_owner_state = isset($extra_header["last_recorded_owner_state"]) ? $row[$extra_header["last_recorded_owner_state"]] : null;
+            $row_zip = isset($extra_header["zip"]) ? $row[$extra_header["zip"]] : null;
+            $row_city = isset($extra_header["city"]) ? $row[$extra_header["city"]] : null;
 
 
             // remove non-numeric characters and cast to float
@@ -96,7 +94,7 @@
             /*********************************************************/
 
             // set time limit 
-            ini_set('max_execution_time', 3);
+            ini_set('max_execution_time', 5);
 
 
             // GO TO THE LINK AND DOWNLOAD THE PAGE
@@ -159,7 +157,7 @@
                 'certNo'        =>    $adv_num,
                 'auctionID'        =>    NULL,
                 'parcelNo'        =>    $parcelNo,
-                'alternateID'        =>    NULL,
+                'alternateID'        =>    $alternate_id,
                 'chargeType'        =>    $charge_descrip,
                 'faceAmnt'        =>    $face_amount,
                 'status'        => ($status ? '1' : '0'),
@@ -181,7 +179,7 @@
                 'saleHistory'        =>    $sale_hist_data,
                 'priorDelinqHistory'    =>    NULL,
                 'propertyTaxes'        =>    $taxes_as_text,
-                'taxJurisdictionID'    =>    NULL
+                'taxJurisdictionID'    =>    $juris_id
             ];
 
             // var_dump($structure);
@@ -196,12 +194,15 @@
 
     function parsePage($target)
     {
+        global $err_message;
         $page = _http($target);
         $headers = $page['headers'];
         $http_status_code = $headers['status_info']['status_code'];
 
-        if ($http_status_code != 200)
+        if (!isset($http_status_code) || $http_status_code != 200) {
+            $err_message = $headers['status_info']['status_message'];
             return FALSE;
+        }
 
         $doc = new DOMDocument('1.0', 'utf-8');
         // don't propagate DOM errors to PHP interpreter

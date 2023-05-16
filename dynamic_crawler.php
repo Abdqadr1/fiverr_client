@@ -1,13 +1,19 @@
 <?php
 require_once "vendor/autoload.php";
 
+use Facebook\WebDriver\Exception\UnknownErrorException;
+use Facebook\WebDriver\Exception\Internal\UnexpectedResponseException;
+use Facebook\WebDriver\Exception\Internal\WebDriverCurlException;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverExpectedCondition;
 
+error_reporting(0);
+
 function _dynamicCrawler($link, $timeout = 60, $containsPath, $buttonId = null)
 {
+    global $err_message, $driver;
     $output = false;
     try {
         $link = str_starts_with($link, 'https://') ? $link : "https://" . $link;
@@ -16,8 +22,8 @@ function _dynamicCrawler($link, $timeout = 60, $containsPath, $buttonId = null)
 
         $capabilities = DesiredCapabilities::chrome();
 
-        // Start the Selenium WebDriver with the specified capabilities
-        $driver = RemoteWebDriver::create($host, $capabilities);
+        // Start the WebDriver with the specified capabilities, connection and request timeouts
+        $driver = RemoteWebDriver::create($host, $capabilities, 6000, 6000);
 
         // Navigate to the website you want to scrape
         $driver->get($link);
@@ -43,19 +49,27 @@ function _dynamicCrawler($link, $timeout = 60, $containsPath, $buttonId = null)
         // echo "Current URL: $current_url <br/>";
 
         $output =  $driver->getPageSource();
-        // Quit the Selenium WebDriver
+    } catch (UnknownErrorException $un) {
+        $arr = preg_split("/\r\n|\n|\r/", $un->getMessage()) ?? [];
+        array_pop($arr);
+        $msg = join(" ", $arr);
+        $err_message = $msg;
+        echo $err_message;
     } catch (Exception $ex) {
-        echo $ex->getMessage();
+        // echo var_dump($ex);
+        $arr = preg_split("/\r\n|\n|\r/", $ex->getMessage()) ?? [];
+        $err_message = $arr[2] ?? "An error occurred during crawling";
+        echo $err_message;
     } finally {
+        // Quit the WebDriver
         $driver?->quit();
         return $output;
     }
 }
 
-// _dynamicCrawler('https://gis.dutchessny.gov/parcelaccess/property-card/?parcelgrid=13020000595400289208930000&parcelid=463');
-
 function dataHubCrawler($link, $timeout = 60, $containsPath, $town = "", $block = "", $lot = "", $qual = "")
 {
+    global $err_message, $driver;
     $output = false;
     try {
         $link = str_starts_with($link, 'https://') ? $link : "https://" . $link;
@@ -64,8 +78,8 @@ function dataHubCrawler($link, $timeout = 60, $containsPath, $town = "", $block 
 
         $capabilities = DesiredCapabilities::chrome();
 
-        // Start the Selenium WebDriver with the specified capabilities
-        $driver = RemoteWebDriver::create($host, $capabilities);
+        // Start the WebDriver with the specified capabilities, connection and request timeouts
+        $driver = RemoteWebDriver::create($host, $capabilities, 6000, 6000);
 
         // Navigate to the website you want to scrape
         $driver->get($link);
@@ -115,10 +129,25 @@ function dataHubCrawler($link, $timeout = 60, $containsPath, $town = "", $block 
 
         $output =  $driver->getPageSource();
         // Quit the Selenium WebDriver
+    } catch (UnknownErrorException $un) {
+        $arr = preg_split("/\r\n|\n|\r/", $un->getMessage()) ?? [];
+        array_pop($arr);
+        $msg = join(" ", $arr);
+        $err_message = $msg;
+        echo $err_message;
     } catch (Exception $ex) {
-        echo $ex->getMessage() . $ex->getLine();
+        // echo var_dump($ex);
+        $arr = preg_split("/\r\n|\n|\r/", $ex->getMessage()) ?? [];
+        $err_message = $arr[2] ?? "An error occurred during crawling";
+        echo $err_message;
     } finally {
         $driver?->quit();
         return $output;
     }
 }
+
+// _dynamicCrawler(
+//     'https://gis.dutchessny.gov/parcelaccess/property-card/?parcelgrid=13020000595400289208930000&parcelid=463',
+//     20,
+//     '//*[@id="pid-parcelnum"]'
+// );

@@ -18,7 +18,7 @@
         /******** SETTINGS *********/
         $state = 'NY';
         /***************************/
-        global $err_message, $adv_num, $tax_link;
+        global $err_message, $adv_num, $tax_link, $juris_id;
         try {
 
             // Remove excess whitespace first with 'keepOnlyDesired' function
@@ -26,13 +26,14 @@
             $row = array_map('keepOnlyDesired', $row);
             [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
 
+
             // for extra headers
-            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_name = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_state = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_zip = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_city = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : null;
+            $row_owner_name = isset($extra_header["last_recorded_owner"]) ? $row[$extra_header["last_recorded_owner"]] : null;
+            $row_owner_address = isset($extra_header["last_recorded_owner_address"]) ? $row[$extra_header["last_recorded_owner_address"]] : null;
+            $row_owner_state = isset($extra_header["last_recorded_owner_state"]) ? $row[$extra_header["last_recorded_owner_state"]] : null;
+            $row_zip = isset($extra_header["zip"]) ? $row[$extra_header["zip"]] : null;
+            $row_city = isset($extra_header["city"]) ? $row[$extra_header["city"]] : null;
 
             // remove non-numeric characters and cast to float
             $face_amount = (float) preg_replace("/([^0-9\\.]+)/i", "", $face_amount);
@@ -112,8 +113,8 @@
             $prop_full_loc = trim($prop_full_loc);
             $loc_arr = preg_split('/\s*,\s*/', $prop_full_loc);
             $prop_loc = $row_address ?? $loc_arr[0] ?? '';
-            $city = $loc_arr[1] ?? '';
-            $zip_code = $loc_arr[2] ?? '';
+            $city = $row_city ?? $loc_arr[1] ?? '';
+            $zip_code = $row_zip ?? $loc_arr[2] ?? '';
 
             $owner_state = $row_owner_state ?? $owners_info[0]["State"] ?? "";
             $owner_loc = $row_owner_address ?? $owners_info[0]["Address 1"] ?? "";
@@ -170,8 +171,8 @@
                 'propClass'        =>    $prop_class,
                 'propType'        =>    $prop_type,
                 'propLocation'        =>    $prop_loc,
-                'city'            =>    $row_city ?? $city,
-                'zip'            =>    $row_zip ?? $zip_code,
+                'city'            =>    $city,
+                'zip'            =>    $zip_code,
                 'buildingDescrip'    =>    $bldg_descrip,
                 'numBeds'        =>    $beds,
                 'numBaths'        =>    $baths,
@@ -183,7 +184,7 @@
                 'saleHistory'        =>    $sale_hist_data,
                 'priorDelinqHistory'    =>    NULL,
                 'propertyTaxes'        =>    $taxes_as_text,
-                'taxJurisdictionID'    =>    NULL
+                'taxJurisdictionID'    =>    $juris_id
             ];
 
             //  var_dump($structure);
@@ -198,13 +199,18 @@
 
     function parseTaxPage($target)
     {
+        global $err_message;
+
         $page = _http($target);
         $headers = $page['headers'];
         $http_status_code = $headers['status_info']['status_code'];
         //var_dump($headers);
 
-        if ($http_status_code >= 400)
+
+        if (!isset($http_status_code) || $http_status_code >= 400) {
+            $err_message = $headers['status_info']['status_message'];
             return FALSE;
+        }
 
         $doc = new DOMDocument('1.0', 'utf-8');
         // don't propagate DOM errors to PHP interpreter
@@ -225,13 +231,18 @@
 
     function parsePage($target)
     {
+        global $err_message;
+
         $page = _http($target);
         $headers = $page['headers'];
         $http_status_code = $headers['status_info']['status_code'];
         //var_dump($headers);
 
-        if ($http_status_code >= 400)
+
+        if (!isset($http_status_code) || $http_status_code >= 400) {
+            $err_message = $headers['status_info']['status_message'];
             return FALSE;
+        }
 
 
         $doc = new DOMDocument('1.0', 'utf-8');

@@ -17,7 +17,7 @@
         $state = 'NY';
         /***************************/
 
-        global $err_message, $adv_num, $tax_link;
+        global $err_message, $adv_num, $tax_link, $juris_id;
 
         try {
 
@@ -27,13 +27,14 @@
             [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
 
 
+
             // for extra headers
-            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_name = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_state = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_zip = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_city = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : null;
+            $row_owner_name = isset($extra_header["last_recorded_owner"]) ? $row[$extra_header["last_recorded_owner"]] : null;
+            $row_owner_address = isset($extra_header["last_recorded_owner_address"]) ? $row[$extra_header["last_recorded_owner_address"]] : null;
+            $row_owner_state = isset($extra_header["last_recorded_owner_state"]) ? $row[$extra_header["last_recorded_owner_state"]] : null;
+            $row_zip = isset($extra_header["zip"]) ? $row[$extra_header["zip"]] : null;
+            $row_city = isset($extra_header["city"]) ? $row[$extra_header["city"]] : null;
 
 
 
@@ -100,16 +101,16 @@
                 'Tax Assess Info' => $taxAssessInfo
             ] = $parsedPage;
 
-            $owner_name = $row_owner_name ?? $propInfo['Owner Name'] ?? "";
+            $owner_name = $row_owner_name ?? ($propInfo['Owner Name'] ?? "");
             $owner_type = determineOwnerType($owner_name);
-            $owner_loc = $row_owner_address ??  $propInfo["Owner Address"] ?? "";
-            $owner_state = $row_owner_state ??  "";
+            $owner_loc = $row_owner_address ?? ($propInfo["Owner Address"] ?? "");
+            $owner_state = $row_owner_state;
 
-            $prop_loc = $row_address ?? $propInfo["Location"] ?? "";
+            $prop_loc = $row_address ?? ($propInfo["Location"] ?? "");
             $prop_city_zip = $propInfo["city_zip"] ?? "";
             [$city, $zip_code] = explode(',', $prop_city_zip, 2);
-            $city = trim($city);
-            $zip_code = trim($zip_code);
+            $city = $row_city ?? trim($city);
+            $zip_code = $row_zip ?? trim($zip_code);
             $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
             $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
@@ -164,8 +165,8 @@
                 'propClass'        =>    $prop_class,
                 'propType'        =>    $prop_type,
                 'propLocation'        =>    $prop_loc,
-                'city'            =>    $row_city ?? $city,
-                'zip'            =>    $row_zip ?? $zip_code ?? NULL,
+                'city'            =>    $city,
+                'zip'            =>    $zip_code,
                 'buildingDescrip'    =>    $bldg_descrip,
                 'numBeds'        =>    $beds,
                 'numBaths'        =>    $baths,
@@ -177,7 +178,7 @@
                 'saleHistory'        =>    $sale_hist_data,
                 'priorDelinqHistory'    =>    NULL,
                 'propertyTaxes'        =>    $taxes_as_text,
-                'taxJurisdictionID'    =>    NULL
+                'taxJurisdictionID'    =>    $juris_id
             ];
 
             // var_dump($structure);
@@ -192,13 +193,16 @@
 
     function parsePage($target)
     {
+        global $err_message;
+
         $page = _http($target);
         $headers = $page['headers'];
         $http_status_code = $headers['status_info']['status_code'];
 
-        if ($http_status_code >= 400)
+        if (!isset($http_status_code) || $http_status_code >= 400) {
+            $err_message = $headers['status_info']['status_message'];
             return FALSE;
-
+        }
 
         $doc = new DOMDocument('1.0', 'utf-8');
         // don't propagate DOM errors to PHP interpreter

@@ -146,7 +146,15 @@ function getMunicipalitiesInCounty(int $countyJurisCode): ?array
 function shutdownHandler()
 {
 	// echo "shutdown handler <br/>";
-	global $conn, $adv_num, $tax_link, $array, $array_count, $extra_header, $header;
+	global $conn, $adv_num, $tax_link, $driver;
+
+	/** 
+	 * if time limit is exceeded when fetching websites that use the dynamic crawler
+	 * we have to close the chrome tabs opened even the fatal error of time limit occurs
+	 * we do that using the following statement
+	 *  */
+	if ($driver) $driver?->quit();
+
 	$index = ($_SESSION['last_index'] ?? -1) + 1;
 	if (!is_null($last_error = error_get_last())) {
 		if (strpos($last_error['message'], 'Maximum execution time') > -1) {
@@ -154,9 +162,12 @@ function shutdownHandler()
 			// record the last
 			saveDataToDB_sendProgress($conn, "Time limit exceeded", $adv_num, $index, $tax_link, false);
 
+
 			//refresh page
 			$_SESSION['try_again'] = true;
 			exit("<script>window.location.reload();</script>");
 		}
 	}
+
+	$conn?->close();
 }

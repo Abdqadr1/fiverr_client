@@ -15,7 +15,7 @@
         /******** SETTINGS *********/
         $state = 'NJ';
         /***************************/
-        global $err_message, $adv_num, $tax_link;
+        global $err_message, $adv_num, $tax_link, $juris_id;
 
         try {
             // Remove excess whitespace first with 'keepOnlyDesired' function
@@ -23,13 +23,14 @@
             $row = array_map('keepOnlyDesired', $row);
             [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status, $town] = $row;
 
+
             // for extra headers
-            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_name = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_state = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_zip = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_city = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : null;
+            $row_owner_name = isset($extra_header["last_recorded_owner"]) ? $row[$extra_header["last_recorded_owner"]] : null;
+            $row_owner_address = isset($extra_header["last_recorded_owner_address"]) ? $row[$extra_header["last_recorded_owner_address"]] : null;
+            $row_owner_state = isset($extra_header["last_recorded_owner_state"]) ? $row[$extra_header["last_recorded_owner_state"]] : null;
+            $row_zip = isset($extra_header["zip"]) ? $row[$extra_header["zip"]] : null;
+            $row_city = isset($extra_header["city"]) ? $row[$extra_header["city"]] : null;
 
 
             // remove non-numeric characters and cast to float
@@ -98,8 +99,9 @@
             $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
             $city_state = $propInfo["City&State:"] ?? "";
             [$owner_city, $owner_state] = preg_split("/\s*,\s*/", $city_state, 2);
+            $owner_city = $row_city ?? $owner_city;
             $owner_state = $row_owner_state ?? $owner_state;
-            $owner_zip = $propInfo["Zip:"] ?? "";
+            $owner_zip = $row_zip ?? $propInfo["Zip:"] ?? "";
             $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
             $total_appraised_value = $propInfo['Net Tax Value:'] ?? 0;
@@ -139,8 +141,8 @@
                 'propClass'        =>    $prop_class,
                 'propType'        =>    $prop_type,
                 'propLocation'        =>    $prop_loc,
-                'city'            =>    $row_city ?? $owner_city,
-                'zip'            =>    $row_zip ?? $owner_zip,
+                'city'            =>    $owner_city,
+                'zip'            =>    $owner_zip,
                 'buildingDescrip'    =>    $land_description,
                 'numBeds'        =>    NULL,
                 'numBaths'        =>    NULL,
@@ -152,7 +154,7 @@
                 'saleHistory'        =>    $sale_hist_data,
                 'priorDelinqHistory'    =>    NULL,
                 'propertyTaxes'        =>    $taxes_as_text,
-                'taxJurisdictionID'    =>    NULL
+                'taxJurisdictionID'    =>    $juris_id
             ];
 
             return $saveDataToDB($conn, $structure, $adv_num,  $index, $tax_link);

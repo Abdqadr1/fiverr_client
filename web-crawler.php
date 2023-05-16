@@ -57,6 +57,7 @@
 		$error = false;
 		$error_no = curl_errno($handle);
 		$error = $error_no > 0 ? curl_error($handle) : false;
+		// echo $error;
 
 		//Close cURL handle
 		curl_close($handle);

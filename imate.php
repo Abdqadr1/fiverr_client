@@ -17,7 +17,7 @@
         /******** SETTINGS *********/
         $state = 'NY';
         /***************************/
-        global $err_message, $adv_num, $tax_link;
+        global $err_message, $adv_num, $tax_link, $juris_id;
 
         try {
 
@@ -26,13 +26,14 @@
             $row = array_map('keepOnlyDesired', $row);
             [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
 
+
             // for extra headers
-            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_name = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_state = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_zip = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_city = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : null;
+            $row_owner_name = isset($extra_header["last_recorded_owner"]) ? $row[$extra_header["last_recorded_owner"]] : null;
+            $row_owner_address = isset($extra_header["last_recorded_owner_address"]) ? $row[$extra_header["last_recorded_owner_address"]] : null;
+            $row_owner_state = isset($extra_header["last_recorded_owner_state"]) ? $row[$extra_header["last_recorded_owner_state"]] : null;
+            $row_zip = isset($extra_header["zip"]) ? $row[$extra_header["zip"]] : null;
+            $row_city = isset($extra_header["city"]) ? $row[$extra_header["city"]] : null;
 
 
             // remove non-numeric characters and cast to float
@@ -118,7 +119,7 @@
             ] = $parsedPage;
 
 
-            $owner_loc = $row_owner_address ?? $ownerInfo[0]["owner_street"] ?? "";
+            $owner_loc = $row_owner_address ?? ($ownerInfo[0]["owner_street"] ?? "");
             $owner_name = $ownerInfo[0]['owner_name'] ?? "";
             $owner_type = determineOwnerType($owner_name);
             for ($o = 1; $o < count($ownerInfo); $o++) {
@@ -127,7 +128,7 @@
             }
             $owner_name = $row_owner_name ?? $owner_name;
 
-            $prop_loc = $row_address ??  $propInfo["prop_loc"] ?? "";
+            $prop_loc = $row_address ?? ($propInfo["prop_loc"] ?? "");
             $city_state_zip = $ownerInfo[0]["city_state_zip"] ?? "";
             $sate_zip_array = explode(" ", $city_state_zip, 3);
             $owner_state = $sate_zip_array[1] ?? "";
@@ -182,8 +183,8 @@
                 'propClass'        =>    $prop_class,
                 'propType'        =>    $prop_type,
                 'propLocation'        =>    $prop_loc,
-                'city'            =>    $row_city ?? $city ?? NULL,
-                'zip'            =>    $row_zip ?? $zip_code ?? NULL,
+                'city'            =>    $row_city,
+                'zip'            =>    $row_zip,
                 'buildingDescrip'    =>    $bldg_descrip,
                 'numBeds'        =>    $beds,
                 'numBaths'        =>    $baths,
@@ -195,7 +196,7 @@
                 'saleHistory'        =>    $sale_hist_data,
                 'priorDelinqHistory'    =>    NULL,
                 'propertyTaxes'        =>    $taxes_as_text,
-                'taxJurisdictionID'    =>    NULL
+                'taxJurisdictionID'    =>    $juris_id
             ];
 
             // listData($structure);

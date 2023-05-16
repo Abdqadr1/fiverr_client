@@ -5,13 +5,13 @@ $state = $county = $municipality = $selected = "";
 
 function generateReport($file, $error_rows)
 {
-    foreach ($error_rows as $row) {
-        try {
-            $log_foldername = __DIR__ . "/logs";
-            if (!file_exists($log_foldername)) {
-                mkdir($log_foldername, 0777, true);
-            }
-            $log_file_data = $log_foldername . '/log_' . $file . '_' . date('d-M-Y') . '.log';
+    try {
+        $log_foldername = __DIR__ . "/logs";
+        if (!file_exists($log_foldername)) {
+            mkdir($log_foldername, 0777, true);
+        }
+        $log_file_data = $log_foldername . '/log_' . $file . '_' . date('d-M-Y') . '.log';
+        foreach ($error_rows as $row) {
             $log_data = "";
             $time = $row['time'] ?? '';
             $url = $row['url'] ?? '';
@@ -19,11 +19,12 @@ function generateReport($file, $error_rows)
             $row_num = $row['row_num'] ?? '';
             $msg = "[$time] [row: $row_num, url: $url] [message: $message]";
             $log_data .= $msg . PHP_EOL;
+
             // if you don't add `FILE_APPEND`, the file will be erased each time you add a log
             file_put_contents($log_file_data, $log_data, FILE_APPEND);
-        } catch (Throwable $t) {
-            error_log("Error when generating report");
         }
+    } catch (Throwable $t) {
+        error_log("Error when generating report");
     }
 }
 

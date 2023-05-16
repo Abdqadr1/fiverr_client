@@ -18,7 +18,7 @@
         /******** SETTINGS *********/
         $state = 'GA';
         /***************************/
-        global $err_message, $adv_num, $tax_link;
+        global $err_message, $adv_num, $tax_link, $juris_id;
         try {
 
             // Remove excess whitespace first with 'keepOnlyDesired' function
@@ -27,13 +27,14 @@
 
             [$adv_num, $parcel_id, $alternate_id, $charge_type, $face_amount, $status] = $row;
 
+
             // for extra headers
-            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_name = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_owner_state = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_zip = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
-            $row_city = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : "";
+            $row_address = isset($extra_header["prop_location"]) ? $row[$extra_header["prop_location"]] : null;
+            $row_owner_name = isset($extra_header["last_recorded_owner"]) ? $row[$extra_header["last_recorded_owner"]] : null;
+            $row_owner_address = isset($extra_header["last_recorded_owner_address"]) ? $row[$extra_header["last_recorded_owner_address"]] : null;
+            $row_owner_state = isset($extra_header["last_recorded_owner_state"]) ? $row[$extra_header["last_recorded_owner_state"]] : null;
+            $row_zip = isset($extra_header["zip"]) ? $row[$extra_header["zip"]] : null;
+            $row_city = isset($extra_header["city"]) ? $row[$extra_header["city"]] : null;
 
 
             // remove non-numeric characters and cast to float
@@ -90,11 +91,12 @@
                 'Tax Assess Info' => $taxAssessInfo
             ] = $parsedPage;
 
-            $owner_name = $row_owner_name ?? $propInfo['owner_name'] ?? "";
+            $owner_name = $row_owner_name ?? ($propInfo['owner_name'] ?? "");
             $owner_type = determineOwnerType($owner_name);
-            $prop_loc = $row_address ?? $propInfo["Address"] ?? "";
+            // echo (($propInfo["Address"] ?? "") . " <br/>");
+            $prop_loc = $row_address ?? ($propInfo["Address"] ?? "");
 
-            $owner_loc = $row_owner_address ?? $propInfo["owner_street"] ?? "";
+            $owner_loc = $row_owner_address ?? ($propInfo["owner_street"] ?? "");
             $city_state_zip = $propInfo["city_state"] ?? "";
 
             $absentee_owner = isAbsenteeOwner($prop_loc, $owner_loc);
@@ -102,8 +104,11 @@
             $arr = preg_split('/\s+/', trim($city_state_zip));
             $arr_count = count($arr);
             $zip_code = array_pop($arr) ?? "";
-            $owner_state = $row_owner_state ?? array_pop($arr) ?? "";
+            $zip_code = $row_zip ?? $zip_code;
+
+            $owner_state = $row_owner_state ?? array_pop($arr);
             $city = join(' ', $arr);
+            $city = $row_city ?? $city;
 
             $lives_in_state = livesInState($state ?? "", $owner_state, $absentee_owner);
 
@@ -156,8 +161,8 @@
                 'propClass'        =>    $prop_class,
                 'propType'        =>    $prop_type,
                 'propLocation'        =>    $prop_loc,
-                'city'            =>    $row_city ?? $city,
-                'zip'            =>    $row_zip ?? $zip_code ?? NULL,
+                'city'            =>    $city,
+                'zip'            =>    $zip_code,
                 'buildingDescrip'    =>    $bldg_descrip,
                 'numBeds'        =>    $beds,
                 'numBaths'        =>    $total_baths,
@@ -169,7 +174,7 @@
                 'saleHistory'        =>    $sale_hist_data,
                 'priorDelinqHistory'    =>    NULL,
                 'propertyTaxes'        =>    $taxes_as_text,
-                'taxJurisdictionID'    =>    NULL
+                'taxJurisdictionID'    =>    $juris_id
             ];
 
             // var_dump($structure);
@@ -183,15 +188,17 @@
 
     function parsePage($target)
     {
+        global $err_message;
+
         $page = _http($target);
         $headers = $page['headers'];
         $http_status_code = $headers['status_info']['status_code'];
         //var_dump($headers);
 
-
-        if ($http_status_code >= 400)
+        if (!isset($http_status_code) || $http_status_code >= 400) {
+            $err_message = $headers['status_info']['status_message'];
             return FALSE;
-
+        }
 
         $doc = new DOMDocument('1.0', 'utf-8');
         // don't propagate DOM errors to PHP interpreter

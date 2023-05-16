@@ -35,10 +35,8 @@ function sendData($message, $shouldRefresh = false)
     flush();
 
     if (connection_aborted()) {
-        echo "user aborted process";
         error_log("User aborted process!");
-        $conn->query("DROP DATABASE IF EXISTS " . $db_name);
-        $conn->close();
+        $conn->query("DROP DATABASE IF EXISTS `$db_name`");
         exit;
     }
 }
@@ -183,8 +181,6 @@ if (
     for ($i = $last_index ?? 0; $i < $array_count; $i++) {
         parseRow($conn, $i, $array[$i], $header, $extra_header, "saveDataToDB_sendProgress");
     }
-
-    $conn?->close();
 } else {
     $script = "<script>";
     $script .= "parent.serverError('Incomplete data in the server!')";
