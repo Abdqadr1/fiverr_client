@@ -1,7 +1,7 @@
 
 
     <?php
-    require_once 'web-crawler.php';
+    require_once 'dynamic_crawler.php';
     require_once 'tax-codes.php';
 
 
@@ -94,7 +94,7 @@
             /*********************************************************/
 
             // set time limit 
-            ini_set('max_execution_time', 5);
+            ini_set('max_execution_time', 6);
 
 
             // GO TO THE LINK AND DOWNLOAD THE PAGE
@@ -102,7 +102,7 @@
             if (!$parsedPage || is_empty($parsedPage)) {
                 // echo "Page failed to Load for lienNo: " . $adv_num;
                 $err_message = empty($err_message) ? "No data found on the website" : $err_message;
-                $saveDataToDB($conn, $err_message, $adv_num, $index, $tax_link, false);
+                return ["error" => $err_message];
             }
 
             [
@@ -181,34 +181,30 @@
                 'propertyTaxes'        =>    $taxes_as_text,
                 'taxJurisdictionID'    =>    $juris_id
             ];
-
             // var_dump($structure);
 
-            return $saveDataToDB($conn, $structure, $adv_num,  $index, $tax_link);
+            return ['data' => $structure];
         } catch (Throwable $x) {
             $err_message = $x->getMessage() . " Line: " . $x->getLine();
-            return $saveDataToDB($conn, $err_message, $adv_num, $index, $tax_link, false);
+            return ["error" => $err_message];
         }
     }
 
 
     function parsePage($target)
     {
-        global $err_message;
-        $page = _http($target);
-        $headers = $page['headers'];
-        $http_status_code = $headers['status_info']['status_code'];
 
-        if (!isset($http_status_code) || $http_status_code != 200) {
-            $err_message = $headers['status_info']['status_message'];
-            return FALSE;
-        }
+
+        $requires_path_contain = '/html/body/table[1]/tbody/tr[1]/td[2]/font';
+        $page = _dynamicCrawler($target, 7, $requires_path_contain);
+
+        if (!$page) return FALSE;
 
         $doc = new DOMDocument('1.0', 'utf-8');
         // don't propagate DOM errors to PHP interpreter
         libxml_use_internal_errors(true);
         // converts all special characters to utf-8
-        $content = mb_convert_encoding($page['body'], 'HTML-ENTITIES', 'UTF-8');
+        $content = mb_convert_encoding($page, 'HTML-ENTITIES', 'UTF-8');
         $doc->loadHTML($content);
 
         [$table1, $table2, $table3] = $doc->getElementsByTagName('table');
@@ -216,8 +212,8 @@
         $trTags_1 = $table1->getElementsByTagName('tr');
         // Remove rows 4 & 10 (which contain headings)
         // !!! Row 10 becomes 9 after the first removal
-        $table1->removeChild($trTags_1[3]);
-        $table1->removeChild($trTags_1[8]);
+        // $table1->removeChild($trTags_1[3]);
+        // $table1->removeChild($trTags_1[8]);
 
         $tdTags_1 = $table1->getElementsByTagName('td');
         $data_1 = [];
@@ -239,7 +235,7 @@
 
         // Remove the first row which says "TAX-LIST-HISTORY"
         $table3_child_rows = $table3->getElementsByTagName("tr");
-        $table3->removeChild($table3_child_rows->item(0));
+        // $table3->removeChild($table3_child_rows->item(0));
 
         // Establish the header row as the first row
         $table3_firstRow = $table3_child_rows->item(0);

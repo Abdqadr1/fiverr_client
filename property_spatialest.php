@@ -86,7 +86,7 @@
             if (!$parsedPage || is_empty($parsedPage)) {
                 // echo "Page failed to Load for lienNo: " . $adv_num . "<br/>";
                 $err_message = empty($err_message) ? "No data found on the website" : $err_message;
-                return $saveDataToDB($conn, $err_message, $adv_num, $index, $tax_link, false);
+                return ["error" => $err_message];
             }
 
             [
@@ -175,10 +175,10 @@
             ];
 
             // listData($structure);
-            return $saveDataToDB($conn, $structure, $adv_num,  $index, $tax_link);
+            return ['data' => $structure];
         } catch (Throwable $x) {
             $err_message = $x->getMessage() . " Line: " . $x->getLine();
-            return $saveDataToDB($conn, $err_message, $adv_num, $index, $tax_link, false);
+            return ["error" => $err_message];
         }
     }
 

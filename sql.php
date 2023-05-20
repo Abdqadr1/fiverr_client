@@ -150,7 +150,7 @@ function shutdownHandler()
 
 	/** 
 	 * if time limit is exceeded when fetching websites that use the dynamic crawler
-	 * we have to close the chrome tabs opened even the fatal error of time limit occurs
+	 * we have to close the chrome tabs opened even when the fatal error of time limit occurs
 	 * we do that using the following statement
 	 *  */
 	if ($driver) $driver?->quit();
@@ -165,7 +165,7 @@ function shutdownHandler()
 
 			//refresh page
 			$_SESSION['try_again'] = true;
-			exit("<script>window.location.reload();</script>");
+			echo ("<script>window.location.reload();</script>");
 		}
 	}
 

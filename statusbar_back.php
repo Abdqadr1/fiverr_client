@@ -9,7 +9,7 @@ ini_set('max_execution_time', 0);
 register_shutdown_function("shutdownHandler");
 // set_error_handler("custom_global_error_handler");
 
-ini_set('display_errors', 0);
+// ini_set('display_errors', 0);
 ignore_user_abort(true);
 ob_start();
 
@@ -179,7 +179,16 @@ if (
     // last index processed
     $last_index = isset($_SESSION['last_index']) ? (int) $_SESSION['last_index'] + 1 : 0;
     for ($i = $last_index ?? 0; $i < $array_count; $i++) {
-        parseRow($conn, $i, $array[$i], $header, $extra_header, "saveDataToDB_sendProgress");
+        $result = parseRow($conn, $i, $array[$i], $header, $extra_header, "saveDataToDB_sendProgress");
+        $data = "";
+        $success = false;
+
+        if (isset($result['error'])) $data = $result['error'];
+        else {
+            $data = $result['data'];
+            $success = true;
+        }
+        saveDataToDB_sendProgress($conn, $data, $adv_num, $i, $tax_link, $success);
     }
 } else {
     $script = "<script>";
