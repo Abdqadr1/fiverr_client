@@ -179,7 +179,7 @@ if (
     // last index processed
     $last_index = isset($_SESSION['last_index']) ? (int) $_SESSION['last_index'] + 1 : 0;
     for ($i = $last_index ?? 0; $i < $array_count; $i++) {
-        $result = parseRow($conn, $i, $array[$i], $header, $extra_header, "saveDataToDB_sendProgress");
+        $result = parseRow($array[$i], $extra_header);
         $data = "";
         $success = false;
 

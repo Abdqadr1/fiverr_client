@@ -13,7 +13,7 @@
     //$header_map = array_map( 'keepOnlyDesired', $header );
 
 
-    function parseRow(mysqli $conn, $index, $row, $headers, $extra_header, $saveDataToDB)
+    function parseRow($row, $extra_header)
     {
         /******** SETTINGS *********/
         $state = 'TN';

@@ -10,7 +10,7 @@
 
     // $array = openFile("./TEST FILES/essex_county_TEST_FILE.csv");
     // $header = array_shift($array);
-    function parseRow(mysqli $conn, $index, $row, $headers, $extra_header, $saveDataToDB)
+    function parseRow($row, $extra_header)
     {
         /******** SETTINGS *********/
         $state = 'NJ';

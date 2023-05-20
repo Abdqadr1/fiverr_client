@@ -11,7 +11,7 @@
     // $array = openFile("./TEST FILES/montgomery county_tn_TEST FILE.csv");
     // $header = array_shift($array);
 
-    function parseRow(mysqli $conn, $index, $row, $headers, $extra_header, $saveDataToDB)
+    function parseRow($row, $extra_header)
     {
         /******** SETTINGS *********/
         $state = 'TN';
@@ -79,7 +79,7 @@
             /*********************************************************/
 
             // set time limit 
-            ini_set('max_execution_time', 3);
+            ini_set('max_execution_time', 20);
 
             // GO TO THE LINK AND DOWNLOAD THE PAGE
             $parsedPage = parsePage($tax_link);

@@ -23,7 +23,7 @@ function _dynamicCrawler($link, $timeout = 60, $containsPath, $buttonId = null)
         $capabilities = DesiredCapabilities::chrome();
 
         // Start the WebDriver with the specified capabilities, connection and request timeouts
-        $driver = RemoteWebDriver::create($host, $capabilities, 6000, 6000);
+        $driver = RemoteWebDriver::create($host, $capabilities, 10000);
 
         // Navigate to the website you want to scrape
         $driver->get($link);
@@ -54,12 +54,12 @@ function _dynamicCrawler($link, $timeout = 60, $containsPath, $buttonId = null)
         array_pop($arr);
         $msg = join(" ", $arr);
         $err_message = $msg;
-        echo $err_message;
+        // echo $err_message;
     } catch (Exception $ex) {
         // echo var_dump($ex);
         $arr = preg_split("/\r\n|\n|\r/", $ex->getMessage()) ?? [];
         $err_message = $arr[2] ?? "An error occurred during crawling";
-        echo $err_message;
+        // echo $err_message;
     } finally {
         // Quit the WebDriver
         $driver?->quit();
@@ -134,12 +134,12 @@ function dataHubCrawler($link, $timeout = 60, $containsPath, $town = "", $block 
         array_pop($arr);
         $msg = join(" ", $arr);
         $err_message = $msg;
-        echo $err_message;
+        // echo $err_message;
     } catch (Exception $ex) {
         // echo var_dump($ex);
         $arr = preg_split("/\r\n|\n|\r/", $ex->getMessage()) ?? [];
         $err_message = $arr[2] ?? "An error occurred during crawling";
-        echo $err_message;
+        // echo $err_message;
     } finally {
         $driver?->quit();
         return $output;
@@ -147,7 +147,7 @@ function dataHubCrawler($link, $timeout = 60, $containsPath, $town = "", $block 
 }
 
 // _dynamicCrawler(
-//     'https://gis.dutchessny.gov/parcelaccess/property-card/?parcelgrid=13020000595400289208930000&parcelid=463',
-//     20,
-//     '//*[@id="pid-parcelnum"]'
+//     'https://property.spatialest.com/tn/montgomery#/property/1671042',
+//     30,
+//     '/html/body/main/div/div[2]/div[1]/div[2]/div/section/div/div[1]/div[2]/header/div/div/div[1]/div[2]'
 // );

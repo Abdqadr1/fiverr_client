@@ -5,7 +5,7 @@
     require_once 'tax-codes.php';
 
 
-    function parseRow(mysqli $conn, $index, $row, $headers, $extra_header, $saveDataToDB)
+    function parseRow($row, $extra_header)
     {
         /******** SETTINGS *********/
         $state = 'NJ';
